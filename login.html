@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>লগইন - নিরাপদ ভোট</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/common.css">
+    <link rel="stylesheet" href="assets/css/auth.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html">
+                <img src="assets/images/election_comission_logo-removebg-preview.png" alt="বাংলাদেশ সরকার" class="logo">
+            </a>
+            <div class="header-title">
+                <h1>নিরাপদ ভোট</h1>
+                <p>স্বচ্ছ ও নিরাপদ ডিজিটাল ভোটিং সিস্টেম</p>
+            </div>
+    
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="auth-container">
+            <div class="auth-card card">
+                <div class="auth-header">
+                    <h2>নাগরিক লগইন</h2>
+                    <p>আপনার অ্যাকাউন্টে প্রবেশ করুন</p>
+                </div>
+
+                <div id="alertContainer"></div>
+
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="nid">জাতীয় পরিচয়পত্র নম্বর *</label>
+                        <input 
+                            type="text" 
+                            id="nid" 
+                            name="nid" 
+                            placeholder="আপনার NID নম্বর লিখুন"
+                            required
+                            maxlength="17"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">পাসওয়ার্ড *</label>
+                        <div class="password-input-wrapper">
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                placeholder="আপনার পাসওয়ার্ড লিখুন"
+                                required
+                            >
+                            <button type="button" class="toggle-password" onclick="togglePassword('password')">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="remember">
+                            <span>মনে রাখুন</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full" id="submitBtn">
+                        <span id="btnText">লগইন করুন</span>
+                        <span id="btnLoader" class="loading hidden"></span>
+                    </button>
+                </form>
+
+                <div class="auth-links">
+                    <a href="#" class="link" onclick="forgotPassword()">পাসওয়ার্ড ভুলে গেছেন?</a>
+                </div>
+
+                <div class="auth-footer">
+                    <p>নতুন ভোটার?</p>
+                    <a href="register.html" class="link">এখনই নিবন্ধন করুন</a>
+                </div>
+
+                <div class="divider">
+                    <span>অথবা</span>
+                </div>
+
+                <div class="admin-login-link">
+                    <a href="admin-login.html" class="btn btn-secondary btn-full">
+                        প্রশাসক হিসেবে লগইন করুন
+                    </a>
+                </div>
+
+                <div class="back-home">
+                    <a href="index.html">← হোম পেজে ফিরে যান</a>
+                </div>
+            </div>
+
+            <div class="help-section card">
+                <h3>সহায়তা প্রয়োজন?</h3>
+                <div class="help-item">
+                    <h4>লগইন করতে সমস্যা?</h4>
+                    <p>আপনার NID নম্বর এবং পাসওয়ার্ড সঠিক আছে কিনা নিশ্চিত করুন।</p>
+                </div>
+                <div class="help-item">
+                    <h4>পাসওয়ার্ড ভুলে গেছেন?</h4>
+                    <p>"পাসওয়ার্ড ভুলে গেছেন?" লিংকে ক্লিক করে পুনরায় সেট করুন।</p>
+                </div>
+                <div class="help-item">
+                    <h4>নিবন্ধিত নন?</h4>
+                    <p>প্রথমে নিবন্ধন সম্পূর্ণ করুন তারপর লগইন করুন।</p>
+                </div>
+                <button class="btn btn-secondary btn-full" onclick="openChatBot()">
+                    <i class="fa-solid fa-robot"></i> AI সহায়ক চালু করুন
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; ২০২৫ নিরাপদ ভোট সিস্টেম। সর্বস্বত্ব সংরক্ষিত।</p>
+        </div>
+    </footer>
+
+    <script src="assets/js/common.js"></script>
+    <script src="assets/js/login.js"></script>
+</body>
+</html>
