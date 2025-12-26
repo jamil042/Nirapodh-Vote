@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>প্রশাসক ড্যাশবোর্ড - নিরাপদ ভোট</title>
+    <link rel="stylesheet" href="assets/css/common.css">
+    <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <img src="assets/images/election_comission_logo-removebg-preview.png" alt="বাংলাদেশ সরকার" class="logo">
+            <div class="header-title">
+                <h1>নিরাপদ ভোট - প্রশাসক প্যানেল</h1>
+                <p>নির্বাচন ব্যবস্থাপনা সিস্টেম</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary btn-sm" onclick="logout()">লগআউট</button>
+    
+            </div>
+        </div>
+    </header>
+
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" onclick="showSection('dashboard')">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">ড্যাশবোর্ড</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('ballot')">
+                    <span class="nav-icon">🗳️</span>
+                    <span class="nav-text">ব্যালট তৈরি</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('candidates')">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-text">প্রার্থী তালিকা</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('notice')">
+                    <span class="nav-icon">📢</span>
+                    <span class="nav-text">নোটিশ প্রকাশ</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('results')">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-text">ফলাফল ব্যবস্থাপনা</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('complaints')">
+                    <span class="nav-icon">📝</span>
+                    <span class="nav-text">অভিযোগ ব্যবস্থাপনা</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('chat')">
+                    <span class="nav-icon">💬</span>
+                    <span class="nav-text">নাগরিক চ্যাট</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('settings')">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-text">সেটিংস</span>
+                </a>
+            </nav>
+        </aside>
