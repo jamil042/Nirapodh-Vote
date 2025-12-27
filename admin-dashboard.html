@@ -61,7 +61,7 @@
         </aside>
 
         <main class="main-content">
-            <!-- Dashboard Section -->
+        
             <section id="dashboard-section" class="content-section active">
                 <div class="section-header">
                     <h2>ড্যাশবোর্ড</h2>
@@ -142,7 +142,6 @@
             </section>
 
 
-            <!-- Ballot Creation Section -->
             <section id="ballot-section" class="content-section">
                 <div class="section-header">
                     <h2>ব্যালট তৈরি করুন</h2>
@@ -208,7 +207,7 @@
                 </div>
             </section>
 
-             <!-- Candidates List Section -->
+            
             <section id="candidates-section" class="content-section">
                 <div class="section-header">
                     <h2>প্রার্থী তালিকা</h2>
@@ -249,7 +248,7 @@
                 </div>
             </section>
 
-             <!-- Notice Section -->
+            
             <section id="notice-section" class="content-section">
                 <div class="section-header">
                     <h2>নোটিশ প্রকাশ</h2>
@@ -323,3 +322,241 @@
                     </div>
                 </div>
             </section>
+            <section id="results-section" class="content-section">
+                <div class="section-header">
+                    <h2>ফলাফল ব্যবস্থাপনা</h2>
+                    <p>ভোটের ফলাফল গণনা ও প্রকাশ</p>
+                </div>
+
+                <div class="card">
+                    <div class="form-group">
+                        <label for="selectBallot">ব্যালট নির্বাচন করুন</label>
+                        <select id="selectBallot">
+                            <option value="">ব্যালট নির্বাচন করুন</option>
+                            <option value="1">ঢাকা-১ আসন নির্বাচন</option>
+                            <option value="2">চট্টগ্রাম-২ আসন নির্বাচন</option>
+                        </select>
+                    </div>
+
+                    <div class="results-summary">
+                        <h3>ফলাফল সারসংক্ষেপ - ঢাকা-১ আসন</h3>
+                        <div class="result-stats">
+                            <div class="result-stat">
+                                <span class="result-label">মোট ভোটার:</span>
+                                <span class="result-value">৫০,০০০</span>
+                            </div>
+                            <div class="result-stat">
+                                <span class="result-label">প্রদত্ত ভোট:</span>
+                                <span class="result-value">৪৫,২৩৪</span>
+                            </div>
+                            <div class="result-stat">
+                                <span class="result-label">ভোট প্রদানের হার:</span>
+                                <span class="result-value">৯০.৪৭%</span>
+                            </div>
+                        </div>
+
+                        <div class="candidate-results">
+                            <div class="candidate-result-item">
+                                <div class="candidate-info">
+                                    <div class="candidate-photo">👤</div>
+                                    <div>
+                                        <h4>মোঃ করিম</h4>
+                                        <p>জাতীয় নাগরিক পার্টি - ⚖️</p>
+                                    </div>
+                                </div>
+                                <div class="vote-count">
+                                    <span class="votes">২৫,৪৫০ ভোট</span>
+                                    <div class="vote-bar">
+                                        <div class="vote-fill" style="width: 56%"></div>
+                                    </div>
+                                    <span class="percentage">৫৬.২৫%</span>
+                                </div>
+                            </div>
+                            <div class="candidate-result-item">
+                                <div class="candidate-info">
+                                    <div class="candidate-photo">👤</div>
+                                    <div>
+                                        <h4>মোঃ রহিম</h4>
+                                        <p>বিএনপি - 🌾</p>
+                                    </div>
+                                </div>
+                                <div class="vote-count">
+                                    <span class="votes">১৯,৭৮৪ ভোট</span>
+                                    <div class="vote-bar">
+                                        <div class="vote-fill" style="width: 44%"></div>
+                                    </div>
+                                    <span class="percentage">৪৩.৭৫%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-primary" onclick="calculateResults()">ফলাফল পুনর্গণনা করুন</button>
+                        <button class="btn btn-secondary" onclick="exportResults()">PDF হিসেবে রপ্তানি করুন</button>
+                        <button class="btn btn-primary" onclick="publishResults()">ফলাফল প্রকাশ করুন</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="complaints-section" class="content-section">
+                <div class="section-header">
+                    <h2>অভিযোগ ব্যবস্থাপনা</h2>
+                    <p>নাগরিকদের অভিযোগ দেখুন ও সমাধান করুন</p>
+                </div>
+
+                <div class="card">
+                    <div class="complaints-list">
+                        <div class="complaint-item">
+                            <div class="complaint-header">
+                                <h4>অভিযোগ #০০১</h4>
+                                <span class="badge badge-warning">অপেক্ষমান</span>
+                            </div>
+                            <p class="complaint-date">জমা: ৩ ডিসেম্বর ২০২৫, ২:৩০ PM</p>
+                            <p class="complaint-text">আমার ভোট সঠিকভাবে রেজিস্টার হয়নি। অনুগ্রহ করে যাচাই করুন।</p>
+                            <div class="complaint-meta">
+                                <span>এলাকা: ঢাকা-১</span>
+                                <span>ভোটার ID: ****5678</span>
+                            </div>
+                            <div class="form-group">
+                                <label>প্রশাসক মন্তব্য</label>
+                                <textarea rows="3" placeholder="আপনার প্রতিক্রিয়া লিখুন..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>প্রমাণপত্র আপলোড করুন (যদি থাকে)</label>
+                                <input type="file" accept=".pdf,.jpg,.png">
+                            </div>
+                            <div class="complaint-actions">
+                                <button class="btn btn-sm btn-primary">সমাধান করুন</button>
+                                <button class="btn btn-sm btn-danger">প্রত্যাখ্যান করুন</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="chat-section" class="content-section">
+                <div class="section-header">
+                    <h2>নাগরিক চ্যাট</h2>
+                    <p>নাগরিকদের সাথে সরাসরি যোগাযোগ</p>
+                </div>
+
+                <div class="chat-container">
+                    <div class="chat-list card">
+                        <h3>চ্যাট তালিকা</h3>
+                        <div class="chat-item active">
+                            <div class="chat-avatar">👤</div>
+                            <div class="chat-info">
+                                <h4>নাগরিক #১২৩৪</h4>
+                                <p>শেষ বার্তা: ধন্যবাদ...</p>
+                            </div>
+                            <span class="unread-badge">২</span>
+                        </div>
+                        <div class="chat-item">
+                            <div class="chat-avatar">👤</div>
+                            <div class="chat-info">
+                                <h4>নাগরিক #৫৬৭৮</h4>
+                                <p>আমার ভোট...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-window card">
+                        <div class="chat-header">
+                            <h3>নাগরিক #১২৩৪</h3>
+                            <span class="chat-status">অনলাইন</span>
+                        </div>
+                        <div class="chat-messages">
+                            <div class="message user-message">
+                                <p>আমার ভোট কেন্দ্র কোথায়?</p>
+                                <span class="message-time">২:৩০ PM</span>
+                            </div>
+                            <div class="message admin-message">
+                                <p>আপনার NID অনুযায়ী আপনার ভোট কেন্দ্র হল ঢাকা সিটি কলেজ।</p>
+                                <span class="message-time">২:৩২ PM</span>
+                            </div>
+                            <div class="message user-message">
+                                <p>ধন্যবাদ!</p>
+                                <span class="message-time">২:৩৩ PM</span>
+                            </div>
+                        </div>
+                        <div class="chat-input">
+                            <input type="text" placeholder="বার্তা লিখুন..." id="chatMessage">
+                            <button class="btn btn-primary" onclick="sendMessage()">পাঠান</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+             <section id="settings-section" class="content-section">
+                <div class="section-header">
+                    <h2>সেটিংস</h2>
+                    <p>প্রশাসক অ্যাকাউন্ট ও সিস্টেম সেটিংস</p>
+                </div>
+
+                <div class="card">
+                    <h3>পাসওয়ার্ড পরিবর্তন</h3>
+                    <form id="changePasswordForm">
+                        <div class="form-group">
+                            <label for="currentPassword">বর্তমান পাসওয়ার্ড *</label>
+                            <input type="password" id="currentPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">নতুন পাসওয়ার্ড *</label>
+                            <input type="password" id="newPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmNewPassword">নতুন পাসওয়ার্ড নিশ্চিত করুন *</label>
+                            <input type="password" id="confirmNewPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">পাসওয়ার্ড পরিবর্তন করুন</button>
+                    </form>
+                </div>
+
+                <div class="card mt-20">
+                    <h3>প্রশাসক তথ্য</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">প্রশাসক ID:</span>
+                            <span class="info-value">ADMIN-2025-001</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">নাম:</span>
+                            <span class="info-value">মোঃ রহিম</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">ইমেইল:</span>
+                            <span class="info-value">admin@nirapod-vote.gov.bd</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">শেষ লগইন:</span>
+                            <span class="info-value">৩ ডিসেম্বর ২০২৫, ৯:০০ AM</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    
+    <div id="candidateModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>প্রার্থীর বিস্তারিত তথ্য</h2>
+                <span class="close-modal" onclick="closeCandidateModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="candidateModalBody">
+                
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCandidateModal()">বন্ধ করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assests/js/common.js"></script>
+    <script src="assests/js/admin.js"></script>
+</body>
+</html>
+
+           
