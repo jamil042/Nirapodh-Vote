@@ -114,14 +114,14 @@
     box-shadow: 0 6px 20px rgba(12, 43, 19, 0.18),
         0 2px 8px rgba(18, 73, 31, 0.08);
     color: var(--primary-green);
-    font-weight: 400;
+    font-weight: 200;
 }
 
 .nav-item.active {
     background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%);
     color: white;
-    font-weight: 700;
-    transform: translateX(10px) scale(1.03);
+    font-weight: 450;
+    transform: translateX(10px) scale(1.01);
     box-shadow: 0 8px 24px rgba(30, 126, 52, 0.3),
         0 3px 10px rgba(30, 126, 52, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -129,7 +129,7 @@
 }
 
 @keyframes activeGlowAdmin {
-
+ts/images/election_comission_logo-removebg-preview.png
     0%,
     100% {
         box-shadow: 0 8px 24px rgba(30, 126, 52, 0.3),
