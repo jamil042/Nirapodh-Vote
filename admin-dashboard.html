@@ -323,3 +323,79 @@
                     </div>
                 </div>
             </section>
+            <section id="results-section" class="content-section">
+                <div class="section-header">
+                    <h2>ফলাফল ব্যবস্থাপনা</h2>
+                    <p>ভোটের ফলাফল গণনা ও প্রকাশ</p>
+                </div>
+
+                <div class="card">
+                    <div class="form-group">
+                        <label for="selectBallot">ব্যালট নির্বাচন করুন</label>
+                        <select id="selectBallot">
+                            <option value="">ব্যালট নির্বাচন করুন</option>
+                            <option value="1">ঢাকা-১ আসন নির্বাচন</option>
+                            <option value="2">চট্টগ্রাম-২ আসন নির্বাচন</option>
+                        </select>
+                    </div>
+
+                    <div class="results-summary">
+                        <h3>ফলাফল সারসংক্ষেপ - ঢাকা-১ আসন</h3>
+                        <div class="result-stats">
+                            <div class="result-stat">
+                                <span class="result-label">মোট ভোটার:</span>
+                                <span class="result-value">৫০,০০০</span>
+                            </div>
+                            <div class="result-stat">
+                                <span class="result-label">প্রদত্ত ভোট:</span>
+                                <span class="result-value">৪৫,২৩৪</span>
+                            </div>
+                            <div class="result-stat">
+                                <span class="result-label">ভোট প্রদানের হার:</span>
+                                <span class="result-value">৯০.৪৭%</span>
+                            </div>
+                        </div>
+
+                        <div class="candidate-results">
+                            <div class="candidate-result-item">
+                                <div class="candidate-info">
+                                    <div class="candidate-photo">👤</div>
+                                    <div>
+                                        <h4>মোঃ করিম</h4>
+                                        <p>জাতীয় নাগরিক পার্টি - ⚖️</p>
+                                    </div>
+                                </div>
+                                <div class="vote-count">
+                                    <span class="votes">২৫,৪৫০ ভোট</span>
+                                    <div class="vote-bar">
+                                        <div class="vote-fill" style="width: 56%"></div>
+                                    </div>
+                                    <span class="percentage">৫৬.২৫%</span>
+                                </div>
+                            </div>
+                            <div class="candidate-result-item">
+                                <div class="candidate-info">
+                                    <div class="candidate-photo">👤</div>
+                                    <div>
+                                        <h4>মোঃ রহিম</h4>
+                                        <p>বিএনপি - 🌾</p>
+                                    </div>
+                                </div>
+                                <div class="vote-count">
+                                    <span class="votes">১৯,৭৮৪ ভোট</span>
+                                    <div class="vote-bar">
+                                        <div class="vote-fill" style="width: 44%"></div>
+                                    </div>
+                                    <span class="percentage">৪৩.৭৫%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-primary" onclick="calculateResults()">ফলাফল পুনর্গণনা করুন</button>
+                        <button class="btn btn-secondary" onclick="exportResults()">PDF হিসেবে রপ্তানি করুন</button>
+                        <button class="btn btn-primary" onclick="publishResults()">ফলাফল প্রকাশ করুন</button>
+                    </div>
+                </div>
+            </section>
