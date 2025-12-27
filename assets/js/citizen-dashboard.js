@@ -571,7 +571,6 @@ function openCandidateModal(candidateId) {
             <div class="candidate-profile-info">
                 <h3>${candidate.name}</h3>
                 <div class="candidate-party-info">
-                    <img src="https://via.placeholder.com/40" alt="প্রতীক" class="party-symbol-small">
                     <strong>${candidate.party}</strong>
                 </div>
             </div>
