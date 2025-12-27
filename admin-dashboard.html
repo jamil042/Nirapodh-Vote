@@ -61,7 +61,7 @@
         </aside>
 
         <main class="main-content">
-            <!-- Dashboard Section -->
+        
             <section id="dashboard-section" class="content-section active">
                 <div class="section-header">
                     <h2>ড্যাশবোর্ড</h2>
@@ -142,7 +142,6 @@
             </section>
 
 
-            <!-- Ballot Creation Section -->
             <section id="ballot-section" class="content-section">
                 <div class="section-header">
                     <h2>ব্যালট তৈরি করুন</h2>
@@ -208,7 +207,7 @@
                 </div>
             </section>
 
-             <!-- Candidates List Section -->
+            
             <section id="candidates-section" class="content-section">
                 <div class="section-header">
                     <h2>প্রার্থী তালিকা</h2>
@@ -249,7 +248,7 @@
                 </div>
             </section>
 
-             <!-- Notice Section -->
+            
             <section id="notice-section" class="content-section">
                 <div class="section-header">
                     <h2>নোটিশ প্রকাশ</h2>
@@ -488,4 +487,76 @@
                     </div>
                 </div>
             </section>
+
+             <section id="settings-section" class="content-section">
+                <div class="section-header">
+                    <h2>সেটিংস</h2>
+                    <p>প্রশাসক অ্যাকাউন্ট ও সিস্টেম সেটিংস</p>
+                </div>
+
+                <div class="card">
+                    <h3>পাসওয়ার্ড পরিবর্তন</h3>
+                    <form id="changePasswordForm">
+                        <div class="form-group">
+                            <label for="currentPassword">বর্তমান পাসওয়ার্ড *</label>
+                            <input type="password" id="currentPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">নতুন পাসওয়ার্ড *</label>
+                            <input type="password" id="newPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmNewPassword">নতুন পাসওয়ার্ড নিশ্চিত করুন *</label>
+                            <input type="password" id="confirmNewPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">পাসওয়ার্ড পরিবর্তন করুন</button>
+                    </form>
+                </div>
+
+                <div class="card mt-20">
+                    <h3>প্রশাসক তথ্য</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">প্রশাসক ID:</span>
+                            <span class="info-value">ADMIN-2025-001</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">নাম:</span>
+                            <span class="info-value">মোঃ রহিম</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">ইমেইল:</span>
+                            <span class="info-value">admin@nirapod-vote.gov.bd</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">শেষ লগইন:</span>
+                            <span class="info-value">৩ ডিসেম্বর ২০২৫, ৯:০০ AM</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    
+    <div id="candidateModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>প্রার্থীর বিস্তারিত তথ্য</h2>
+                <span class="close-modal" onclick="closeCandidateModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="candidateModalBody">
+                
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCandidateModal()">বন্ধ করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/common.js"></script>
+    <script src="assets/js/admin.js"></script>
+</body>
+</html>
+
            
