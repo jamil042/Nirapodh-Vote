@@ -207,3 +207,44 @@
                     </form>
                 </div>
             </section>
+
+             <!-- Candidates List Section -->
+            <section id="candidates-section" class="content-section">
+                <div class="section-header">
+                    <h2>প্রার্থী তালিকা</h2>
+                    <p>সকল নির্বাচনী প্রার্থীর তথ্য</p>
+                </div>
+
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ছবি</th>
+                                    <th>নাম</th>
+                                    <th>দল</th>
+                                    <th>প্রতীক</th>
+                                    <th>এলাকা</th>
+                                    <th>অবস্থা</th>
+                                    <th>পদক্ষেপ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="candidatesTableBody">
+                                <tr>
+                                    <td><div class="candidate-photo">👤</div></td>
+                                    <td>মোঃ করিম</td>
+                                    <td>জাতীয় নাগরিক পার্টি</td>
+                                    <td><div class="party-symbol">⚖️</div></td>
+                                    <td>ঢাকা-১</td>
+                                    <td><span class="badge badge-success">সক্রিয়</span></td>
+                                    <td>
+                                        <button class="btn-icon" onclick="viewCandidateDetails(1)" title="বিস্তারিত দেখুন">👁️</button>
+                                        <button class="btn-icon" onclick="editCandidate(1)">✏️</button>
+                                        <button class="btn-icon" onclick="deleteCandidate(1)">🗑️</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
