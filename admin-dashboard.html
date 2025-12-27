@@ -248,3 +248,78 @@
                     </div>
                 </div>
             </section>
+
+             <!-- Notice Section -->
+            <section id="notice-section" class="content-section">
+                <div class="section-header">
+                    <h2>নোটিশ প্রকাশ</h2>
+                    <p>নাগরিকদের জন্য গুরুত্বপূর্ণ নোটিশ প্রকাশ করুন</p>
+                </div>
+
+                <div class="card">
+                    <form id="noticeForm">
+                        <div class="form-group">
+                            <label for="noticeTitle">নোটিশ শিরোনাম *</label>
+                            <input type="text" id="noticeTitle" placeholder="নোটিশের শিরোনাম লিখুন" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="noticeType">নোটিশ ধরন *</label>
+                            <select id="noticeType" required>
+                                <option value="">নির্বাচন করুন</option>
+                                <option value="general">সাধারণ</option>
+                                <option value="urgent">জরুরী</option>
+                                <option value="schedule">সময়সূচী</option>
+                                <option value="result">ফলাফল</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>নোটিশ বিষয়বস্তু *</label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="contentType" value="text" checked onclick="toggleNoticeContent('text')">
+                                    <span>টেক্সট বার্তা</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="contentType" value="pdf" onclick="toggleNoticeContent('pdf')">
+                                    <span>PDF ফাইল</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="textContent">
+                            <label for="noticeMessage">বার্তা *</label>
+                            <textarea id="noticeMessage" rows="6" placeholder="নোটিশের বিস্তারিত লিখুন..."></textarea>
+                        </div>
+
+                        <div class="form-group hidden" id="pdfContent">
+                            <label for="noticePdf">PDF ফাইল আপলোড করুন *</label>
+                            <input type="file" id="noticePdf" accept=".pdf">
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">নোটিশ প্রকাশ করুন</button>
+                            <button type="reset" class="btn btn-secondary">রিসেট</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card mt-20">
+                    <h3>প্রকাশিত নোটিশ সমূহ</h3>
+                    <div class="notice-list">
+                        <div class="notice-item">
+                            <div class="notice-header">
+                                <h4>ভোটিং সময়সূচী পরিবর্তন</h4>
+                                <span class="badge badge-urgent">জরুরী</span>
+                            </div>
+                            <p class="notice-date">প্রকাশিত: ৩ ডিসেম্বর ২০২৫, ১০:৩০ AM</p>
+                            <p class="notice-preview">আগামীকাল ভোটিং সময় ৮টা থেকে ৬টা পর্যন্ত বর্ধিত করা হয়েছে...</p>
+                            <div class="notice-actions">
+                                <button class="btn btn-sm btn-secondary">সম্পাদনা</button>
+                                <button class="btn btn-sm btn-danger">মুছে ফেলুন</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
