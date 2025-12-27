@@ -140,3 +140,70 @@
                     </div>
                 </div>
             </section>
+
+
+            <!-- Ballot Creation Section -->
+            <section id="ballot-section" class="content-section">
+                <div class="section-header">
+                    <h2>ব্যালট তৈরি করুন</h2>
+                    <p>নতুন নির্বাচনী ব্যালট তৈরি ও পরিচালনা করুন</p>
+                </div>
+
+                <div class="card">
+                    <form id="ballotForm" class="ballot-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="ballotName">ব্যালটের নাম *</label>
+                                <input type="text" id="ballotName" placeholder="যেমন: ঢাকা-১ আসন নির্বাচন" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="ballotLocation">নির্বাচন এলাকা *</label>
+                                <input type="text" id="ballotLocation" placeholder="যেমন: ঢাকা-১" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="startDate">শুরুর তারিখ ও সময় *</label>
+                                <input type="datetime-local" id="startDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="endDate">শেষ তারিখ ও সময় *</label>
+                                <input type="datetime-local" id="endDate" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>ভাষা নির্বাচন করুন *</label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="language" value="bangla" checked>
+                                    <span>বাংলা</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="language" value="english">
+                                    <span>English</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="language" value="both">
+                                    <span>উভয়</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="candidates-section">
+                            <h3>প্রার্থী যোগ করুন</h3>
+                            <div id="candidatesList"></div>
+                            <button type="button" class="btn btn-secondary" onclick="addCandidate()">
+                                + নতুন প্রার্থী যোগ করুন
+                            </button>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">ব্যালট সংরক্ষণ করুন</button>
+                            <button type="button" class="btn btn-secondary" onclick="previewBallot()">পূর্বরূপ দেখুন</button>
+                            <button type="reset" class="btn btn-danger">রিসেট</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
