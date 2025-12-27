@@ -136,3 +136,170 @@ function toggleNoticeContent(type) {
         pdfContent.classList.remove('hidden');
     }
 }
+
+function handleNoticeSubmit(e) {
+    e.preventDefault();
+    
+    showAlert('নোটিশ সফলভাবে প্রকাশিত হয়েছে!', 'success');
+    e.target.reset();
+}
+
+function calculateResults() {
+    showAlert('ফলাফল পুনর্গণনা করা হচ্ছে...', 'info');
+    setTimeout(() => {
+        showAlert('ফলাফল সফলভাবে গণনা করা হয়েছে!', 'success');
+    }, 2000);
+}
+
+function exportResults() {
+    showAlert('PDF তৈরি করা হচ্ছে...', 'info');
+    setTimeout(() => {
+        showAlert('ফলাফল PDF হিসেবে রপ্তানি হয়েছে!', 'success');
+    }, 2000);
+}
+
+function publishResults() {
+    if (confirm('আপনি কি ফলাফল প্রকাশ করতে চান? প্রকাশের পর সকল নাগরিক দেখতে পারবে।')) {
+        showAlert('ফলাফল সফলভাবে প্রকাশিত হয়েছে!', 'success');
+    }
+}
+
+function editCandidate(id) {
+    showAlert('প্রার্থী সম্পাদনা ফিচার শীঘ্রই আসছে', 'info');
+}
+
+function deleteCandidate(id) {
+    if (confirm('আপনি কি এই প্রার্থী মুছে ফেলতে চান?')) {
+        showAlert('প্রার্থী সফলভাবে মুছে ফেলা হয়েছে', 'success');
+    }
+}
+
+function sendMessage() {
+    const messageInput = document.getElementById('chatMessage');
+    if (!messageInput || !messageInput.value.trim()) return;
+    
+    const chatMessages = document.querySelector('.chat-messages');
+    const message = messageInput.value;
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message admin-message';
+    messageDiv.innerHTML = `
+        <p>${message}</p>
+        <span class="message-time">${new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' })}</span>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    messageInput.value = '';
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function handlePasswordChange(e) {
+    e.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+    
+    if (newPassword !== confirmNewPassword) {
+        showAlert('নতুন পাসওয়ার্ড মিলছে না', 'error');
+        return;
+    }
+    
+    if (newPassword.length < 8) {
+        showAlert('পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে', 'error');
+        return;
+    }
+    
+    showAlert('পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!', 'success');
+    e.target.reset();
+}
+
+const candidateData = {
+    1: {
+        name: "মোঃ করিম",
+        party: "জাতীয় নাগরিক পার্টি (এনসিপি)",
+        symbol: "assets/images/symbol1.png", // Placeholder
+        photo: "https://via.placeholder.com/150",
+        bio: "মোঃ করিম একজন অভিজ্ঞ রাজনীতিবিদ। তিনি গত ১০ বছর ধরে এই এলাকার উন্নয়নে কাজ করছেন।",
+        manifesto: [
+            "রাস্তাঘাটের উন্নয়ন",
+            "নতুন স্কুল স্থাপন",
+            "বিদ্যুৎ সমস্যার সমাধান"
+        ],
+        socialActivities: [
+            "সভাপতি, স্থানীয় ক্লাব",
+            "সদস্য, মসজিদ কমিটি"
+        ],
+        partyHistory: "জাতীয় নাগরিক পার্টি (এনসিপি) একটি আধুনিক প্রগতিশীল রাজনৈতিক দল যা সুশাসন, স্বচ্ছতা এবং নাগরিক অধিকার রক্ষায় প্রতিশ্রুতিবদ্ধ। দলটি গণতান্ত্রিক মূল্যবোধ এবং সামাজিক ন্যায়বিচার প্রতিষ্ঠায় কাজ করে।"
+    }
+};
+
+function viewCandidateDetails(candidateId) {
+    const modal = document.getElementById('candidateModal');
+    const modalBody = document.getElementById('candidateModalBody');
+    const candidate = candidateData[candidateId];
+
+    if (!candidate) {
+        alert("প্রার্থীর তথ্য পাওয়া যায়নি");
+        return;
+    }
+
+    let manifestoHtml = '<ul class="detail-list">';
+    candidate.manifesto.forEach(item => {
+        manifestoHtml += `<li>${item}</li>`;
+    });
+    manifestoHtml += '</ul>';
+
+    let socialHtml = '<ul class="detail-list">';
+    candidate.socialActivities.forEach(item => {
+        socialHtml += `<li>${item}</li>`;
+    });
+    socialHtml += '</ul>';
+
+    modalBody.innerHTML = `
+        <div class="candidate-profile-header">
+            <img src="${candidate.photo}" alt="${candidate.name}" class="candidate-profile-img">
+            <div class="candidate-profile-info">
+                <h3>${candidate.name}</h3>
+                <div class="candidate-party-info">
+                    <img src="https://via.placeholder.com/40" alt="প্রতীক" class="party-symbol-small">
+                    <strong>${candidate.party}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h4>জীবনী</h4>
+            <p>${candidate.bio}</p>
+        </div>
+
+        <div class="detail-section">
+            <h4>নির্বাচনী ইশতেহার</h4>
+            ${manifestoHtml}
+        </div>
+
+        <div class="detail-section">
+            <h4>সামাজিক কর্মকাণ্ড</h4>
+            ${socialHtml}
+        </div>
+
+        <div class="detail-section">
+            <h4>দলীয় ইতিহাস</h4>
+            <p>${candidate.partyHistory}</p>
+        </div>
+    `;
+
+    modal.style.display = "block";
+}
+
+function closeCandidateModal() {
+    const modal = document.getElementById('candidateModal');
+    modal.style.display = "none";
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById('candidateModal');
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
