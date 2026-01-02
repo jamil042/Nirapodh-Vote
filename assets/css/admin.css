@@ -118,8 +118,8 @@
 }
 
 .nav-item.active {
-    background: rgba(30, 126, 52, 0.1);
-    color: var(--primary-green);
+background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%);
+    color: white;
     font-weight: 600;
     transform: translateX(4px) scale(1.02);
 }
