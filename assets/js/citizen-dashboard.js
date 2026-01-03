@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeDashboard();
     setupNavigationListeners();
     setupRealtimeFeatures();
+    setupMobileMenu();
     loadUserData();
     updateTimeRemaining();
 });
@@ -75,6 +76,52 @@ function showSection(sectionName) {
     if (sectionName === 'chat') {
         const badge = document.getElementById('chatBadge');
         if (badge) badge.classList.add('hidden');
+    }
+}
+
+// Setup mobile menu
+function setupMobileMenu() {
+    const hamburger = document.getElementById('hamburgerMenu');
+    const sidebar = document.querySelector('.sidebar');
+    
+    if (hamburger && sidebar) {
+        // Close sidebar when nav item is clicked
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                closeSidebarMobile();
+            });
+        });
+        
+        // Close sidebar when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.sidebar') && !event.target.closest('.hamburger-menu')) {
+                closeSidebarMobile();
+            }
+        });
+    }
+}
+
+// Toggle sidebar visibility on mobile
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+        sidebar.classList.toggle('mobile-open');
+        const hamburger = document.getElementById('hamburgerMenu');
+        if (hamburger) {
+            hamburger.classList.toggle('active');
+        }
+    }
+}
+
+// Close sidebar on mobile
+function closeSidebarMobile() {
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+        sidebar.classList.remove('mobile-open');
+        const hamburger = document.getElementById('hamburgerMenu');
+        if (hamburger) {
+            hamburger.classList.remove('active');
+        }
     }
 }
 
