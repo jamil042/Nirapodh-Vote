@@ -36,7 +36,7 @@ function handleLogin(e) {
         // Redirect to citizen dashboard (not created yet)
         setTimeout(() => {
             showAlert('নাগরিক ড্যাশবোর্ড শীঘ্রই আসছে...', 'info');
-            // window.location.href = 'citizen-dashboard.html';
+            window.location.href = 'citizen-dashboard.html';
         }, 1500);
     }, 2000);
 }
