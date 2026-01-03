@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeDashboard() {
     loadDashboardData(); // Load mock data
     loadCandidatesData(); // Load mock candidates data
+    loadComplaintsData(); // Load mock complaints data
 
     const ballotForm = document.getElementById('ballotForm');
     if (ballotForm) {

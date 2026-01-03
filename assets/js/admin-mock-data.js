@@ -36,6 +36,24 @@ const mockDashboardData = {
             status: "active",
             image: "assets/images/hasnat.jpg" // Placeholder if image not available
         }
+    ],
+    complaints: [
+        {
+            id: "০০১",
+            status: "pending", // pending, resolved, rejected
+            date: "৩ ডিসেম্বর ২০২৫, ২:৩০ PM",
+            text: "আমার ভোট সঠিকভাবে রেজিস্টার হয়নি। অনুগ্রহ করে যাচাই করুন।",
+            area: "ঢাকা-১",
+            voterId: "****5678"
+        },
+        {
+            id: "০০২",
+            status: "resolved",
+            date: "২ ডিসেম্বর ২০২৫, ১০:১৫ AM",
+            text: "ভোট কেন্দ্রের অবস্থান ভুল দেখানো হচ্ছে।",
+            area: "চট্টগ্রাম-৩",
+            voterId: "****9012"
+        }
     ]
 };
 
@@ -120,6 +138,51 @@ function loadCandidatesData() {
                         </button>
                     </td>
                 </tr>
+            `;
+        }).join('');
+    }
+}
+
+function loadComplaintsData() {
+    const complaintsListContainer = document.getElementById('complaints-list-container');
+    if (complaintsListContainer) {
+        complaintsListContainer.innerHTML = mockDashboardData.complaints.map(complaint => {
+            let badgeClass = 'badge-warning';
+            let statusText = 'অপেক্ষমান';
+            
+            if (complaint.status === 'resolved') {
+                badgeClass = 'badge-success';
+                statusText = 'সমাধানকৃত';
+            } else if (complaint.status === 'rejected') {
+                badgeClass = 'badge-danger';
+                statusText = 'প্রত্যাখ্যাত';
+            }
+
+            return `
+                <div class="complaint-item">
+                    <div class="complaint-header">
+                        <h4>অভিযোগ #${complaint.id}</h4>
+                        <span class="badge ${badgeClass}">${statusText}</span>
+                    </div>
+                    <p class="complaint-date">জমা: ${complaint.date}</p>
+                    <p class="complaint-text">${complaint.text}</p>
+                    <div class="complaint-meta">
+                        <span>এলাকা: ${complaint.area}</span>
+                        <span>ভোটার ID: ${complaint.voterId}</span>
+                    </div>
+                    <div class="form-group">
+                        <label>প্রশাসক মন্তব্য</label>
+                        <textarea rows="3" placeholder="আপনার প্রতিক্রিয়া লিখুন..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>প্রমাণপত্র আপলোড করুন (যদি থাকে)</label>
+                        <input type="file" accept=".pdf,.jpg,.png">
+                    </div>
+                    <div class="complaint-actions">
+                        <button class="btn btn-sm btn-primary">সমাধান করুন</button>
+                        <button class="btn btn-sm btn-danger">প্রত্যাখ্যান করুন</button>
+                    </div>
+                </div>
             `;
         }).join('');
     }
