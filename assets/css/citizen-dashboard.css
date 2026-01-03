@@ -659,7 +659,7 @@
 }
 
 .discussion-messages {
-    height: 500px;
+    height: 420px;
     overflow-y: auto;
     padding: 25px;
     background: #f9f9f9;
@@ -729,7 +729,7 @@
 }
 
 .chat-messages {
-    height: 500px;
+    height: 420px;
     overflow-y: auto;
     padding: 25px;
     background: #f9f9f9;
