@@ -396,7 +396,7 @@
 
 .candidate-card input[type="radio"]:checked+.candidate-label {
     border-color: var(--primary-green);
-    background: var(--light-green);
+    background: var(--light-green-2);
     box-shadow: var(--shadow-lg);
 }
 
@@ -1017,7 +1017,7 @@
 
 .modal-body {
     padding: 30px;
-    max-height: 65vh;
+    max-height: 75vh;
     overflow-y: auto;
 }
 
