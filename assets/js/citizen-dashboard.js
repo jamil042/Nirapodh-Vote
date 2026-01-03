@@ -144,7 +144,7 @@ function submitVote(ballotId) {
         //     body: JSON.stringify({ ballotId, candidateId: candidateValue })
         // })
         
-        showAlert('✅ আপনার ভোট সফলভাবে প্রদান করা হয়েছে! ধন্যবাদ।', 'success');
+        showAlert(' আপনার ভোট সফলভাবে প্রদান করা হয়েছে! ধন্যবাদ।', 'success');
         
         // Store voted candidate info for highlighting in results
         const votedData = {
@@ -378,7 +378,7 @@ function submitComplaint(event) {
         //     body: JSON.stringify({ text: complaintText, anonymous: isAnonymous })
         // })
         
-        showAlert('✅ আপনার অভিযোগ সফলভাবে জমা দেওয়া হয়েছে। প্রশাসক শীঘ্রই এটি পর্যালোচনা করবেন।', 'success');
+        showAlert(' আপনার অভিযোগ সফলভাবে জমা দেওয়া হয়েছে। প্রশাসক শীঘ্রই এটি পর্যালোচনা করবেন।', 'success');
         
         // Clear form
         document.getElementById('complaintForm').reset();
@@ -441,7 +441,7 @@ function changePassword(event) {
         //     body: JSON.stringify({ currentPassword, newPassword })
         // })
         
-        showAlert('✅ পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে', 'success');
+        showAlert(' পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে', 'success');
         
         // Clear form
         document.getElementById('passwordForm').reset();
@@ -636,6 +636,168 @@ function openCandidateModal(candidateId) {
 function closeCandidateModal() {
     const modal = document.getElementById('candidateModal');
     modal.style.display = "none";
+}
+
+// ============= FOUR STATES OF UI =============
+
+// Show Alert (Success, Error, Warning, Info)
+function showAlert(message, type = 'info') {
+    const alertContainer = document.getElementById('alertContainer');
+    if (!alertContainer) return;
+
+    const icons = {
+        success: '✓',
+        error: '✕',
+        warning: '⚠',
+        info: 'ℹ'
+    };
+
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    alert.innerHTML = `
+        <span class="alert-icon">${icons[type]}</span>
+        <span>${message}</span>
+    `;
+
+    alertContainer.appendChild(alert);
+
+    // Auto remove after 4 seconds
+    setTimeout(() => {
+        alert.classList.add('fade-out');
+        setTimeout(() => alert.remove(), 300);
+    }, 4000);
+}
+
+// Show Loading State
+function showLoadingState(container, type = 'ballot') {
+    if (!container) return;
+    
+    let skeletonHtml = '';
+    if (type === 'ballot') {
+        skeletonHtml = '<div class="skeleton-item skeleton-ballot"></div>';
+    } else if (type === 'result') {
+        skeletonHtml = '<div class="skeleton-item skeleton-result"></div>';
+    }
+    
+    container.innerHTML = skeletonHtml;
+    container.classList.add('is-loading');
+}
+
+// Hide Loading State
+function hideLoadingState(container) {
+    if (!container) return;
+    container.classList.remove('is-loading');
+}
+
+// Show Empty State
+function showEmptyState(container, icon, title, message, buttonText = null, onButtonClick = null) {
+    if (!container) return;
+    
+    let buttonHtml = '';
+    if (buttonText && onButtonClick) {
+        buttonHtml = `<button class="btn btn-primary" onclick="${onButtonClick}">${buttonText}</button>`;
+    }
+    
+    container.innerHTML = `
+        <div class="empty-state">
+            <div class="empty-state-icon">${icon}</div>
+            <h3>${title}</h3>
+            <p>${message}</p>
+            ${buttonHtml}
+        </div>
+    `;
+}
+
+// Validate Form Input
+function validateInput(input, type = 'text') {
+    if (!input) return false;
+    
+    const value = input.value.trim();
+    let errorMsg = '';
+    
+    if (type === 'email') {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+            errorMsg = 'বৈধ ইমেইল প্রবেশ করুন';
+        }
+    } else if (type === 'phone') {
+        const phoneRegex = /^[0-9]{11}$/;
+        if (!phoneRegex.test(value)) {
+            errorMsg = '১১ সংখ্যার ফোন নম্বর প্রবেশ করুন';
+        }
+    } else if (type === 'password') {
+        if (value.length < 8) {
+            errorMsg = 'পাসওয়ার্ড কমপক্ষে ৮ অক্ষর হতে হবে';
+        }
+    } else if (type === 'required') {
+        if (!value) {
+            errorMsg = 'এই ক্ষেত্র পূরণ করা আবশ্যক';
+        }
+    }
+    
+    if (errorMsg) {
+        input.classList.add('error');
+        let errorDiv = input.nextElementSibling;
+        if (!errorDiv || !errorDiv.classList.contains('form-error')) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'form-error';
+            input.parentNode.insertBefore(errorDiv, input.nextSibling);
+        }
+        errorDiv.textContent = errorMsg;
+        errorDiv.style.display = 'block';
+        return false;
+    } else {
+        input.classList.remove('error');
+        const errorDiv = input.nextElementSibling;
+        if (errorDiv && errorDiv.classList.contains('form-error')) {
+            errorDiv.style.display = 'none';
+        }
+        return true;
+    }
+}
+
+// Check Password Strength
+function checkPasswordStrength(password) {
+    let strength = 'weak';
+    if (password.length >= 8) {
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasLowerCase = /[a-z]/.test(password);
+        const hasNumbers = /[0-9]/.test(password);
+        const hasSpecial = /[!@#$%^&*]/.test(password);
+        
+        if (hasUpperCase && hasLowerCase && hasNumbers) {
+            strength = 'medium';
+        }
+        if (hasUpperCase && hasLowerCase && hasNumbers && hasSpecial) {
+            strength = 'strong';
+        }
+    }
+    return strength;
+}
+
+// Show Success Animation
+function showSuccessAnimation(element) {
+    if (!element) return;
+    element.classList.add('success-animation');
+    setTimeout(() => element.classList.remove('success-animation'), 600);
+}
+
+// Handle Network Error
+function handleNetworkError() {
+    showAlert('নেটওয়ার্ক সংযোগ ব্যর্থ। অনুগ্রহ করে আপনার ইন্টারনেট সংযোগ পরীক্ষা করুন।', 'error');
+}
+
+// Handle Server Error
+function handleServerError(statusCode) {
+    const messages = {
+        400: 'অনুরোধটি বৈধ নয়। অনুগ্রহ করে আপনার তথ্য পরীক্ষা করুন।',
+        401: 'আপনার সেশন শেষ হয়েছে। অনুগ্রহ করে আবার লগইন করুন।',
+        403: 'আপনার এই কাজটি করার অনুমতি নেই।',
+        404: 'অনুরোধকৃত রিসোর্স পাওয়া যায়নি।',
+        500: 'সার্ভার ত্রুটি। অনুগ্রহ করে কিছু সময় পর আবার চেষ্টা করুন।'
+    };
+    const message = messages[statusCode] || 'একটি ত্রুটি ঘটেছে। অনুগ্রহ করে পরে চেষ্টা করুন।';
+    showAlert(message, 'error');
 }
 
 // Close modal when clicking outside
