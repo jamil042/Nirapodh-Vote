@@ -8,6 +8,8 @@ function initializeDashboard() {
     loadDashboardData(); // Load mock data
     loadCandidatesData(); // Load mock candidates data
     loadComplaintsData(); // Load mock complaints data
+    loadChatData(); // Load mock chat data
+    loadAdminProfile(); // Load mock admin info
 
     const ballotForm = document.getElementById('ballotForm');
     if (ballotForm) {
@@ -323,4 +325,15 @@ window.onclick = function(event) {
     if (event.target == modal) {
         modal.style.display = "none";
     }
+}
+
+function selectChat(chatId) {
+    // Update active state in mock data (in a real app, this would fetch data)
+    mockDashboardData.chatList.forEach(chat => {
+        chat.active = (chat.id === chatId);
+        if (chat.active) chat.unread = 0; // Mark as read
+    });
+
+    // Re-render chat list to show active state
+    loadChatData();
 }

@@ -54,7 +54,71 @@ const mockDashboardData = {
             area: "চট্টগ্রাম-৩",
             voterId: "****9012"
         }
-    ]
+    ],
+    chatList: [
+        {
+            id: 1,
+            name: "নাগরিক #১২৩৪",
+            lastMessage: "ধন্যবাদ!",
+            unread: 2,
+            active: true
+        },
+        {
+            id: 2,
+            name: "নাগরিক #৫৬৭৮",
+            lastMessage: "আমার ভোট...",
+            unread: 0,
+            active: false
+        }
+    ],
+    chatMessages: [
+        {
+            sender: "user",
+            text: "আমার ভোট কেন্দ্র কোথায়?",
+            time: "২:৩০ PM"
+        },
+        {
+            sender: "admin",
+            text: "আপনার NID অনুযায়ী আপনার ভোট কেন্দ্র হল ঢাকা সিটি কলেজ।",
+            time: "২:৩২ PM"
+        },
+        {
+            sender: "user",
+            text: "ধন্যবাদ!",
+            time: "২:৩৩ PM"
+        },
+        {
+            sender: "admin",
+            text: "আর কোন তথ্য প্রয়োজন হলে জানাবেন।",
+            time: "২:৩৪ PM"
+        },
+        {
+            sender: "user",
+            text: "ভোটের ফলাফল কখন দেখবো?",
+            time: "২:৩৫ PM"
+        },
+        {
+            sender: "admin",
+            text: "ভোট শেষ হওয়ার ২ ঘণ্টার মধ্যে প্রকাশ করা হবে।",
+            time: "২:৩৬ PM"
+        },
+        {
+            sender: "user",
+            text: "ঠিক আছে, ধন্যবাদ।",
+            time: "২:৩৭ PM"
+        },
+        {
+            sender: "admin",
+            text: "স্বাগতম। নিরাপদ ভোটে থাকার জন্য ধন্যবাদ।",
+            time: "২:৩৮ PM"
+        }
+    ],
+    adminProfile: {
+        id: "ADMIN-2025-001",
+        name: "মোঃ রহিম",
+        email: "admin@nirapod-vote.gov.bd",
+        lastLogin: "৩ ডিসেম্বর ২০২৫, ৯:০০ AM"
+    }
 };
 
 function loadDashboardData() {
@@ -186,4 +250,75 @@ function loadComplaintsData() {
             `;
         }).join('');
     }
+}
+
+function loadChatData() {
+    // Load Chat List
+    const chatListContainer = document.getElementById('chat-list-container');
+    if (chatListContainer) {
+        chatListContainer.innerHTML = `<h3>চ্যাট তালিকা</h3>` + mockDashboardData.chatList.map(chat => `
+            <div class="chat-item ${chat.active ? 'active' : ''}" onclick="selectChat(${chat.id})">
+                <div class="chat-avatar">
+                    <svg viewBox="0 0 24 24" fill="#757575" width="32" height="32">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                </div>
+                <div class="chat-info">
+                    <h4>${chat.name}</h4>
+                    <p>শেষ বার্তা: ${chat.lastMessage}</p>
+                </div>
+                ${chat.unread > 0 ? `<span class="unread-badge">${toBengaliNumber(chat.unread)}</span>` : ''}
+            </div>
+        `).join('');
+    }
+
+    // Load Chat Messages
+    const chatMessagesContainer = document.getElementById('chat-messages-container');
+    if (chatMessagesContainer) {
+        chatMessagesContainer.innerHTML = mockDashboardData.chatMessages.map(msg => `
+            <div class="message ${msg.sender === 'user' ? 'user-message' : 'admin-message'}">
+                <p>${msg.text}</p>
+                <span class="message-time">${msg.time}</span>
+            </div>
+        `).join('');
+        
+        // Scroll to bottom
+        chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+    }
+
+    // Load Chat Header
+    const activeChat = mockDashboardData.chatList.find(c => c.active);
+    if (activeChat) {
+        const headerName = document.getElementById('chat-header-name');
+        const headerStatus = document.getElementById('chat-header-status');
+        if (headerName) headerName.textContent = activeChat.name;
+        if (headerStatus) headerStatus.textContent = 'অনলাইন';
+    }
+}
+
+function loadAdminProfile() {
+    const adminInfoContainer = document.getElementById('admin-info-container');
+    if (!adminInfoContainer) return;
+
+    const profile = mockDashboardData.adminProfile;
+    if (!profile) return;
+
+    adminInfoContainer.innerHTML = `
+        <div class="info-item">
+            <span class="info-label">প্রশাসক ID:</span>
+            <span class="info-value">${profile.id}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">নাম:</span>
+            <span class="info-value">${profile.name}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">ইমেইল:</span>
+            <span class="info-value">${profile.email}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">শেষ লগইন:</span>
+            <span class="info-value">${profile.lastLogin}</span>
+        </div>
+    `;
 }
