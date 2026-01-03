@@ -109,7 +109,7 @@
                         </div>
                         <div class="stat-info">
                             <h3>মোট ব্যালট</h3>
-                            <p class="stat-number">১২</p>
+                            <p class="stat-number" id="total-ballots">...</p>
                         </div>
                     </div>
                     <div class="stat-card card">
@@ -120,7 +120,7 @@
                         </div>
                         <div class="stat-info">
                             <h3>সক্রিয় ভোট</h3>
-                            <p class="stat-number">৩</p>
+                            <p class="stat-number" id="active-votes">...</p>
                         </div>
                     </div>
                     <div class="stat-card card">
@@ -131,7 +131,7 @@
                         </div>
                         <div class="stat-info">
                             <h3>মোট ভোটার</h3>
-                            <p class="stat-number">১,২৫,৪৫০</p>
+                            <p class="stat-number" id="total-voters">...</p>
                         </div>
                     </div>
                     <div class="stat-card card">
@@ -142,7 +142,7 @@
                         </div>
                         <div class="stat-info">
                             <h3>প্রদত্ত ভোট</h3>
-                            <p class="stat-number">৮৫,৩২০</p>
+                            <p class="stat-number" id="votes-cast">...</p>
                         </div>
                     </div>
                 </div>
@@ -155,40 +155,15 @@
                             </svg>
                             লাইভ ভোটিং পরিসংখ্যান
                         </h3>
-                        <div class="live-stats">
-                            <div class="live-stat-item">
-                                <span class="live-label">ঢাকা-১ আসন:</span>
-                                <span class="live-value">৪৫,২৩৪ ভোট</span>
-                                <span class="live-percentage">৬৮%</span>
-                            </div>
-                            <div class="live-stat-item">
-                                <span class="live-label">চট্টগ্রাম-২ আসন:</span>
-                                <span class="live-value">৩২,১৮৯ ভোট</span>
-                                <span class="live-percentage">৫৫%</span>
-                            </div>
-                            <div class="live-stat-item">
-                                <span class="live-label">সিলেট-৩ আসন:</span>
-                                <span class="live-value">৭,৮৯৭ ভোট</span>
-                                <span class="live-percentage">৪২%</span>
-                            </div>
+                        <div class="live-stats" id="live-stats-container">
+                            <!-- Live stats will be loaded here -->
                         </div>
                     </div>
 
                     <div class="card">
                         <h3>⏰ সাম্প্রতিক কার্যক্রম</h3>
-                        <div class="activity-list">
-                            <div class="activity-item">
-                                <span class="activity-time">৫ মিনিট আগে</span>
-                                <p>নতুন ব্যালট "ঢাকা-৫ আসন" তৈরি হয়েছে</p>
-                            </div>
-                            <div class="activity-item">
-                                <span class="activity-time">১৫ মিনিট আগে</span>
-                                <p>১২৩ জন নতুন ভোটার নিবন্ধিত হয়েছে</p>
-                            </div>
-                            <div class="activity-item">
-                                <span class="activity-time">৩০ মিনিট আগে</span>
-                                <p>নোটিশ প্রকাশ: "ভোটিং সময় বৃদ্ধি"</p>
-                            </div>
+                        <div class="activity-list" id="activity-list-container">
+                            <!-- Activity list will be loaded here -->
                         </div>
                     </div>
                 </div>
@@ -388,41 +363,7 @@
                                 </tr>
                             </thead>
                             <tbody id="candidatesTableBody">
-                                <tr>
-                                    <td>
-                                        <div class="candidate-photo">
-                                            <img src="assets/images/WhatsApp Image 2025-12-27 at 11.35.15 PM.jpeg" alt="" style="width: 100%; height: 100%; object-fit: cover;">
-                                        </div>
-                                    </td>
-                                    <td>ওসমান হাদি</td>
-                                    <td>স্বতন্ত্র প্রার্থী</td>
-                                    <td>
-                                        <div class="party-symbol">
-                                            <svg viewBox="0 0 24 24" fill="#424242" width="20" height="20">
-                                                <path d="M11 2L6 7v3H3v9h8v-5h2v5h8V10h-3V7l-5-5zm7 16h-4v-5H10v5H6v-5h2V8h8v5h2v5z"/>
-                                            </svg>
-                                        </div>
-                                    </td>
-                                    <td>ঢাকা-৮</td>
-                                    <td><span class="badge badge-success">সক্রিয়</span></td>
-                                    <td>
-                                        <button class="btn-icon" onclick="viewCandidateDetails(1)" title="বিস্তারিত দেখুন">
-                                            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                                                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-                                            </svg>
-                                        </button>
-                                        <button class="btn-icon" onclick="editCandidate(1)">
-                                            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                                            </svg>
-                                        </button>
-                                        <button class="btn-icon" onclick="deleteCandidate(1)">
-                                            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                                            </svg>
-                                        </button>
-                                    </td>
-                                </tr>
+                                <!-- Candidates will be loaded here dynamically -->
                             </tbody>
                         </table>
                     </div>
@@ -760,8 +701,7 @@
     </div>
 
     <script src="assets/js/common.js"></script>
+    <script src="assets/js/admin-mock-data.js"></script>
     <script src="assets/js/admin.js"></script>
 </body>
 </html>
-
-           

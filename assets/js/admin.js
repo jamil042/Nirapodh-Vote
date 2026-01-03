@@ -5,6 +5,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeDashboard() {
+    loadDashboardData(); // Load mock data
+    loadCandidatesData(); // Load mock candidates data
+
     const ballotForm = document.getElementById('ballotForm');
     if (ballotForm) {
         ballotForm.addEventListener('submit', handleBallotSubmit);
@@ -216,21 +219,38 @@ function handlePasswordChange(e) {
 
 const candidateData = {
     1: {
-        name: "মোঃ করিম",
-        party: "জাতীয় নাগরিক পার্টি (এনসিপি)",
-        symbol: "assets/images/symbol1.png", // Placeholder
-        photo: "https://via.placeholder.com/150",
-        bio: "মোঃ করিম একজন অভিজ্ঞ রাজনীতিবিদ। তিনি গত ১০ বছর ধরে এই এলাকার উন্নয়নে কাজ করছেন।",
+        name: "ওসমান হাদি",
+        party: "স্বতন্ত্র প্রার্থী",
+        symbol: "assets/images/powerful-symbol-unity-anti-corruption-day_968957-12635.avif",
+        photo: "assets/images/WhatsApp Image 2025-12-27 at 11.35.15 PM.jpeg",
+        bio: "ওসমান হাদি একজন সমাজসেবক ও রাজনীতিবিদ। তিনি দীর্ঘ দুই দশক ধরে ঢাকা-৮ আসনের মানুষের কল্যাণে কাজ করে যাচ্ছেন। দুর্নীতিমুক্ত সমাজ গড়ার প্রত্যয়ে তিনি এবার স্বতন্ত্র প্রার্থী হিসেবে নির্বাচনে অংশগ্রহণ করছেন।",
         manifesto: [
-            "রাস্তাঘাটের উন্নয়ন",
-            "নতুন স্কুল স্থাপন",
-            "বিদ্যুৎ সমস্যার সমাধান"
+            "দুর্নীতিমুক্ত প্রশাসনিক ব্যবস্থা নিশ্চিত করা",
+            "যুব সমাজের জন্য কর্মসংস্থান সৃষ্টি",
+            "আধুনিক বর্জ্য ব্যবস্থাপনা ও পরিচ্ছন্ন এলাকা"
         ],
         socialActivities: [
-            "সভাপতি, স্থানীয় ক্লাব",
-            "সদস্য, মসজিদ কমিটি"
+            "প্রতিষ্ঠাতা, সবুজ বাংলা ফাউন্ডেশন",
+            "প্রধান উপদেষ্টা, এলাকা উন্নয়ন কমিটি"
         ],
-        partyHistory: "জাতীয় নাগরিক পার্টি (এনসিপি) একটি আধুনিক প্রগতিশীল রাজনৈতিক দল যা সুশাসন, স্বচ্ছতা এবং নাগরিক অধিকার রক্ষায় প্রতিশ্রুতিবদ্ধ। দলটি গণতান্ত্রিক মূল্যবোধ এবং সামাজিক ন্যায়বিচার প্রতিষ্ঠায় কাজ করে।"
+        partyHistory: "স্বতন্ত্র প্রার্থী হিসেবে তিনি কোনো নির্দিষ্ট রাজনৈতিক দলের অন্তর্ভুক্ত নন, তবে তিনি মুক্তিযুদ্ধের চেতনায় বিশ্বাসী এবং সর্বস্তরের মানুষের অধিকার আদায়ে সোচ্চার।"
+    },
+    2: {
+        name: "হাসনাত আবদুল্লাহ",
+        party: "ন্যাশনাল সিটিজেন পার্টি (এনসিপি)",
+        symbol: "assets/images/জাতীয়_নাগরিক_পার্টির_লোগো.svg.png",
+        photo: "assets/images/hasnat.jpg",
+        bio: "হাসনাত আবদুল্লাহ বৈষম্যবিরোধী ছাত্র আন্দোলনের অন্যতম সমন্বয়ক এবং তরুণ রাজনৈতিক ব্যক্তিত্ব। তিনি রাষ্ট্র সংস্কার এবং নতুন রাজনৈতিক বন্দোবস্তের লক্ষ্যে কাজ করছেন। ছাত্র-জনতার অভ্যুত্থানে তার নেতৃত্ব তাকে জাতীয় পরিচিতি এনে দিয়েছে।",
+        manifesto: [
+            "রাষ্ট্রীয় কাঠামোর আমূল সংস্কার",
+            "শিক্ষা ও স্বাস্থ্যখাতে বাজেট বৃদ্ধি",
+            "নাগরিক অধিকার ও বাকস্বাধীনতা নিশ্চিত করা"
+        ],
+        socialActivities: [
+            "সমন্বয়ক, বৈষম্যবিরোধী ছাত্র আন্দোলন",
+            "স্বেচ্ছাসেবী, বন্যার্তদের সহায়তা কার্যক্রম"
+        ],
+        partyHistory: "ন্যাশনাল সিটিজেন পার্টি (এনসিপি) একটি নতুন প্রজন্মের রাজনৈতিক দল যা ২০২৪ সালের ছাত্র-জনতার অভ্যুত্থানের পরবর্তী সময়ে গঠিত হয়। দলটি সাম্য, মানবিক মর্যাদা এবং সামাজিক সুবিচার প্রতিষ্ঠার লক্ষ্যে কাজ করছে।"
     }
 };
 
@@ -262,7 +282,7 @@ function viewCandidateDetails(candidateId) {
             <div class="candidate-profile-info">
                 <h3>${candidate.name}</h3>
                 <div class="candidate-party-info">
-                    <img src="https://via.placeholder.com/40" alt="প্রতীক" class="party-symbol-small">
+                    <img src="${candidate.symbol}" alt="প্রতীক" class="party-symbol-small">
                     <strong>${candidate.party}</strong>
                 </div>
             </div>
