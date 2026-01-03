@@ -125,6 +125,7 @@ function submitVote(ballotId) {
     }
     
     const candidateValue = selectedCandidate.value;
+    const candidateLabel = selectedCandidate.closest('.candidate-card').querySelector('h4').textContent;
     
     // Confirm vote
     if (!confirm('আপনি কি নিশ্চিত আপনি এই প্রার্থীকে ভোট দিতে চান? ভোট দেওয়ার পর এটি পরিবর্তন করা যাবে না।')) {
@@ -145,6 +146,15 @@ function submitVote(ballotId) {
         
         showAlert('✅ আপনার ভোট সফলভাবে প্রদান করা হয়েছে! ধন্যবাদ।', 'success');
         
+        // Store voted candidate info for highlighting in results
+        const votedData = {
+            ballotId: ballotId,
+            candidateId: candidateValue,
+            candidateName: candidateLabel,
+            timestamp: getCurrentDateTime()
+        };
+        localStorage.setItem('votedCandidate_' + ballotId, JSON.stringify(votedData));
+        
         // Update UI to show voted state
         const ballotCard = selectedCandidate.closest('.ballot-card');
         ballotCard.classList.add('voted');
@@ -163,6 +173,7 @@ function submitVote(ballotId) {
         setTimeout(() => {
             if (confirm('ফলাফল দেখতে চান?')) {
                 showSection('results');
+                highlightUserVote();
             }
         }, 2000);
         
@@ -175,6 +186,29 @@ function getCurrentDateTime() {
     const date = now.toLocaleDateString('bn-BD');
     const time = now.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
     return `${date}, ${time}`;
+}
+
+// Highlight user's voted candidate in results
+function highlightUserVote() {
+    // Get voted candidate data from localStorage
+    const votedData = localStorage.getItem('votedCandidate_1'); // ballotId = 1 for national parliament
+    if (!votedData) return;
+    
+    const { candidateName } = JSON.parse(votedData);
+    
+    // Find and highlight the matching candidate in results
+    const resultItems = document.querySelectorAll('.result-item');
+    resultItems.forEach(item => {
+        const itemName = item.querySelector('h4').textContent;
+        if (itemName === candidateName) {
+            item.classList.add('user-voted');
+            // Add badge
+            const badge = document.createElement('span');
+            badge.className = 'voted-badge';
+            badge.textContent = '✓ আপনার ভোট';
+            item.querySelector('.result-info').appendChild(badge);
+        }
+    });
 }
 
 // ============= DISCUSSION FUNCTIONS =============
@@ -414,7 +448,6 @@ function changePassword(event) {
         
     }, 1500);
 }
-
 // ============= UTILITY FUNCTIONS =============
 
 // Escape HTML to prevent XSS
