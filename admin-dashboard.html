@@ -557,51 +557,17 @@
                 </div>
 
                 <div class="chat-container">
-                    <div class="chat-list card">
-                        <h3>চ্যাট তালিকা</h3>
-                        <div class="chat-item active">
-                            <div class="chat-avatar">
-                                <svg viewBox="0 0 24 24" fill="#757575" width="32" height="32">
-                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                                </svg>
-                            </div>
-                            <div class="chat-info">
-                                <h4>নাগরিক #১২৩৪</h4>
-                                <p>শেষ বার্তা: ধন্যবাদ...</p>
-                            </div>
-                            <span class="unread-badge">২</span>
-                        </div>
-                        <div class="chat-item">
-                            <div class="chat-avatar">
-                                <svg viewBox="0 0 24 24" fill="#757575" width="32" height="32">
-                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                                </svg>
-                            </div>
-                            <div class="chat-info">
-                                <h4>নাগরিক #৫৬৭৮</h4>
-                                <p>আমার ভোট...</p>
-                            </div>
-                        </div>
+                    <div class="chat-list card" id="chat-list-container">
+                        <!-- Chat list will be loaded here -->
                     </div>
 
                     <div class="chat-window card">
                         <div class="chat-header">
-                            <h3>নাগরিক #১২৩৪</h3>
-                            <span class="chat-status">অনলাইন</span>
+                            <h3 id="chat-header-name"></h3>
+                            <span class="chat-status" id="chat-header-status">অনলাইন</span>
                         </div>
-                        <div class="chat-messages">
-                            <div class="message user-message">
-                                <p>আমার ভোট কেন্দ্র কোথায়?</p>
-                                <span class="message-time">২:৩০ PM</span>
-                            </div>
-                            <div class="message admin-message">
-                                <p>আপনার NID অনুযায়ী আপনার ভোট কেন্দ্র হল ঢাকা সিটি কলেজ।</p>
-                                <span class="message-time">২:৩২ PM</span>
-                            </div>
-                            <div class="message user-message">
-                                <p>ধন্যবাদ!</p>
-                                <span class="message-time">২:৩৩ PM</span>
-                            </div>
+                        <div class="chat-messages" id="chat-messages-container">
+                            <!-- Chat messages will be loaded here -->
                         </div>
                         <div class="chat-input">
                             <input type="text" placeholder="বার্তা লিখুন..." id="chatMessage">
@@ -638,23 +604,8 @@
 
                 <div class="card mt-20">
                     <h3>প্রশাসক তথ্য</h3>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">প্রশাসক ID:</span>
-                            <span class="info-value">ADMIN-2025-001</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">নাম:</span>
-                            <span class="info-value">মোঃ রহিম</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">ইমেইল:</span>
-                            <span class="info-value">admin@nirapod-vote.gov.bd</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">শেষ লগইন:</span>
-                            <span class="info-value">৩ ডিসেম্বর ২০২৫, ৯:০০ AM</span>
-                        </div>
+                    <div class="info-grid" id="admin-info-container">
+                        <!-- Admin info will be loaded dynamically -->
                     </div>
                 </div>
             </section>
