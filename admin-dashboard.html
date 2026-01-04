@@ -188,6 +188,24 @@
                     <p>নতুন নির্বাচনী ব্যালট তৈরি ও পরিচালনা করুন</p>
                 </div>
 
+                <!-- Add New Ballot Type and Location Section -->
+                <div class="card">
+                    <h3>নতুন ব্যালটের নাম ও এলাকা যোগ করুন</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="newBallotName">ব্যালটের নাম যোগ করুন *</label>
+                            <input type="text" id="newBallotName" placeholder="যেমন: জাতীয় সংসদ নির্বাচন ২০২৫" class="input-field">
+                        </div>
+                        <div class="form-group">
+                            <label for="newBallotLocation">নির্বাচন এলাকা যোগ করুন *</label>
+                            <input type="text" id="newBallotLocation" placeholder="যেমন: ঢাকা-১০" class="input-field">
+                        </div>
+                        <div class="form-group">
+                            <button type="button" class="btn btn-success" onclick="addNewBallotOption()" style="align-self: flex-end;">+ যোগ করুন</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card">
                     <form id="ballotForm" class="ballot-form">
                         <div class="form-row">
