@@ -21,6 +21,33 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /* ===========================
+   REGISTERED USERS STORAGE
+   =========================== */
+
+// Get all registered users
+function getRegisteredUsers() {
+    const users = localStorage.getItem('nirapodh_users');
+    return users ? JSON.parse(users) : {};
+}
+
+// Save user credentials
+function saveUserCredentials(nid, password) {
+    const users = getRegisteredUsers();
+    users[nid] = {
+        nid: nid,
+        password: password,
+        registeredAt: new Date().toISOString()
+    };
+    localStorage.setItem('nirapodh_users', JSON.stringify(users));
+}
+
+// Check if user exists
+function userExists(nid) {
+    const users = getRegisteredUsers();
+    return users.hasOwnProperty(nid);
+}
+
+/* ===========================
    UI STATE MANAGEMENT
    =========================== */
 
@@ -171,17 +198,33 @@ function handleRegister(e) {
         showAlert(errors.join(', '), 'error', '✗ ত্রুটি');
         return;
     }
+
+    const nid = document.getElementById('nid').value.trim();
+    
+    // Check if user already exists
+    if (userExists(nid)) {
+        showAlert('এই NID দিয়ে ইতিমধ্যে একটি অ্যাকাউন্ট রয়েছে। লগইন করতে যান।', 'error', '✗ ত্রুটি');
+        return;
+    }
     
     // Show loading state
     showLoadingState();
 
     // Simulate API call
     setTimeout(() => {
-        // Simulate random success/error for demo
+        // Save registration (simulate 80% success rate)
         const isSuccess = Math.random() > 0.2; // 80% success rate
 
         if (isSuccess) {
             hideLoadingState();
+            
+            // Initialize user with NID (password will be set later in signup)
+            const tempPassword = 'TempPass@123';
+            saveUserCredentials(nid, tempPassword);
+            
+            // Store NID in sessionStorage for signup page
+            sessionStorage.setItem('registeringNid', nid);
+            
             const alertContainer = document.getElementById('alertContainer');
             if (alertContainer) {
                 alertContainer.innerHTML = `
@@ -190,8 +233,8 @@ function handleRegister(e) {
                             <i class="fa-solid fa-circle-check"></i>
                         </div>
                         <div class="alert-content">
-                            <div class="alert-title">✓ OTP পাঠানো হয়েছে!</div>
-                            <div class="alert-message">আপনার মোবাইল নম্বরে OTP পাঠানো হয়েছে। সাইনআপ পেজে নিয়ে যাওয়া হচ্ছে...</div>
+                            <div class="alert-title">✓ নিবন্ধন সফল!</div>
+                            <div class="alert-message">আপনার পাসওয়ার্ড তৈরি করতে সাইনআপ পেজে যাচ্ছেন...</div>
                         </div>
                     </div>
                 `;
