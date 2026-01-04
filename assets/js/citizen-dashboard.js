@@ -571,7 +571,7 @@ const candidateData = {
         name: "মোঃ আবদুল্লাহ",
         party: "জাতীয় নাগরিক পার্টি (এনসিপি)",
         symbol: "assets/images/bodna.jpg",
-        photo: "assets/images/donald_trump.jpg",
+        photo: "assets/images/Tamim.jpeg",
         bio: "মোঃ আবদুল্লাহ একজন অভিজ্ঞ রাজনীতিবিদ যিনি গত ২০ বছর ধরে জনসেবায় নিয়োজিত আছেন। তিনি ঢাকা বিশ্ববিদ্যালয় থেকে রাষ্ট্রবিজ্ঞানে স্নাতকোত্তর ডিগ্রি অর্জন করেছেন।",
         manifesto: [
             "শিক্ষার মান উন্নয়ন ও ডিজিটাল শিক্ষা ব্যবস্থা প্রবর্তন",
@@ -590,7 +590,7 @@ const candidateData = {
         name: "সালমা খাতুন",
         party: "জনকল্যাণ পার্টি",
         symbol: "assets/images/honey-bee.jpg", 
-        photo: "assets/images/salma_khatun.jpg",
+        photo: "assets/images/Saima_apu.jpeg",
         bio: "সালমা খাতুন একজন সমাজকর্মী ও নারী অধিকার নেত্রী। তিনি তৃণমূল পর্যায় থেকে রাজনীতিতে উঠে এসেছেন এবং নারীদের ক্ষমতায়নে কাজ করছেন।",
         manifesto: [
             "নারীদের জন্য নিরাপদ কর্মপরিবেশ নিশ্চিত করা",
@@ -609,7 +609,7 @@ const candidateData = {
         name: "রহিম উদ্দিন",
         party: "স্বাধীন প্রার্থী",
         symbol: "assets/images/ant.jpg", 
-        photo: "assets/images/putin.jpg",
+        photo: "assets/images/Taz.jpg",
         bio: "রহিম উদ্দিন একজন সফল ব্যবসায়ী ও সমাজসেবক। তিনি কোনো রাজনৈতিক দলের সাথে যুক্ত নন এবং স্বতন্ত্রভাবে জনগণের সেবা করতে চান।",
         manifesto: [
             "স্থানীয় অবকাঠামো উন্নয়ন",
