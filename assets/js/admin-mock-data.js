@@ -363,11 +363,11 @@ function loadComplaintsData() {
                         <span>ভোটার ID: ${complaint.voterId}</span>
                     </div>
                     <div class="form-group">
-                        <label>প্রশাসক মন্তব্য</label>
-                        <textarea rows="3" placeholder="আপনার প্রতিক্রিয়া লিখুন..."></textarea>
+                        <label>প্রশাসক মন্তব্য *</label>
+                        <textarea rows="3" placeholder="আপনার প্রতিক্রিয়া লিখুন..." required></textarea>
                     </div>
                     <div class="form-group">
-                        <label>প্রমাণপত্র আপলোড করুন (যদি থাকে)</label>
+                        <label>প্রমাণপত্র আপলোড করুন</label>
                         <input type="file" accept=".pdf,.jpg,.png">
                     </div>
                     <div class="complaint-actions">

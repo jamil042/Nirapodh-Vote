@@ -707,6 +707,16 @@ function resolveComplaint(complaintId) {
     const btn = event?.target;
     if (!btn) return;
     
+    // Get the textarea from the closest complaint item
+    const complaintItem = btn.closest('.complaint-item');
+    const textarea = complaintItem?.querySelector('textarea');
+    
+    // Validate textarea is not empty
+    if (!textarea || !textarea.value.trim()) {
+        showAlert('অনুগ্রহ করে প্রশাসক মন্তব্য লিখুন', 'error');
+        return;
+    }
+    
     // Show loading state
     btn.disabled = true;
     btn.classList.add('btn-loading');
@@ -735,6 +745,16 @@ function resolveComplaint(complaintId) {
 function rejectComplaint(complaintId) {
     const btn = event?.target;
     if (!btn) return;
+    
+    // Get the textarea from the closest complaint item
+    const complaintItem = btn.closest('.complaint-item');
+    const textarea = complaintItem?.querySelector('textarea');
+    
+    // Validate textarea is not empty
+    if (!textarea || !textarea.value.trim()) {
+        showAlert('অনুগ্রহ করে প্রশাসক মন্তব্য লিখুন', 'error');
+        return;
+    }
     
     // Show loading state
     btn.disabled = true;
