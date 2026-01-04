@@ -26,6 +26,17 @@ function initializeDashboard() {
     // Set active section from URL hash or default to voting
     const hash = window.location.hash.substring(1) || 'voting';
     showSection(hash);
+    
+    // Add Enter key listener for chat input
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        });
+    }
 }
 
 // Setup navigation listeners
