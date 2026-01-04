@@ -9,6 +9,25 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /* ===========================
+   REGISTERED USERS STORAGE
+   =========================== */
+
+// Get all registered users
+function getRegisteredUsers() {
+    const users = localStorage.getItem('nirapodh_users');
+    return users ? JSON.parse(users) : {};
+}
+
+// Verify user credentials
+function verifyUserCredentials(nid, password) {
+    const users = getRegisteredUsers();
+    if (!users.hasOwnProperty(nid)) {
+        return false;
+    }
+    return users[nid].password === password;
+}
+
+/* ===========================
    UI STATE MANAGEMENT
    =========================== */
 
@@ -172,15 +191,19 @@ function handleLogin(e) {
 
     // Simulate API call
     setTimeout(() => {
-        // Simulate random success/error for demo
         const nid = document.getElementById('nid').value;
-        const isSuccess = nid === '1234567890'; // Demo: only this NID works
+        const password = document.getElementById('password').value;
+        
+        // Verify against registered users
+        const isSuccess = verifyUserCredentials(nid, password);
 
         if (isSuccess) {
+            // Save logged-in user info to sessionStorage
+            sessionStorage.setItem('loggedInUser', nid);
             showSuccessState();
         } else {
             hideLoadingState();
-            showServerError();
+            showServerError('এই NID এবং পাসওয়ার্ড মেলেনি। অনুগ্রহ করে আবার চেষ্টা করুন বা নিবন্ধন করুন।');
         }
     }, 2000);
 }
