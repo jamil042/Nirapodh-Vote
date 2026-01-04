@@ -703,3 +703,60 @@ function selectChat(chatId) {
     // Re-render chat list to show active state
     loadChatData();
 }
+function resolveComplaint(complaintId) {
+    const btn = event?.target;
+    if (!btn) return;
+    
+    // Show loading state
+    btn.disabled = true;
+    btn.classList.add('btn-loading');
+    const originalText = btn.textContent;
+    btn.textContent = 'সমাধান হচ্ছে...';
+    
+    setTimeout(() => {
+        // Update complaint status in mock data
+        const complaint = mockDashboardData.complaints.find(c => c.id === complaintId);
+        if (complaint) {
+            complaint.status = 'resolved';
+        }
+        
+        // Reload complaints
+        loadComplaintsData();
+        
+        // Show success message
+        showAlert('অভিযোগ সফলভাবে সমাধান করা হয়েছে', 'success');
+        
+        btn.disabled = false;
+        btn.classList.remove('btn-loading');
+        btn.textContent = originalText;
+    }, 1500);
+}
+
+function rejectComplaint(complaintId) {
+    const btn = event?.target;
+    if (!btn) return;
+    
+    // Show loading state
+    btn.disabled = true;
+    btn.classList.add('btn-loading');
+    const originalText = btn.textContent;
+    btn.textContent = 'প্রত্যাখ্যান হচ্ছে...';
+    
+    setTimeout(() => {
+        // Update complaint status in mock data
+        const complaint = mockDashboardData.complaints.find(c => c.id === complaintId);
+        if (complaint) {
+            complaint.status = 'rejected';
+        }
+        
+        // Reload complaints
+        loadComplaintsData();
+        
+        // Show success message
+        showAlert('অভিযোগ সফলভাবে প্রত্যাখ্যান করা হয়েছে', 'success');
+        
+        btn.disabled = false;
+        btn.classList.remove('btn-loading');
+        btn.textContent = originalText;
+    }, 1500);
+}

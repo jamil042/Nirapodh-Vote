@@ -371,8 +371,8 @@ function loadComplaintsData() {
                         <input type="file" accept=".pdf,.jpg,.png">
                     </div>
                     <div class="complaint-actions">
-                        <button class="btn btn-sm btn-primary">সমাধান করুন</button>
-                        <button class="btn btn-sm btn-danger">প্রত্যাখ্যান করুন</button>
+                        <button class="btn btn-sm btn-primary" onclick="resolveComplaint('${complaint.id}')">সমাধান করুন</button>
+                        <button class="btn btn-sm btn-danger" onclick="rejectComplaint('${complaint.id}')">প্রত্যাখ্যান করুন</button>
                     </div>
                 </div>
             `;
