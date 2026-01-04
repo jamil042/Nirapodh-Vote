@@ -1,5 +1,11 @@
 let candidateCount = 0;
 
+// Custom Ballot Arrays (20 items each)
+let customBallotNames = new Array(20);
+let customBallotLocations = new Array(20);
+let ballotNameCount = 0;
+let ballotLocationCount = 0;
+
 // ===== TOAST NOTIFICATION SYSTEM =====
 function showAlert(title, type = 'info', duration = 3000) {
     const alertContainer = document.getElementById('alert-container') || createAlertContainer();
@@ -60,6 +66,16 @@ function initializeDashboard() {
     if (changePasswordForm) {
         changePasswordForm.addEventListener('submit', handlePasswordChange);
     }
+    
+    const chatMessageInput = document.getElementById('chatMessage');
+    if (chatMessageInput) {
+        chatMessageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    }
 }
 
 function populateBallotFormOptions() {
@@ -70,12 +86,38 @@ function populateBallotFormOptions() {
 
     const ballotTypeOptions = ballotMockData.ballotTypes || [];
     const ballotLocationOptions = ballotMockData.ballotLocations || [];
+    
+    // Add custom ballot names
+    const allBallotTypes = [...ballotTypeOptions];
+    customBallotNames.forEach((name, index) => {
+        if (name) {
+            allBallotTypes.push({ value: `custom_ballot_${index}`, label: name });
+        }
+    });
+    
+    // Deduplicate ballot names - keep only unique labels
+    const uniqueBallotTypes = [];
+    const seenLabels = new Set();
+    allBallotTypes.forEach(option => {
+        if (!seenLabels.has(option.label)) {
+            uniqueBallotTypes.push(option);
+            seenLabels.add(option.label);
+        }
+    });
+    
+    // Add custom ballot locations
+    const allBallotLocations = [...ballotLocationOptions];
+    customBallotLocations.forEach((location, index) => {
+        if (location) {
+            allBallotLocations.push({ value: `custom_location_${index}`, label: location });
+        }
+    });
 
     ballotNameSelect.innerHTML = ['<option value="">নির্বাচন করুন</option>',
-        ...ballotTypeOptions.map(option => `<option value="${option.value}">${option.label}</option>`) ].join('');
+        ...uniqueBallotTypes.map(option => `<option value="${option.value}">${option.label}</option>`) ].join('');
 
     ballotLocationSelect.innerHTML = ['<option value="">এলাকা নির্বাচন করুন</option>',
-        ...ballotLocationOptions.map(option => `<option value="${option.value}">${option.label}</option>`) ].join('');
+        ...allBallotLocations.map(option => `<option value="${option.value}">${option.label}</option>`) ].join('');
 }
 
 function renderCharts() {
@@ -514,6 +556,61 @@ function deleteCandidate(id) {
     }
 }
 
+function addNewBallotOption() {
+    const newBallotNameInput = document.getElementById('newBallotName');
+    const newBallotLocationInput = document.getElementById('newBallotLocation');
+    
+    const ballotName = (newBallotNameInput?.value || '').trim();
+    const ballotLocation = (newBallotLocationInput?.value || '').trim();
+    
+    // Validation
+    if (!ballotName && !ballotLocation) {
+        showAlert('অনুগ্রহ করে ব্যালটের নাম বা নির্বাচন এলাকা লিখুন', 'warning');
+        return;
+    }
+    
+    if (ballotName && ballotLocation) {
+        // Check for duplicate combination (same ballot name + same area)
+        for (let i = 0; i < ballotNameCount; i++) {
+            for (let j = 0; j < ballotLocationCount; j++) {
+                if (customBallotNames[i] === ballotName && customBallotLocations[j] === ballotLocation) {
+                    showAlert(`"${ballotName}" এবং "${ballotLocation}" এই সংমিশ্রণ ইতিমধ্যে রয়েছে। অন্য এলাকা নির্বাচন করুন।`, 'error');
+                    return;
+                }
+            }
+        }
+    }
+    
+    if (ballotName && ballotNameCount >= 20) {
+        showAlert('সর্বোচ্চ ২০টি ব্যালটের নাম যোগ করা যায়', 'warning');
+        return;
+    }
+    
+    if (ballotLocation && ballotLocationCount >= 20) {
+        showAlert('সর্বোচ্চ ২০টি নির্বাচন এলাকা যোগ করা যায়', 'warning');
+        return;
+    }
+    
+    // Add ballot name
+    if (ballotName) {
+        customBallotNames[ballotNameCount] = ballotName;
+        ballotNameCount++;
+        newBallotNameInput.value = '';
+        showAlert(`"${ballotName}" ব্যালটের নাম যোগ হয়েছে`, 'success');
+    }
+    
+    // Add ballot location
+    if (ballotLocation) {
+        customBallotLocations[ballotLocationCount] = ballotLocation;
+        ballotLocationCount++;
+        newBallotLocationInput.value = '';
+        showAlert(`"${ballotLocation}" নির্বাচন এলাকা যোগ হয়েছে`, 'success');
+    }
+    
+    // Update the dropdowns
+    populateBallotFormOptions();
+}
+
 function sendMessage() {
     const messageInput = document.getElementById('chatMessage');
     const sendBtn = document.querySelector('.chat-input-area button');
@@ -547,7 +644,6 @@ function sendMessage() {
             sendBtn.classList.remove('btn-loading');
         }
         
-        showAlert('বার্তা পাঠানো হয়েছে', 'success');
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }, 1000);
 }
