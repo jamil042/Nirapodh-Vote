@@ -6,25 +6,25 @@
     <title>নাগরিক ড্যাশবোর্ড - নিরাপদ ভোট</title>
     <link rel="stylesheet" href="assets/css/common.css">
     <link rel="stylesheet" href="assets/css/citizen-dashboard.css">
-    <link rel="stylesheet" href="assets/css/citizen_chat.css">
-
-    
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-<script src="assets/js/citizen_chat.js"></script>
-
+</head>
 </head>
 <body>
     <!-- Header -->
     <header class="dashboard-header">
         <div class="header-content">
             <div class="logo-section">
-                <img src="assets/images/election_comission_logo-removebg-preview.png" alt="লোগো" class="logo-small">
+                <img src="assets/images/election_commision_white_bg.png" alt="লোগো" class="logo-small">
                 <h1>নিরাপদ ভোট - নাগরিক ড্যাশবোর্ড</h1>
             </div>
             <div class="user-section">
                 <span class="user-name" id="userName">মোঃ আবদুল করিম</span>
                 <button onclick="logout()" class="btn btn-secondary btn-sm">লগআউট</button>
             </div>
+            <button class="hamburger-menu" id="hamburgerMenu" onclick="toggleSidebar()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </header>
 
@@ -37,41 +37,64 @@
         <aside class="sidebar">
             <nav class="sidebar-nav">
                 <button class="nav-item active" data-section="voting">
-                    <span class="nav-icon">🗳️</span>
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                    </span>
                     <span class="nav-text">ভোট প্রদান</span>
                 </button>
                 <button class="nav-item" data-section="results">
-                    <span class="nav-icon">📊</span>
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+                        </svg>
+                    </span>
                     <span class="nav-text">ফলাফল</span>
                 </button>
                 <button class="nav-item" data-section="discussion">
-                    <span class="nav-icon">💬</span>
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/>
+                        </svg>
+                    </span>
                     <span class="nav-text">আলোচনা</span>
                     <span class="notification-badge" id="discussionBadge">নতুন</span>
                 </button>
                 <button class="nav-item" data-section="chat">
-                    <span class="nav-icon">📱</span>
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+                        </svg>
+                    </span>
                     <span class="nav-text">প্রশাসকের সাথে চ্যাট</span>
-                    <span class="notification-badge hidden" id="chatBadge">3</span>
+                    <span class="notification-badge hidden" id="chatBadge">৩</span>
                 </button>
                 <button class="nav-item" data-section="complaints">
-                    <span class="nav-icon">📝</span>
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                        </svg>
+                    </span>
                     <span class="nav-text">অভিযোগ</span>
                 </button>
                 <button class="nav-item" data-section="notices">
-                    <span class="nav-icon">📢</span>
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/>
+                        </svg>
+                    </span>
                     <span class="nav-text">নোটিশ</span>
                 </button>
                 <button class="nav-item" data-section="profile">
-                    <span class="nav-icon">👤</span>
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                        </svg>
+                    </span>
                     <span class="nav-text">প্রোফাইল</span>
                 </button>
             </nav>
-            <div class="sidebar-footer">
-                <button onclick="openChatBot()" class="btn btn-primary btn-sm">
-                    🤖 AI সহায়তা
-                </button>
-            </div>
         </aside>
 
         <!-- Content Area -->
@@ -79,7 +102,12 @@
             <!-- Voting Section -->
             <div id="voting-section" class="content-section active">
                 <div class="section-header">
-                    <h2>🗳️ ভোট প্রদান</h2>
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                        ভোট প্রদান
+                    </h2>
                     <p class="user-area">আপনার এলাকা: <strong id="userArea">ঢাকা-১০</strong></p>
                 </div>
 
@@ -170,13 +198,18 @@
             <!-- Results Section -->
             <div id="results-section" class="content-section">
                 <div class="section-header">
-                    <h2>📊 ভোটের ফলাফল</h2>
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
+                            <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+                        </svg>
+                        ভোটের ফলাফল
+                    </h2>
                 </div>
 
                 <div class="results-container">
                     <div class="result-card">
                         <h3>জাতীয় সংসদ নির্বাচন ২০২৫</h3>
-                        <p class="result-status live">🔴 লাইভ ফলাফল</p>
+                        <p class="result-status live">⚪ লাইভ ফলাফল</p>
                         
                         <div class="result-item">
                             <div class="result-info">
@@ -236,10 +269,11 @@
 
                     <div class="result-card completed">
                         <h3>মেয়র নির্বাচন ২০২৫</h3>
-                        <p class="result-status completed">✓ ফলাফল চূড়ান্ত</p>
+                        <br>
                         <div class="winner-announcement">
                             🏆 বিজয়ী: করিম উদ্দিন (জনকল্যাণ পার্টি)
                         </div>
+                        <br>
                         <button class="btn btn-secondary">PDF ডাউনলোড করুন</button>
                     </div>
                 </div>
@@ -248,8 +282,18 @@
             <!-- Discussion Section -->
             <div id="discussion-section" class="content-section">
                 <div class="section-header">
-                    <h2>💬 সর্বজনীন আলোচনা</h2>
-                    <p class="anonymous-note">⚠️ এই আলোচনা সম্পূর্ণ বেনামী</p>
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
+                            <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/>
+                        </svg>
+                        সর্বজনীন আলোচনা
+                    </h2>
+                    <p class="anonymous-note">
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;">
+                            <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                        </svg>
+                        এই আলোচনা সম্পূর্ণ বেনামী
+                    </p>
                 </div>
 
                 <div class="discussion-container">
@@ -286,119 +330,63 @@
                 </div>
             </div>
 
+            <!-- Chat with Admin Section -->
+            <div id="chat-section" class="content-section">
+                <div class="section-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
+                            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+                        </svg>
+                        প্রশাসকের সাথে চ্যাট
+                    </h2>
+                    <p class="private-note">
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;">
+                            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                        </svg>
+                        এটি একটি ব্যক্তিগত চ্যাট
+                    </p>
+                </div>
 
-<!-- Chat Section - Namespaced & Production-Safe -->
-<section id="chat-section" class="content-section" data-section="chat">
-  <div class="section-header">
-    <h2>💬 নাগরিক গ্লোবাল চ্যাট</h2>
-    <p class="chat-subtitle">সকল নাগরিকদের সাথে কথা বলুন</p>
-  </div>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="chat-message admin">
+                            <div class="message-bubble">
+                                <p>স্বাগতম! আমি আপনাকে কীভাবে সাহায্য করতে পারি?</p>
+                                <span class="message-time">১০:৩০ AM</span>
+                            </div>
+                        </div>
 
-  <!-- Login Card (Initially visible) -->
-  <div id="chatLoginCard" class="chat-login-card" data-chat="login-card">
-    <div class="chat-login-content">
-      <div class="chat-login-icon">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" aria-hidden="true">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-          <circle cx="9" cy="7" r="4"></circle>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-        </svg>
-      </div>
-      <h3>গ্লোবাল চ্যাটে স্বাগতম</h3>
-      <p>সকল নাগরিকদের সাথে যোগাযোগ করুন</p>
+                        <div class="chat-message user">
+                            <div class="message-bubble">
+                                <p>ভোট প্রদানের সময় কি?</p>
+                                <span class="message-time">১০:৩২ AM</span>
+                            </div>
+                        </div>
 
-      <div class="chat-login-form">
-        <input
-          type="text"
-          id="chatUsername"
-          class="input-field"
-          placeholder="আপনার নাম লিখুন"
-          maxlength="20"
-          aria-label="চ্যাট ইউজারনেম"
-        >
-        <button type="button" onclick="joinGlobalChat()" class="btn btn-primary" aria-label="চ্যাটে প্রবেশ করুন">
-          চ্যাটে প্রবেশ করুন
-        </button>
-      </div>
-    </div>
-  </div>
+                        <div class="chat-message admin">
+                            <div class="message-bubble">
+                                <p>ভোট প্রদানের সময় সকাল ৮টা থেকে বিকাল ৪টা পর্যন্ত। আপনি এই সময়ের মধ্যে যেকোনো সময় ভোট দিতে পারবেন।</p>
+                                <span class="message-time">১০:৩২ AM</span>
+                            </div>
+                        </div>
+                    </div>
 
-  <!-- Chat Interface (Initially hidden) -->
-  <div id="chatInterface" class="chat-interface" style="display: none;" data-chat="ui">
-    <div class="chat-main-container">
-      <!-- Chat Messages Area -->
-      <div class="chat-content-area">
-        <div class="chat-header-bar">
-          <div class="chat-header-left">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" aria-hidden="true">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
-            <div>
-              <h3 style="margin: 0; font-size: 16px;">গ্লোবাল চ্যাট</h3>
-              <p class="online-count">
-                <span class="online-dot"></span>
-                <span id="onlineCount">0</span> জন অনলাইনে
-              </p>
+                    <div class="chat-input">
+                        <input type="text" id="chatInput" placeholder="বার্তা লিখুন..." class="input-field">
+                        <button onclick="sendChatMessage()" class="btn btn-primary">পাঠান</button>
+                    </div>
+                </div>
             </div>
-          </div>
-          <button type="button" onclick="leaveGlobalChat()" class="btn btn-secondary btn-sm" aria-label="প্রস্থান করুন">
-            প্রস্থান করুন
-          </button>
-        </div>
-
-        <!-- Messages Container -->
-        <div
-          class="global-chat-messages"
-          id="globalChatMessages"
-          role="log"
-          aria-live="polite"
-          aria-relevant="additions"
-        >
-          <!-- Messages will be appended here -->
-        </div>
-
-        <!-- Chat Input -->
-        <div class="global-chat-input-container">
-          <input
-            type="text"
-            id="globalChatInput"
-            class="input-field"
-            placeholder="বার্তা লিখুন..."
-            maxlength="500"
-            aria-label="চ্যাট বার্তা"
-          >
-          <button type="button" onclick="sendGlobalMessage()" class="btn btn-primary" aria-label="বার্তা পাঠান">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;" aria-hidden="true">
-              <line x1="22" y1="2" x2="11" y2="13"></line>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-            </svg>
-            পাঠান
-          </button>
-        </div>
-      </div>
-
-      <!-- Online Users Sidebar -->
-      <div class="chat-users-sidebar">
-        <div class="users-sidebar-header">
-          <h4 style="margin: 0; font-size: 14px;">অনলাইন নাগরিক</h4>
-          <span class="users-count" id="usersSidebarCount">0</span>
-        </div>
-        <div class="users-list" id="onlineUsersList">
-          <div class="no-users">কোন নাগরিক অনলাইনে নেই</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
             <!-- Complaints Section -->
             <div id="complaints-section" class="content-section">
                 <div class="section-header">
-                    <h2>📝 অভিযোগ দাখিল</h2>
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
+                            <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                        </svg>
+                        অভিযোগ দাখিল
+                    </h2>
                 </div>
 
                 <div class="complaints-container">
@@ -451,7 +439,12 @@
             <!-- Notices Section -->
             <div id="notices-section" class="content-section">
                 <div class="section-header">
-                    <h2>📢 নোটিশ বোর্ড</h2>
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
+                            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/>
+                        </svg>
+                        নোটিশ বোর্ড
+                    </h2>
                 </div>
 
                 <div class="notices-container">
@@ -461,7 +454,7 @@
                             <span class="notice-date">০৪ জানুয়ারি ২০২৫</span>
                         </div>
                         <p>জাতীয় সংসদ নির্বাচন ০৫ জানুয়ারি ২০২৫ তারিখে অনুষ্ঠিত হবে। ভোট প্রদানের সময় সকাল ৮টা থেকে বিকাল ৪টা পর্যন্ত।</p>
-                        <button class="btn btn-secondary btn-sm">বিস্তারিত দেখুন</button>
+                        <!--<button class="btn btn-secondary btn-sm">বিস্তারিত দেখুন</button>-->
                     </div>
 
                     <div class="notice-card">
@@ -488,7 +481,12 @@
             <!-- Profile Section -->
             <div id="profile-section" class="content-section">
                 <div class="section-header">
-                    <h2>👤 প্রোফাইল সেটিংস</h2>
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                        </svg>
+                        প্রোফাইল সেটিংস
+                    </h2>
                 </div>
 
                 <div class="profile-container">
@@ -551,9 +549,7 @@
             <div class="modal-body" id="candidateModalBody">
                 <!-- Content will be loaded dynamically -->
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeCandidateModal()">বন্ধ করুন</button>
-            </div>
+            
         </div>
     </div>
 
