@@ -10,6 +10,10 @@ let ballotLocationCount = 0;
 let customCandidates = new Array(50);
 let customCandidateCount = 0;
 
+// Custom Notices Array (100 items max)
+let customNotices = new Array(100);
+let customNoticeCount = 0;
+
 // ===== TOAST NOTIFICATION SYSTEM =====
 function showAlert(title, type = 'info', duration = 3000) {
     const alertContainer = document.getElementById('alert-container') || createAlertContainer();
@@ -55,6 +59,7 @@ function initializeDashboard() {
     loadAdminProfile(); // Load mock admin info
     renderCharts(); // Render charts
     populateBallotFormOptions(); // Load ballot form options from mock data
+    loadPublishedNotices(); // Load published notices
 
     const ballotForm = document.getElementById('ballotForm');
     if (ballotForm) {
@@ -480,6 +485,33 @@ function toggleNoticeContent(type) {
 function handleNoticeSubmit(e) {
     e.preventDefault();
     
+    const title = document.getElementById('noticeTitle').value.trim();
+    const type = document.getElementById('noticeType').value;
+    const contentType = document.querySelector('input[name="contentType"]:checked').value;
+    const message = document.getElementById('noticeMessage').value.trim();
+    const pdfFile = document.getElementById('noticePdf').files[0];
+    
+    // Validation
+    if (!title || !type) {
+        showAlert('শিরোনাম এবং নোটিশ ধরন পূরণ করুন', 'error');
+        return;
+    }
+    
+    if (contentType === 'text' && !message) {
+        showAlert('বার্তা পূরণ করুন', 'error');
+        return;
+    }
+    
+    if (contentType === 'pdf' && !pdfFile) {
+        showAlert('PDF ফাইল আপলোড করুন', 'error');
+        return;
+    }
+    
+    if (customNoticeCount >= 100) {
+        showAlert('সর্বোচ্চ ১০০ নোটিশ প্রকাশ করা যায়', 'warning');
+        return;
+    }
+    
     const btn = e.target.querySelector('button[type="submit"]');
     if (btn) {
         btn.disabled = true;
@@ -487,13 +519,269 @@ function handleNoticeSubmit(e) {
         const originalText = btn.textContent;
         btn.textContent = 'প্রকাশিত হচ্ছে...';
         
+        // Handle PDF file if exists
+        if (contentType === 'pdf' && pdfFile) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                saveNoticeToArray(title, type, contentType, message, e.target.result);
+                resetNoticeForm(btn, originalText);
+                loadPublishedNotices();
+            };
+            reader.readAsDataURL(pdfFile);
+        } else {
+            setTimeout(() => {
+                saveNoticeToArray(title, type, contentType, message, null);
+                resetNoticeForm(btn, originalText);
+                loadPublishedNotices();
+            }, 1500);
+        }
+    }
+}
+
+function saveNoticeToArray(title, type, contentType, message, pdfData) {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('bn-BD', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    const notice = {
+        id: customNoticeCount + 1000,
+        title: title,
+        type: type,
+        contentType: contentType,
+        message: message,
+        pdfData: pdfData,
+        date: dateStr,
+        createdAt: new Date()
+    };
+    
+    customNotices[customNoticeCount] = notice;
+    customNoticeCount++;
+    
+    showAlert(`"${title}" নোটিশ সফলভাবে প্রকাশিত হয়েছে!`, 'success');
+}
+
+function resetNoticeForm(btn, originalText) {
+    setTimeout(() => {
+        document.getElementById('noticeForm').reset();
+        document.getElementById('textContent').classList.remove('hidden');
+        document.getElementById('pdfContent').classList.add('hidden');
+        btn.disabled = false;
+        btn.classList.remove('btn-loading');
+        btn.textContent = originalText;
+    }, 500);
+}
+
+function loadPublishedNotices() {
+    const noticeList = document.querySelector('.notice-list');
+    let html = '';
+    
+    // Add custom notices first (newest first)
+    for (let i = customNoticeCount - 1; i >= 0; i--) {
+        const notice = customNotices[i];
+        if (notice) {
+            html += renderNoticeItem(notice, true);
+        }
+    }
+    
+    // Mock notice data (if any)
+    const mockNotices = [
+        {
+            id: 1,
+            title: 'ভোটিং সময়সূচী পরিবর্তন',
+            type: 'urgent',
+            message: 'আগামীকাল ভোটিং সময় ৮টা থেকে ৬টা পর্যন্ত বর্ধিত করা হয়েছে...',
+            date: '৩ ডিসেম্বর ২০২৫, ১০:৩০ AM'
+        }
+    ];
+    
+    // Add mock notices if no custom notices
+    if (customNoticeCount === 0) {
+        mockNotices.forEach(notice => {
+            html += renderNoticeItem(notice, false);
+        });
+    }
+    
+    noticeList.innerHTML = html || '<p style="text-align: center; color: #999;">কোন নোটিশ প্রকাশিত হয়নি</p>';
+}
+
+function renderNoticeItem(notice, isCustom) {
+    const badgeClass = `badge-${notice.type}`;
+    const typeText = getNoticeTypeText(notice.type);
+    const preview = notice.message ? notice.message.substring(0, 100) + '...' : 'PDF ফাইল';
+    
+    let html = `
+        <div class="notice-item">
+            <div class="notice-header">
+                <h4>${notice.title}</h4>
+                <span class="badge ${badgeClass}">${typeText}</span>
+            </div>
+            <p class="notice-date">প্রকাশিত: ${notice.date}</p>
+            <p class="notice-preview">${preview}</p>
+            <div class="notice-actions">
+    `;
+    
+    if (isCustom) {
+        html += `
+                <button class="btn btn-sm btn-info" onclick="viewNoticeDetails(${notice.id})">বিস্তারিত</button>
+                <button class="btn btn-sm btn-secondary" onclick="editNotice(${notice.id})">সম্পাদনা</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteNotice(${notice.id})">মুছে ফেলুন</button>
+        `;
+    } else {
+        html += `
+                <button class="btn btn-sm btn-info" onclick="viewNoticeDetails(${notice.id})">বিস্তারিত</button>
+                <button class="btn btn-sm btn-secondary" disabled>সম্পাদনা</button>
+                <button class="btn btn-sm btn-danger" disabled>মুছে ফেলুন</button>
+        `;
+    }
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    return html;
+}
+
+function getNoticeTypeText(type) {
+    const types = {
+        'general': 'সাধারণ',
+        'urgent': 'জরুরী',
+        'schedule': 'সময়সূচী',
+        'result': 'ফলাফল'
+    };
+    return types[type] || type;
+}
+
+function viewNoticeDetails(noticeId) {
+    let notice = null;
+    
+    if (noticeId >= 1000) {
+        const customIndex = customNotices.findIndex(n => n && n.id === noticeId);
+        if (customIndex !== -1) {
+            notice = customNotices[customIndex];
+        }
+    }
+    
+    if (!notice) {
+        showAlert('নোটিশ খুঁজে পাওয়া যায়নি', 'error');
+        return;
+    }
+    
+    const modal = document.getElementById('candidateModal');
+    const modalBody = document.getElementById('candidateModalBody');
+    const modalHeader = document.querySelector('#candidateModal .modal-header h2');
+    
+    modalHeader.textContent = 'নোটিশ বিস্তারিত';
+    
+    let contentHtml = '';
+    if (notice.contentType === 'pdf' && notice.pdfData) {
+        contentHtml = `<iframe src="${notice.pdfData}" width="100%" height="600"></iframe>`;
+    } else {
+        contentHtml = `<p style="white-space: pre-wrap; line-height: 1.6;">${notice.message}</p>`;
+    }
+    
+    modalBody.innerHTML = `
+        <div class="notice-detail">
+            <h3>${notice.title}</h3>
+            <p style="color: #666; font-size: 0.9em;">প্রকাশিত: ${notice.date}</p>
+            <p style="margin-top: 10px;"><strong>ধরন:</strong> ${getNoticeTypeText(notice.type)}</p>
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
+                ${contentHtml}
+            </div>
+        </div>
+    `;
+    
+    modal.style.display = "block";
+}
+
+function editNotice(noticeId) {
+    const customIndex = customNotices.findIndex(n => n && n.id === noticeId);
+    if (customIndex === -1) {
+        showAlert('নোটিশ খুঁজে পাওয়া যায়নি', 'error');
+        return;
+    }
+    
+    const notice = customNotices[customIndex];
+    
+    const modal = document.getElementById('candidateModal');
+    const modalBody = document.getElementById('candidateModalBody');
+    const modalHeader = document.querySelector('#candidateModal .modal-header h2');
+    
+    modalHeader.textContent = 'নোটিশ সম্পাদনা';
+    
+    modalBody.innerHTML = `
+        <form id="editNoticeForm" class="candidate-edit-form">
+            <div class="form-group">
+                <label for="editNoticeTitle">নোটিশ শিরোনাম *</label>
+                <input type="text" id="editNoticeTitle" value="${notice.title}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="editNoticeType">নোটিশ ধরন *</label>
+                <select id="editNoticeType" required>
+                    <option value="general" ${notice.type === 'general' ? 'selected' : ''}>সাধারণ</option>
+                    <option value="urgent" ${notice.type === 'urgent' ? 'selected' : ''}>জরুরী</option>
+                    <option value="schedule" ${notice.type === 'schedule' ? 'selected' : ''}>সময়সূচী</option>
+                    <option value="result" ${notice.type === 'result' ? 'selected' : ''}>ফলাফল</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="editNoticeMessage">বার্তা *</label>
+                <textarea id="editNoticeMessage" rows="6" required>${notice.message || ''}</textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" data-notice-id="${noticeId}" data-notice-index="${customIndex}">আপডেট করুন</button>
+                <button type="button" class="btn btn-secondary" onclick="closeCandidateModal()">বাতিল করুন</button>
+            </div>
+        </form>
+    `;
+    
+    const editForm = document.getElementById('editNoticeForm');
+    editForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const btn = e.target.querySelector('button[type="submit"]');
+        const noticeIndex = parseInt(btn.dataset.noticeIndex);
+        
+        btn.disabled = true;
+        btn.classList.add('btn-loading');
+        const originalText = btn.textContent;
+        btn.textContent = 'আপডেট হচ্ছে...';
+        
         setTimeout(() => {
-            showAlert('নোটিশ সফলভাবে প্রকাশিত হয়েছে!', 'success');
+            customNotices[noticeIndex].title = document.getElementById('editNoticeTitle').value;
+            customNotices[noticeIndex].type = document.getElementById('editNoticeType').value;
+            customNotices[noticeIndex].message = document.getElementById('editNoticeMessage').value;
+            
+            showAlert('নোটিশ সফলভাবে আপডেট হয়েছে', 'success');
+            closeCandidateModal();
+            loadPublishedNotices();
+            
             btn.disabled = false;
             btn.classList.remove('btn-loading');
             btn.textContent = originalText;
-            e.target.reset();
         }, 1500);
+    });
+    
+    modal.style.display = "block";
+}
+
+function deleteNotice(noticeId) {
+    if (confirm('আপনি কি এই নোটিশ মুছে ফেলতে চান?')) {
+        const customIndex = customNotices.findIndex(n => n && n.id === noticeId);
+        if (customIndex !== -1) {
+            customNotices[customIndex] = null;
+            customNoticeCount--;
+            showAlert('নোটিশ সফলভাবে মুছে ফেলা হয়েছে', 'success');
+            loadPublishedNotices();
+        }
     }
 }
 
