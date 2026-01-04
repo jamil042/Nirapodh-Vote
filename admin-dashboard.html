@@ -6,6 +6,7 @@
     <title>প্রশাসক ড্যাশবোর্ড - নিরাপদ ভোট</title>
     <link rel="stylesheet" href="assets/css/common.css">
     <link rel="stylesheet" href="assets/css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 </head>
 <body>
     <header class="header">
@@ -167,6 +168,17 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="chart-grid">
+                    <div class="card">
+                        <h3>ভোটিং টার্নআউট ট্রেন্ড</h3>
+                        <canvas id="turnoutChart" height="220"></canvas>
+                    </div>
+                    <div class="card">
+                        <h3>ফলাফলের সারাংশ</h3>
+                        <canvas id="resultChart" height="220"></canvas>
+                    </div>
+                </div>
             </section>
 
 
@@ -181,117 +193,11 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="ballotName">ব্যালটের নাম *</label>
-                                <select id="ballotName" required>
-                                    <option value="">নির্বাচন করুন</option>
-                                    <option value="জাতীয় সংসদ নির্বাচন">জাতীয় সংসদ নির্বাচন</option>
-                                    <option value="সিটি কর্পোরেশন নির্বাচন">সিটি কর্পোরেশন নির্বাচন</option>
-                                    <option value="জেলা পরিষদ নির্বাচন">জেলা পরিষদ নির্বাচন</option>
-                                    <option value="উপজেলা পরিষদ নির্বাচন">উপজেলা পরিষদ নির্বাচন</option>
-                                    <option value="পৌরসভা নির্বাচন">পৌরসভা নির্বাচন</option>
-                                </select>
+                                <select id="ballotName" required></select>
                             </div>
                             <div class="form-group">
                                 <label for="ballotLocation">নির্বাচন এলাকা *</label>
-                                <select id="ballotLocation" required>
-                                    <option value="">এলাকা নির্বাচন করুন</option>
-                                    <option value="পঞ্চগড়-১">পঞ্চগড়-১</option>
-                                    <option value="পঞ্চগড়-২">পঞ্চগড়-২</option>
-                                    <option value="ঠাকুরগাঁও-১">ঠাকুরগাঁও-১</option>
-                                    <option value="ঠাকুরগাঁও-২">ঠাকুরগাঁও-২</option>
-                                    <option value="ঠাকুরগাঁও-৩">ঠাকুরগাঁও-৩</option>
-                                    <option value="দিনাজপুর-১">দিনাজপুর-১</option>
-                                    <option value="দিনাজপুর-২">দিনাজপুর-২</option>
-                                    <option value="দিনাজপুর-৩">দিনাজপুর-৩</option>
-                                    <option value="দিনাজপুর-৪">দিনাজপুর-৪</option>
-                                    <option value="দিনাজপুর-৫">দিনাজপুর-৫</option>
-                                    <option value="দিনাজপুর-৬">দিনাজপুর-৬</option>
-                                    <option value="নীলফামারী-১">নীলফামারী-১</option>
-                                    <option value="নীলফামারী-২">নীলফামারী-২</option>
-                                    <option value="নীলফামারী-৩">নীলফামারী-৩</option>
-                                    <option value="নীলফামারী-৪">নীলফামারী-৪</option>
-                                    <option value="লালমনিরহাট-১">লালমনিরহাট-১</option>
-                                    <option value="লালমনিরহাট-২">লালমনিরহাট-২</option>
-                                    <option value="লালমনিরহাট-৩">লালমনিরহাট-৩</option>
-                                    <option value="রংপুর-১">রংপুর-১</option>
-                                    <option value="রংপুর-২">রংপুর-২</option>
-                                    <option value="রংপুর-৩">রংপুর-৩</option>
-                                    <option value="রংপুর-৪">রংপুর-৪</option>
-                                    <option value="রংপুর-৫">রংপুর-৫</option>
-                                    <option value="রংপুর-৬">রংপুর-৬</option>
-                                    <option value="কুড়িগ্রাম-১">কুড়িগ্রাম-১</option>
-                                    <option value="কুড়িগ্রাম-২">কুড়িগ্রাম-২</option>
-                                    <option value="কুড়িগ্রাম-৩">কুড়িগ্রাম-৩</option>
-                                    <option value="কুড়িগ্রাম-৪">কুড়িগ্রাম-৪</option>
-                                    <option value="গাইবান্ধা-১">গাইবান্ধা-১</option>
-                                    <option value="গাইবান্ধা-২">গাইবান্ধা-২</option>
-                                    <option value="গাইবান্ধা-৩">গাইবান্ধা-৩</option>
-                                    <option value="গাইবান্ধা-৪">গাইবান্ধা-৪</option>
-                                    <option value="গাইবান্ধা-৫">গাইবান্ধা-৫</option>
-                                    <option value="জয়পুরহাট-১">জয়পুরহাট-১</option>
-                                    <option value="জয়পুরহাট-২">জয়পুরহাট-২</option>
-                                    <option value="বগুড়া-১">বগুড়া-১</option>
-                                    <option value="বগুড়া-২">বগুড়া-২</option>
-                                    <option value="বগুড়া-৩">বগুড়া-৩</option>
-                                    <option value="বগুড়া-৪">বগুড়া-৪</option>
-                                    <option value="বগুড়া-৫">বগুড়া-৫</option>
-                                    <option value="বগুড়া-৬">বগুড়া-৬</option>
-                                    <option value="বগুড়া-৭">বগুড়া-৭</option>
-                                    <option value="চাঁপাইনবাবগঞ্জ-১">চাঁপাইনবাবগঞ্জ-১</option>
-                                    <option value="চাঁপাইনবাবগঞ্জ-২">চাঁপাইনবাবগঞ্জ-২</option>
-                                    <option value="চাঁপাইনবাবগঞ্জ-৩">চাঁপাইনবাবগঞ্জ-৩</option>
-                                    <option value="নওগাঁ-১">নওগাঁ-১</option>
-                                    <option value="নওগাঁ-২">নওগাঁ-২</option>
-                                    <option value="নওগাঁ-৩">নওগাঁ-৩</option>
-                                    <option value="নওগাঁ-৪">নওগাঁ-৪</option>
-                                    <option value="নওগাঁ-৫">নওগাঁ-৫</option>
-                                    <option value="নওগাঁ-৬">নওগাঁ-৬</option>
-                                    <option value="রাজশাহী-১">রাজশাহী-১</option>
-                                    <option value="রাজশাহী-২">রাজশাহী-২</option>
-                                    <option value="রাজশাহী-৩">রাজশাহী-৩</option>
-                                    <option value="রাজশাহী-৪">রাজশাহী-৪</option>
-                                    <option value="রাজশাহী-৫">রাজশাহী-৫</option>
-                                    <option value="রাজশাহী-৬">রাজশাহী-৬</option>
-                                    <option value="নাটোর-১">নাটোর-১</option>
-                                    <option value="নাটোর-২">নাটোর-২</option>
-                                    <option value="নাটোর-৩">নাটোর-৩</option>
-                                    <option value="নাটোর-৪">নাটোর-৪</option>
-                                    <option value="সিরাজগঞ্জ-১">সিরাজগঞ্জ-১</option>
-                                    <option value="সিরাজগঞ্জ-২">সিরাজগঞ্জ-২</option>
-                                    <option value="সিরাজগঞ্জ-৩">সিরাজগঞ্জ-৩</option>
-                                    <option value="সিরাজগঞ্জ-৪">সিরাজগঞ্জ-৪</option>
-                                    <option value="সিরাজগঞ্জ-৫">সিরাজগঞ্জ-৫</option>
-                                    <option value="সিরাজগঞ্জ-৬">সিরাজগঞ্জ-৬</option>
-                                    <option value="পাবনা-১">পাবনা-১</option>
-                                    <option value="পাবনা-২">পাবনা-২</option>
-                                    <option value="পাবনা-৩">পাবনা-৩</option>
-                                    <option value="পাবনা-৪">পাবনা-৪</option>
-                                    <option value="পাবনা-৫">পাবনা-৫</option>
-                                    <option value="মেহেরপুর-১">মেহেরপুর-১</option>
-                                    <option value="মেহেরপুর-২">মেহেরপুর-২</option>
-                                    <option value="কুষ্টিয়া-১">কুষ্টিয়া-১</option>
-                                    <option value="কুষ্টিয়া-২">কুষ্টিয়া-২</option>
-                                    <option value="কুষ্টিয়া-৩">কুষ্টিয়া-৩</option>
-                                    <option value="কুষ্টিয়া-৪">কুষ্টিয়া-৪</option>
-                                    <option value="চুয়াডাঙ্গা-১">চুয়াডাঙ্গা-১</option>
-                                    <option value="চুয়াডাঙ্গা-২">চুয়াডাঙ্গা-২</option>
-                                    <option value="ঝিনাইদহ-১">ঝিনাইদহ-১</option>
-                                    <option value="ঝিনাইদহ-২">ঝিনাইদহ-২</option>
-                                    <option value="ঝিনাইদহ-৩">ঝিনাইদহ-৩</option>
-                                    <option value="ঝিনাইদহ-৪">ঝিনাইদহ-৪</option>
-                                    <option value="যশোর-১">যশোর-১</option>
-                                    <option value="যশোর-২">যশোর-২</option>
-                                    <option value="যশোর-৩">যশোর-৩</option>
-                                    <option value="যশোর-৪">যশোর-৪</option>
-                                    <option value="যশোর-৫">যশোর-৫</option>
-                                    <option value="যশোর-৬">যশোর-৬</option>
-                                    <option value="মাগুরা-১">মাগুরা-১</option>
-                                    <option value="মাগুরা-২">মাগুরা-২</option>
-                                    <option value="নড়াইল-১">নড়াইল-১</option>
-                                    <option value="নড়াইল-২">নড়াইল-২</option>
-                                    <option value="বাগেরহাট-১">বাগেরহাট-১</option>
-                                    <option value="বাগেরহাট-২">বাগেরহাট-২</option>
-                                    <option value="বাগেরহাট-৩">বাগেরহাট-৩</option>
-                                </select>
+                                <select id="ballotLocation" required></select>
                             </div>
                         </div>
 
@@ -306,23 +212,7 @@
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label>ভাষা নির্বাচন করুন *</label>
-                            <div class="radio-group">
-                                <label class="radio-label">
-                                    <input type="radio" name="language" value="bangla" checked>
-                                    <span>বাংলা</span>
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="language" value="english">
-                                    <span>English</span>
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="language" value="both">
-                                    <span>উভয়</span>
-                                </label>
-                            </div>
-                        </div>
+                        
 
                         <div class="candidates-section">
                             <h3>প্রার্থী যোগ করুন</h3>
@@ -334,7 +224,7 @@
 
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">ব্যালট সংরক্ষণ করুন</button>
-                            <button type="button" class="btn btn-secondary" onclick="previewBallot()">পূর্বরূপ দেখুন</button>
+                            
                             <button type="reset" class="btn btn-danger">রিসেট</button>
                         </div>
                     </form>
@@ -488,9 +378,7 @@
                                     <div>
                                         <h4>মোঃ করিম</h4>
                                         <p>জাতীয় নাগরিক পার্টি - 
-                                            <svg viewBox="0 0 24 24" fill="#424242" width="16" height="16" style="vertical-align: middle;">
-                                                <path d="M11 2L6 7v3H3v9h8v-5h2v5h8V10h-3V7l-5-5zm7 16h-4v-5H10v5H6v-5h2V8h8v5h2v5z"/>
-                                            </svg>
+                                            <img src="assets/images/জাতীয়_নাগরিক_পার্টির_লোগো.svg.png" alt="জাতীয় নাগরিক পার্টি" width="16" height="16" style="vertical-align: middle;">
                                         </p>
                                     </div>
                                 </div>
@@ -512,9 +400,7 @@
                                     <div>
                                         <h4>মোঃ রহিম</h4>
                                         <p>বিএনপি - 
-                                            <svg viewBox="0 0 24 24" fill="#689f38" width="16" height="16" style="vertical-align: middle;">
-                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                                            </svg>
+                                            <img src="assets/images/dhan.png" alt="বিএনপি" width="16" height="16" style="vertical-align: middle;">
                                         </p>
                                     </div>
                                 </div>
