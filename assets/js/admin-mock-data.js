@@ -184,7 +184,13 @@ function loadDashboardData() {
 function loadCandidatesData() {
     const candidatesTableBody = document.getElementById('candidatesTableBody');
     if (candidatesTableBody) {
-        candidatesTableBody.innerHTML = mockDashboardData.candidates.map(candidate => {
+        // Combine mock candidates with custom candidates
+        const allCandidates = [
+            ...mockDashboardData.candidates,
+            ...customCandidates.filter(c => c) // Filter out null/undefined entries
+        ];
+        
+        candidatesTableBody.innerHTML = allCandidates.map(candidate => {
             const statusBadge = candidate.status === 'active' 
                 ? '<span class="badge badge-success">সক্রিয়</span>' 
                 : '<span class="badge badge-danger">নিষ্ক্রিয়</span>';

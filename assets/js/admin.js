@@ -6,6 +6,10 @@ let customBallotLocations = new Array(20);
 let ballotNameCount = 0;
 let ballotLocationCount = 0;
 
+// Custom Candidates Array (50 items max)
+let customCandidates = new Array(50);
+let customCandidateCount = 0;
+
 // ===== TOAST NOTIFICATION SYSTEM =====
 function showAlert(title, type = 'info', duration = 3000) {
     const alertContainer = document.getElementById('alert-container') || createAlertContainer();
@@ -269,53 +273,158 @@ function addCandidate() {
         <div class="form-row">
             <div class="form-group">
                 <label>প্রার্থীর নাম *</label>
-                <input type="text" required placeholder="প্রার্থীর পূর্ণ নাম">
+                <input type="text" class="candidate-name" required placeholder="প্রার্থীর পূর্ণ নাম">
             </div>
             <div class="form-group">
                 <label>রাজনৈতিক দল *</label>
-                <input type="text" required placeholder="যেমন: জাতীয় নাগরিক পার্টি">
+                <input type="text" class="candidate-party" required placeholder="যেমন: জাতীয় নাগরিক পার্টি">
             </div>
         </div>
         <div class="form-row">
             <div class="form-group">
                 <label>প্রার্থীর ছবি</label>
-                <input type="file" accept="image/*">
+                <input type="file" class="candidate-image" accept="image/*">
             </div>
             <div class="form-group">
                 <label>দলীয় প্রতীক (মার্কা)</label>
-                <input type="file" accept="image/*">
+                <input type="file" class="candidate-symbol" accept="image/*">
             </div>
         </div>
         
         <!-- New Fields -->
         <div class="form-group">
             <label>জীবনী (Bio)</label>
-            <textarea rows="3" placeholder="প্রার্থীর সংক্ষিপ্ত জীবনী..."></textarea>
+            <textarea class="candidate-bio" rows="3" placeholder="প্রার্থীর সংক্ষিপ্ত জীবনী..."></textarea>
         </div>
         <div class="form-group">
             <label>নির্বাচনী ইশতেহার (Manifesto)</label>
-            <textarea rows="3" placeholder="ইশতেহারের পয়েন্টগুলো লিখুন..."></textarea>
+            <textarea class="candidate-manifesto" rows="3" placeholder="ইশতেহারের পয়েন্টগুলো লিখুন..."></textarea>
         </div>
         <div class="form-group">
             <label>সামাজিক কর্মকাণ্ড</label>
-            <textarea rows="2" placeholder="সামাজিক কর্মকাণ্ডের বিবরণ..."></textarea>
+            <textarea class="candidate-social" rows="2" placeholder="সামাজিক কর্মকাণ্ডের বিবরণ..."></textarea>
         </div>
         <div class="form-group">
             <label>দলীয় ইতিহাস</label>
-            <textarea rows="2" placeholder="দলের সংক্ষিপ্ত ইতিহাস..."></textarea>
+            <textarea class="candidate-history" rows="2" placeholder="দলের সংক্ষিপ্ত ইতিহাস..."></textarea>
         </div>
 
-        <button type="button" class="btn btn-danger btn-sm" onclick="removeCandidate(${candidateCount})">
-            এই প্রার্থী সরান
-        </button>
+        <div class="form-row">
+            <div class="form-group">
+                <label>নির্বাচনী এলাকা *</label>
+                <input type="text" class="candidate-area" required placeholder="যেমন: ঢাকা-১০">
+            </div>
+            <div class="form-group">
+                <label>অবস্থা</label>
+                <select class="candidate-status">
+                    <option value="active">সক্রিয়</option>
+                    <option value="inactive">নিষ্ক্রিয়</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn btn-success btn-sm" onclick="submitCandidate(${candidateCount})">
+                প্রার্থী যোগ করুন
+            </button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeCandidate(${candidateCount})">
+                এই প্রার্থী সরান
+            </button>
+        </div>
     `;
     
     candidatesList.appendChild(candidateCard);
 }
 
+function submitCandidate(id) {
+    const candidateCard = document.getElementById(`candidate-${id}`);
+    
+    // Get form values
+    const name = candidateCard.querySelector('.candidate-name').value.trim();
+    const party = candidateCard.querySelector('.candidate-party').value.trim();
+    const area = candidateCard.querySelector('.candidate-area').value.trim();
+    const bio = candidateCard.querySelector('.candidate-bio').value.trim();
+    const status = candidateCard.querySelector('.candidate-status').value;
+    
+    // Validation
+    if (!name || !party || !area) {
+        showAlert('অনুগ্রহ করে প্রার্থীর নাম, দল এবং এলাকা পূরণ করুন', 'error');
+        return;
+    }
+    
+    if (customCandidateCount >= 50) {
+        showAlert('সর্বোচ্চ ৫০ জন প্রার্থী যোগ করা যায়', 'warning');
+        return;
+    }
+    
+    // Get image files
+    const imageInput = candidateCard.querySelector('.candidate-image');
+    const symbolInput = candidateCard.querySelector('.candidate-symbol');
+    
+    // Create FormData to read file
+    const reader1 = imageInput.files[0] ? new FileReader() : null;
+    const reader2 = symbolInput.files[0] ? new FileReader() : null;
+    
+    let imageData = 'assets/images/default-avatar.png';
+    let symbolData = '<img src="assets/images/powerful-symbol-unity-anti-corruption-day_968957-12635.avif" alt="Party Symbol" width="20" height="20">';
+    
+    // Read candidate image if exists
+    if (reader1) {
+        reader1.onload = function(e) {
+            imageData = e.target.result;
+            
+            // Read symbol image if exists
+            if (reader2) {
+                reader2.onload = function(e2) {
+                    symbolData = `<img src="${e2.target.result}" alt="Party Symbol" width="20" height="20">`;
+                    saveCandidateToArray(id, name, party, area, bio, status, imageData, symbolData);
+                };
+                reader2.readAsDataURL(symbolInput.files[0]);
+            } else {
+                saveCandidateToArray(id, name, party, area, bio, status, imageData, symbolData);
+            }
+        };
+        reader1.readAsDataURL(imageInput.files[0]);
+    } else if (reader2) {
+        reader2.onload = function(e) {
+            symbolData = `<img src="${e.target.result}" alt="Party Symbol" width="20" height="20">`;
+            saveCandidateToArray(id, name, party, area, bio, status, imageData, symbolData);
+        };
+        reader2.readAsDataURL(symbolInput.files[0]);
+    } else {
+        saveCandidateToArray(id, name, party, area, bio, status, imageData, symbolData);
+    }
+}
+
+function saveCandidateToArray(id, name, party, area, bio, status, imageData, symbolData) {
+    const candidate = {
+        id: customCandidateCount + 1000, // Offset to distinguish from mock data
+        name: name,
+        party: party,
+        area: area,
+        bio: bio,
+        status: status,
+        image: imageData,
+        symbolSvg: symbolData,
+        phone: '',
+        email: ''
+    };
+    
+    customCandidates[customCandidateCount] = candidate;
+    customCandidateCount++;
+    
+    showAlert(`"${name}" প্রার্থী সফলভাবে যোগ হয়েছে এবং প্রার্থী তালিকায় প্রদর্শিত হচ্ছে`, 'success');
+    
+    // Remove the form after submission
+    removeCandidate(id);
+    
+    // Reload the candidates table
+    loadCandidatesData();
+}
+
 function removeCandidate(id) {
     const candidateCard = document.getElementById(`candidate-${id}`);
-    if (candidateCard && confirm('আপনি কি এই প্রার্থী সরাতে চান?')) {
+    if (candidateCard) {
         candidateCard.remove();
     }
 }
@@ -451,7 +560,20 @@ function publishResults() {
 }
 
 function editCandidate(id) {
-    const candidate = mockDashboardData.candidates.find(c => c.id === id);
+    // Check if it's a custom candidate (ID >= 1000)
+    let candidate = null;
+    let isCustom = id >= 1000;
+    let customIndex = -1;
+    
+    if (isCustom) {
+        customIndex = customCandidates.findIndex(c => c && c.id === id);
+        if (customIndex !== -1) {
+            candidate = customCandidates[customIndex];
+        }
+    } else {
+        candidate = mockDashboardData.candidates.find(c => c.id === id);
+    }
+    
     if (!candidate) {
         showAlert('প্রার্থীর তথ্য পাওয়া যায়নি', 'error');
         return;
@@ -506,7 +628,7 @@ function editCandidate(id) {
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">পরিবর্তন সংরক্ষণ করুন</button>
+                <button type="submit" class="btn btn-primary" data-candidate-id="${id}" data-is-custom="${isCustom}" data-custom-index="${customIndex}">পরিবর্তন সংরক্ষণ করুন</button>
                 <button type="button" class="btn btn-secondary" onclick="closeCandidateModal()">বাতিল করুন</button>
             </div>
         </form>
@@ -524,21 +646,35 @@ function editCandidate(id) {
             const originalText = btn.textContent;
             btn.textContent = 'সংরক্ষণ হচ্ছে...';
             
+            const candidateId = parseInt(btn.dataset.candidateId);
+            const isCustomCandidate = btn.dataset.isCustom === 'true';
+            const customIdx = parseInt(btn.dataset.customIndex);
+            
             setTimeout(() => {
-                // Update candidate data
-                candidate.name = document.getElementById('editCandidateName').value;
-                candidate.party = document.getElementById('editCandidateParty').value;
-                candidate.area = document.getElementById('editCandidateArea').value;
-                candidate.phone = document.getElementById('editCandidatePhone').value;
-                candidate.email = document.getElementById('editCandidateEmail').value;
-                candidate.status = document.getElementById('editCandidateStatus').value;
-                candidate.bio = document.getElementById('editCandidateBio').value;
-
-                // Reload candidates table
-                loadCandidatesData();
+                // Get the candidate reference
+                let candidateToUpdate = null;
+                if (isCustomCandidate && customIdx !== -1) {
+                    candidateToUpdate = customCandidates[customIdx];
+                } else if (!isCustomCandidate) {
+                    candidateToUpdate = mockDashboardData.candidates.find(c => c.id === candidateId);
+                }
                 
-                showAlert('প্রার্থীর তথ্য সফলভাবে আপডেট হয়েছে', 'success');
-                closeCandidateModal();
+                if (candidateToUpdate) {
+                    // Update candidate data
+                    candidateToUpdate.name = document.getElementById('editCandidateName').value;
+                    candidateToUpdate.party = document.getElementById('editCandidateParty').value;
+                    candidateToUpdate.area = document.getElementById('editCandidateArea').value;
+                    candidateToUpdate.phone = document.getElementById('editCandidatePhone').value;
+                    candidateToUpdate.email = document.getElementById('editCandidateEmail').value;
+                    candidateToUpdate.status = document.getElementById('editCandidateStatus').value;
+                    candidateToUpdate.bio = document.getElementById('editCandidateBio').value;
+
+                    // Reload candidates table
+                    loadCandidatesData();
+                    
+                    showAlert('প্রার্থীর তথ্য সফলভাবে আপডেট হয়েছে', 'success');
+                    closeCandidateModal();
+                }
                 
                 btn.disabled = false;
                 btn.classList.remove('btn-loading');
@@ -552,7 +688,19 @@ function editCandidate(id) {
 
 function deleteCandidate(id) {
     if (confirm('আপনি কি এই প্রার্থী মুছে ফেলতে চান?')) {
-        showAlert('প্রার্থী সফলভাবে মুছে ফেলা হয়েছে', 'success');
+        // Check if it's a custom candidate (ID >= 1000)
+        if (id >= 1000) {
+            const customIndex = customCandidates.findIndex(c => c && c.id === id);
+            if (customIndex !== -1) {
+                customCandidates[customIndex] = null;
+                customCandidateCount--;
+                showAlert('প্রার্থী সফলভাবে মুছে ফেলা হয়েছে', 'success');
+                loadCandidatesData();
+            }
+        } else {
+            // Mock candidate - just show message
+            showAlert('প্রার্থী সফলভাবে মুছে ফেলা হয়েছে', 'success');
+        }
     }
 }
 
@@ -722,32 +870,57 @@ const candidateData = {
 function viewCandidateDetails(candidateId) {
     const modal = document.getElementById('candidateModal');
     const modalBody = document.getElementById('candidateModalBody');
-    const candidate = candidateData[candidateId];
+    const modalHeader = document.querySelector('#candidateModal .modal-header h2');
+    
+    // Check if it's a custom candidate (ID >= 1000)
+    let candidate = null;
+    if (candidateId >= 1000) {
+        const customIndex = customCandidates.findIndex(c => c && c.id === candidateId);
+        if (customIndex !== -1) {
+            candidate = customCandidates[customIndex];
+        }
+    } else {
+        candidate = mockDashboardData.candidates.find(c => c.id === candidateId);
+    }
 
     if (!candidate) {
-        alert("প্রার্থীর তথ্য পাওয়া যায়নি");
+        showAlert("প্রার্থীর তথ্য পাওয়া যায়নি", 'error');
         return;
     }
 
-    let manifestoHtml = '<ul class="detail-list">';
-    candidate.manifesto.forEach(item => {
-        manifestoHtml += `<li>${item}</li>`;
-    });
-    manifestoHtml += '</ul>';
+    modalHeader.textContent = 'প্রার্থীর বিবরণ';
+    
+    // Build manifesto HTML if exists
+    let manifestoHtml = '';
+    if (candidate.manifesto && Array.isArray(candidate.manifesto)) {
+        manifestoHtml = '<ul class="detail-list">';
+        candidate.manifesto.forEach(item => {
+            manifestoHtml += `<li>${item}</li>`;
+        });
+        manifestoHtml += '</ul>';
+    }
 
-    let socialHtml = '<ul class="detail-list">';
-    candidate.socialActivities.forEach(item => {
-        socialHtml += `<li>${item}</li>`;
-    });
-    socialHtml += '</ul>';
+    // Build social activities HTML if exists
+    let socialHtml = '';
+    if (candidate.socialActivities && Array.isArray(candidate.socialActivities)) {
+        socialHtml = '<ul class="detail-list">';
+        candidate.socialActivities.forEach(item => {
+            socialHtml += `<li>${item}</li>`;
+        });
+        socialHtml += '</ul>';
+    }
 
-    modalBody.innerHTML = `
+    // Handle different image sources (mock has photo, custom has image)
+    const imageSrc = candidate.photo || candidate.image || 'assets/images/default-avatar.png';
+    const symbolDisplay = candidate.symbol ? `<img src="${candidate.symbol}" alt="প্রতীক" class="party-symbol-small">` : (candidate.symbolSvg || '');
+
+    let detailsHtml = `
         <div class="candidate-profile-header">
-            <img src="${candidate.photo}" alt="${candidate.name}" class="candidate-profile-img">
+            <img src="${imageSrc}" alt="${candidate.name}" class="candidate-profile-img" onerror="this.src='assets/images/default-avatar.png'">
             <div class="candidate-profile-info">
                 <h3>${candidate.name}</h3>
                 <div class="candidate-party-info">
-                    <img src="${candidate.symbol}" alt="প্রতীক" class="party-symbol-small">
+                    ${symbolDisplay}
                     <strong>${candidate.party}</strong>
                 </div>
             </div>
@@ -755,25 +928,38 @@ function viewCandidateDetails(candidateId) {
 
         <div class="detail-section">
             <h4>জীবনী</h4>
-            <p>${candidate.bio}</p>
-        </div>
-
-        <div class="detail-section">
-            <h4>নির্বাচনী ইশতেহার</h4>
-            ${manifestoHtml}
-        </div>
-
-        <div class="detail-section">
-            <h4>সামাজিক কর্মকাণ্ড</h4>
-            ${socialHtml}
-        </div>
-
-        <div class="detail-section">
-            <h4>দলীয় ইতিহাস</h4>
-            <p>${candidate.partyHistory}</p>
+            <p>${candidate.bio || 'তথ্য উপলব্ধ নেই'}</p>
         </div>
     `;
 
+    if (manifestoHtml) {
+        detailsHtml += `
+            <div class="detail-section">
+                <h4>নির্বাচনী ইশতেহার</h4>
+                ${manifestoHtml}
+            </div>
+        `;
+    }
+
+    if (socialHtml) {
+        detailsHtml += `
+            <div class="detail-section">
+                <h4>সামাজিক কর্মকাণ্ড</h4>
+                ${socialHtml}
+            </div>
+        `;
+    }
+
+    if (candidate.partyHistory) {
+        detailsHtml += `
+            <div class="detail-section">
+                <h4>দলীয় ইতিহাস</h4>
+                <p>${candidate.partyHistory}</p>
+            </div>
+        `;
+    }
+
+    modalBody.innerHTML = detailsHtml;
     modal.style.display = "block";
 }
 
