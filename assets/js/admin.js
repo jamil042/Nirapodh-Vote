@@ -1,5 +1,19 @@
 let candidateCount = 0;
 
+// Custom Ballot Arrays (20 items each)
+let customBallotNames = new Array(20);
+let customBallotLocations = new Array(20);
+let ballotNameCount = 0;
+let ballotLocationCount = 0;
+
+// Custom Candidates Array (50 items max)
+let customCandidates = new Array(50);
+let customCandidateCount = 0;
+
+// Custom Notices Array (100 items max)
+let customNotices = new Array(100);
+let customNoticeCount = 0;
+
 // ===== TOAST NOTIFICATION SYSTEM =====
 function showAlert(title, type = 'info', duration = 3000) {
     const alertContainer = document.getElementById('alert-container') || createAlertContainer();
@@ -45,6 +59,7 @@ function initializeDashboard() {
     loadAdminProfile(); // Load mock admin info
     renderCharts(); // Render charts
     populateBallotFormOptions(); // Load ballot form options from mock data
+    loadPublishedNotices(); // Load published notices
 
     const ballotForm = document.getElementById('ballotForm');
     if (ballotForm) {
@@ -60,6 +75,16 @@ function initializeDashboard() {
     if (changePasswordForm) {
         changePasswordForm.addEventListener('submit', handlePasswordChange);
     }
+    
+    const chatMessageInput = document.getElementById('chatMessage');
+    if (chatMessageInput) {
+        chatMessageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    }
 }
 
 function populateBallotFormOptions() {
@@ -70,12 +95,38 @@ function populateBallotFormOptions() {
 
     const ballotTypeOptions = ballotMockData.ballotTypes || [];
     const ballotLocationOptions = ballotMockData.ballotLocations || [];
+    
+    // Add custom ballot names
+    const allBallotTypes = [...ballotTypeOptions];
+    customBallotNames.forEach((name, index) => {
+        if (name) {
+            allBallotTypes.push({ value: `custom_ballot_${index}`, label: name });
+        }
+    });
+    
+    // Deduplicate ballot names - keep only unique labels
+    const uniqueBallotTypes = [];
+    const seenLabels = new Set();
+    allBallotTypes.forEach(option => {
+        if (!seenLabels.has(option.label)) {
+            uniqueBallotTypes.push(option);
+            seenLabels.add(option.label);
+        }
+    });
+    
+    // Add custom ballot locations
+    const allBallotLocations = [...ballotLocationOptions];
+    customBallotLocations.forEach((location, index) => {
+        if (location) {
+            allBallotLocations.push({ value: `custom_location_${index}`, label: location });
+        }
+    });
 
     ballotNameSelect.innerHTML = ['<option value="">নির্বাচন করুন</option>',
-        ...ballotTypeOptions.map(option => `<option value="${option.value}">${option.label}</option>`) ].join('');
+        ...uniqueBallotTypes.map(option => `<option value="${option.value}">${option.label}</option>`) ].join('');
 
     ballotLocationSelect.innerHTML = ['<option value="">এলাকা নির্বাচন করুন</option>',
-        ...ballotLocationOptions.map(option => `<option value="${option.value}">${option.label}</option>`) ].join('');
+        ...allBallotLocations.map(option => `<option value="${option.value}">${option.label}</option>`) ].join('');
 }
 
 function renderCharts() {
@@ -227,53 +278,158 @@ function addCandidate() {
         <div class="form-row">
             <div class="form-group">
                 <label>প্রার্থীর নাম *</label>
-                <input type="text" required placeholder="প্রার্থীর পূর্ণ নাম">
+                <input type="text" class="candidate-name" required placeholder="প্রার্থীর পূর্ণ নাম">
             </div>
             <div class="form-group">
                 <label>রাজনৈতিক দল *</label>
-                <input type="text" required placeholder="যেমন: জাতীয় নাগরিক পার্টি">
+                <input type="text" class="candidate-party" required placeholder="যেমন: জাতীয় নাগরিক পার্টি">
             </div>
         </div>
         <div class="form-row">
             <div class="form-group">
                 <label>প্রার্থীর ছবি</label>
-                <input type="file" accept="image/*">
+                <input type="file" class="candidate-image" accept="image/*">
             </div>
             <div class="form-group">
                 <label>দলীয় প্রতীক (মার্কা)</label>
-                <input type="file" accept="image/*">
+                <input type="file" class="candidate-symbol" accept="image/*">
             </div>
         </div>
         
         <!-- New Fields -->
         <div class="form-group">
             <label>জীবনী (Bio)</label>
-            <textarea rows="3" placeholder="প্রার্থীর সংক্ষিপ্ত জীবনী..."></textarea>
+            <textarea class="candidate-bio" rows="3" placeholder="প্রার্থীর সংক্ষিপ্ত জীবনী..."></textarea>
         </div>
         <div class="form-group">
             <label>নির্বাচনী ইশতেহার (Manifesto)</label>
-            <textarea rows="3" placeholder="ইশতেহারের পয়েন্টগুলো লিখুন..."></textarea>
+            <textarea class="candidate-manifesto" rows="3" placeholder="ইশতেহারের পয়েন্টগুলো লিখুন..."></textarea>
         </div>
         <div class="form-group">
             <label>সামাজিক কর্মকাণ্ড</label>
-            <textarea rows="2" placeholder="সামাজিক কর্মকাণ্ডের বিবরণ..."></textarea>
+            <textarea class="candidate-social" rows="2" placeholder="সামাজিক কর্মকাণ্ডের বিবরণ..."></textarea>
         </div>
         <div class="form-group">
             <label>দলীয় ইতিহাস</label>
-            <textarea rows="2" placeholder="দলের সংক্ষিপ্ত ইতিহাস..."></textarea>
+            <textarea class="candidate-history" rows="2" placeholder="দলের সংক্ষিপ্ত ইতিহাস..."></textarea>
         </div>
 
-        <button type="button" class="btn btn-danger btn-sm" onclick="removeCandidate(${candidateCount})">
-            এই প্রার্থী সরান
-        </button>
+        <div class="form-row">
+            <div class="form-group">
+                <label>নির্বাচনী এলাকা *</label>
+                <input type="text" class="candidate-area" required placeholder="যেমন: ঢাকা-১০">
+            </div>
+            <div class="form-group">
+                <label>অবস্থা</label>
+                <select class="candidate-status">
+                    <option value="active">সক্রিয়</option>
+                    <option value="inactive">নিষ্ক্রিয়</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn btn-success btn-sm" onclick="submitCandidate(${candidateCount})">
+                প্রার্থী যোগ করুন
+            </button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeCandidate(${candidateCount})">
+                এই প্রার্থী সরান
+            </button>
+        </div>
     `;
     
     candidatesList.appendChild(candidateCard);
 }
 
+function submitCandidate(id) {
+    const candidateCard = document.getElementById(`candidate-${id}`);
+    
+    // Get form values
+    const name = candidateCard.querySelector('.candidate-name').value.trim();
+    const party = candidateCard.querySelector('.candidate-party').value.trim();
+    const area = candidateCard.querySelector('.candidate-area').value.trim();
+    const bio = candidateCard.querySelector('.candidate-bio').value.trim();
+    const status = candidateCard.querySelector('.candidate-status').value;
+    
+    // Validation
+    if (!name || !party || !area) {
+        showAlert('অনুগ্রহ করে প্রার্থীর নাম, দল এবং এলাকা পূরণ করুন', 'error');
+        return;
+    }
+    
+    if (customCandidateCount >= 50) {
+        showAlert('সর্বোচ্চ ৫০ জন প্রার্থী যোগ করা যায়', 'warning');
+        return;
+    }
+    
+    // Get image files
+    const imageInput = candidateCard.querySelector('.candidate-image');
+    const symbolInput = candidateCard.querySelector('.candidate-symbol');
+    
+    // Create FormData to read file
+    const reader1 = imageInput.files[0] ? new FileReader() : null;
+    const reader2 = symbolInput.files[0] ? new FileReader() : null;
+    
+    let imageData = 'assets/images/default-avatar.png';
+    let symbolData = '<img src="assets/images/powerful-symbol-unity-anti-corruption-day_968957-12635.avif" alt="Party Symbol" width="20" height="20">';
+    
+    // Read candidate image if exists
+    if (reader1) {
+        reader1.onload = function(e) {
+            imageData = e.target.result;
+            
+            // Read symbol image if exists
+            if (reader2) {
+                reader2.onload = function(e2) {
+                    symbolData = `<img src="${e2.target.result}" alt="Party Symbol" width="20" height="20">`;
+                    saveCandidateToArray(id, name, party, area, bio, status, imageData, symbolData);
+                };
+                reader2.readAsDataURL(symbolInput.files[0]);
+            } else {
+                saveCandidateToArray(id, name, party, area, bio, status, imageData, symbolData);
+            }
+        };
+        reader1.readAsDataURL(imageInput.files[0]);
+    } else if (reader2) {
+        reader2.onload = function(e) {
+            symbolData = `<img src="${e.target.result}" alt="Party Symbol" width="20" height="20">`;
+            saveCandidateToArray(id, name, party, area, bio, status, imageData, symbolData);
+        };
+        reader2.readAsDataURL(symbolInput.files[0]);
+    } else {
+        saveCandidateToArray(id, name, party, area, bio, status, imageData, symbolData);
+    }
+}
+
+function saveCandidateToArray(id, name, party, area, bio, status, imageData, symbolData) {
+    const candidate = {
+        id: customCandidateCount + 1000, // Offset to distinguish from mock data
+        name: name,
+        party: party,
+        area: area,
+        bio: bio,
+        status: status,
+        image: imageData,
+        symbolSvg: symbolData,
+        phone: '',
+        email: ''
+    };
+    
+    customCandidates[customCandidateCount] = candidate;
+    customCandidateCount++;
+    
+    showAlert(`"${name}" প্রার্থী সফলভাবে যোগ হয়েছে এবং প্রার্থী তালিকায় প্রদর্শিত হচ্ছে`, 'success');
+    
+    // Remove the form after submission
+    removeCandidate(id);
+    
+    // Reload the candidates table
+    loadCandidatesData();
+}
+
 function removeCandidate(id) {
     const candidateCard = document.getElementById(`candidate-${id}`);
-    if (candidateCard && confirm('আপনি কি এই প্রার্থী সরাতে চান?')) {
+    if (candidateCard) {
         candidateCard.remove();
     }
 }
@@ -329,6 +485,33 @@ function toggleNoticeContent(type) {
 function handleNoticeSubmit(e) {
     e.preventDefault();
     
+    const title = document.getElementById('noticeTitle').value.trim();
+    const type = document.getElementById('noticeType').value;
+    const contentType = document.querySelector('input[name="contentType"]:checked').value;
+    const message = document.getElementById('noticeMessage').value.trim();
+    const pdfFile = document.getElementById('noticePdf').files[0];
+    
+    // Validation
+    if (!title || !type) {
+        showAlert('শিরোনাম এবং নোটিশ ধরন পূরণ করুন', 'error');
+        return;
+    }
+    
+    if (contentType === 'text' && !message) {
+        showAlert('বার্তা পূরণ করুন', 'error');
+        return;
+    }
+    
+    if (contentType === 'pdf' && !pdfFile) {
+        showAlert('PDF ফাইল আপলোড করুন', 'error');
+        return;
+    }
+    
+    if (customNoticeCount >= 100) {
+        showAlert('সর্বোচ্চ ১০০ নোটিশ প্রকাশ করা যায়', 'warning');
+        return;
+    }
+    
     const btn = e.target.querySelector('button[type="submit"]');
     if (btn) {
         btn.disabled = true;
@@ -336,13 +519,269 @@ function handleNoticeSubmit(e) {
         const originalText = btn.textContent;
         btn.textContent = 'প্রকাশিত হচ্ছে...';
         
+        // Handle PDF file if exists
+        if (contentType === 'pdf' && pdfFile) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                saveNoticeToArray(title, type, contentType, message, e.target.result);
+                resetNoticeForm(btn, originalText);
+                loadPublishedNotices();
+            };
+            reader.readAsDataURL(pdfFile);
+        } else {
+            setTimeout(() => {
+                saveNoticeToArray(title, type, contentType, message, null);
+                resetNoticeForm(btn, originalText);
+                loadPublishedNotices();
+            }, 1500);
+        }
+    }
+}
+
+function saveNoticeToArray(title, type, contentType, message, pdfData) {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('bn-BD', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    const notice = {
+        id: customNoticeCount + 1000,
+        title: title,
+        type: type,
+        contentType: contentType,
+        message: message,
+        pdfData: pdfData,
+        date: dateStr,
+        createdAt: new Date()
+    };
+    
+    customNotices[customNoticeCount] = notice;
+    customNoticeCount++;
+    
+    showAlert(`"${title}" নোটিশ সফলভাবে প্রকাশিত হয়েছে!`, 'success');
+}
+
+function resetNoticeForm(btn, originalText) {
+    setTimeout(() => {
+        document.getElementById('noticeForm').reset();
+        document.getElementById('textContent').classList.remove('hidden');
+        document.getElementById('pdfContent').classList.add('hidden');
+        btn.disabled = false;
+        btn.classList.remove('btn-loading');
+        btn.textContent = originalText;
+    }, 500);
+}
+
+function loadPublishedNotices() {
+    const noticeList = document.querySelector('.notice-list');
+    let html = '';
+    
+    // Add custom notices first (newest first)
+    for (let i = customNoticeCount - 1; i >= 0; i--) {
+        const notice = customNotices[i];
+        if (notice) {
+            html += renderNoticeItem(notice, true);
+        }
+    }
+    
+    // Mock notice data (if any)
+    const mockNotices = [
+        {
+            id: 1,
+            title: 'ভোটিং সময়সূচী পরিবর্তন',
+            type: 'urgent',
+            message: 'আগামীকাল ভোটিং সময় ৮টা থেকে ৬টা পর্যন্ত বর্ধিত করা হয়েছে...',
+            date: '৩ ডিসেম্বর ২০২৫, ১০:৩০ AM'
+        }
+    ];
+    
+    // Add mock notices if no custom notices
+    if (customNoticeCount === 0) {
+        mockNotices.forEach(notice => {
+            html += renderNoticeItem(notice, false);
+        });
+    }
+    
+    noticeList.innerHTML = html || '<p style="text-align: center; color: #999;">কোন নোটিশ প্রকাশিত হয়নি</p>';
+}
+
+function renderNoticeItem(notice, isCustom) {
+    const badgeClass = `badge-${notice.type}`;
+    const typeText = getNoticeTypeText(notice.type);
+    const preview = notice.message ? notice.message.substring(0, 100) + '...' : 'PDF ফাইল';
+    
+    let html = `
+        <div class="notice-item">
+            <div class="notice-header">
+                <h4>${notice.title}</h4>
+                <span class="badge ${badgeClass}">${typeText}</span>
+            </div>
+            <p class="notice-date">প্রকাশিত: ${notice.date}</p>
+            <p class="notice-preview">${preview}</p>
+            <div class="notice-actions">
+    `;
+    
+    if (isCustom) {
+        html += `
+                <button class="btn btn-sm btn-info" onclick="viewNoticeDetails(${notice.id})">বিস্তারিত</button>
+                <button class="btn btn-sm btn-secondary" onclick="editNotice(${notice.id})">সম্পাদনা</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteNotice(${notice.id})">মুছে ফেলুন</button>
+        `;
+    } else {
+        html += `
+                <button class="btn btn-sm btn-info" onclick="viewNoticeDetails(${notice.id})">বিস্তারিত</button>
+                <button class="btn btn-sm btn-secondary" disabled>সম্পাদনা</button>
+                <button class="btn btn-sm btn-danger" disabled>মুছে ফেলুন</button>
+        `;
+    }
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    return html;
+}
+
+function getNoticeTypeText(type) {
+    const types = {
+        'general': 'সাধারণ',
+        'urgent': 'জরুরী',
+        'schedule': 'সময়সূচী',
+        'result': 'ফলাফল'
+    };
+    return types[type] || type;
+}
+
+function viewNoticeDetails(noticeId) {
+    let notice = null;
+    
+    if (noticeId >= 1000) {
+        const customIndex = customNotices.findIndex(n => n && n.id === noticeId);
+        if (customIndex !== -1) {
+            notice = customNotices[customIndex];
+        }
+    }
+    
+    if (!notice) {
+        showAlert('নোটিশ খুঁজে পাওয়া যায়নি', 'error');
+        return;
+    }
+    
+    const modal = document.getElementById('candidateModal');
+    const modalBody = document.getElementById('candidateModalBody');
+    const modalHeader = document.querySelector('#candidateModal .modal-header h2');
+    
+    modalHeader.textContent = 'নোটিশ বিস্তারিত';
+    
+    let contentHtml = '';
+    if (notice.contentType === 'pdf' && notice.pdfData) {
+        contentHtml = `<iframe src="${notice.pdfData}" width="100%" height="600"></iframe>`;
+    } else {
+        contentHtml = `<p style="white-space: pre-wrap; line-height: 1.6;">${notice.message}</p>`;
+    }
+    
+    modalBody.innerHTML = `
+        <div class="notice-detail">
+            <h3>${notice.title}</h3>
+            <p style="color: #666; font-size: 0.9em;">প্রকাশিত: ${notice.date}</p>
+            <p style="margin-top: 10px;"><strong>ধরন:</strong> ${getNoticeTypeText(notice.type)}</p>
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
+                ${contentHtml}
+            </div>
+        </div>
+    `;
+    
+    modal.style.display = "block";
+}
+
+function editNotice(noticeId) {
+    const customIndex = customNotices.findIndex(n => n && n.id === noticeId);
+    if (customIndex === -1) {
+        showAlert('নোটিশ খুঁজে পাওয়া যায়নি', 'error');
+        return;
+    }
+    
+    const notice = customNotices[customIndex];
+    
+    const modal = document.getElementById('candidateModal');
+    const modalBody = document.getElementById('candidateModalBody');
+    const modalHeader = document.querySelector('#candidateModal .modal-header h2');
+    
+    modalHeader.textContent = 'নোটিশ সম্পাদনা';
+    
+    modalBody.innerHTML = `
+        <form id="editNoticeForm" class="candidate-edit-form">
+            <div class="form-group">
+                <label for="editNoticeTitle">নোটিশ শিরোনাম *</label>
+                <input type="text" id="editNoticeTitle" value="${notice.title}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="editNoticeType">নোটিশ ধরন *</label>
+                <select id="editNoticeType" required>
+                    <option value="general" ${notice.type === 'general' ? 'selected' : ''}>সাধারণ</option>
+                    <option value="urgent" ${notice.type === 'urgent' ? 'selected' : ''}>জরুরী</option>
+                    <option value="schedule" ${notice.type === 'schedule' ? 'selected' : ''}>সময়সূচী</option>
+                    <option value="result" ${notice.type === 'result' ? 'selected' : ''}>ফলাফল</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="editNoticeMessage">বার্তা *</label>
+                <textarea id="editNoticeMessage" rows="6" required>${notice.message || ''}</textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" data-notice-id="${noticeId}" data-notice-index="${customIndex}">আপডেট করুন</button>
+                <button type="button" class="btn btn-secondary" onclick="closeCandidateModal()">বাতিল করুন</button>
+            </div>
+        </form>
+    `;
+    
+    const editForm = document.getElementById('editNoticeForm');
+    editForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const btn = e.target.querySelector('button[type="submit"]');
+        const noticeIndex = parseInt(btn.dataset.noticeIndex);
+        
+        btn.disabled = true;
+        btn.classList.add('btn-loading');
+        const originalText = btn.textContent;
+        btn.textContent = 'আপডেট হচ্ছে...';
+        
         setTimeout(() => {
-            showAlert('নোটিশ সফলভাবে প্রকাশিত হয়েছে!', 'success');
+            customNotices[noticeIndex].title = document.getElementById('editNoticeTitle').value;
+            customNotices[noticeIndex].type = document.getElementById('editNoticeType').value;
+            customNotices[noticeIndex].message = document.getElementById('editNoticeMessage').value;
+            
+            showAlert('নোটিশ সফলভাবে আপডেট হয়েছে', 'success');
+            closeCandidateModal();
+            loadPublishedNotices();
+            
             btn.disabled = false;
             btn.classList.remove('btn-loading');
             btn.textContent = originalText;
-            e.target.reset();
         }, 1500);
+    });
+    
+    modal.style.display = "block";
+}
+
+function deleteNotice(noticeId) {
+    if (confirm('আপনি কি এই নোটিশ মুছে ফেলতে চান?')) {
+        const customIndex = customNotices.findIndex(n => n && n.id === noticeId);
+        if (customIndex !== -1) {
+            customNotices[customIndex] = null;
+            customNoticeCount--;
+            showAlert('নোটিশ সফলভাবে মুছে ফেলা হয়েছে', 'success');
+            loadPublishedNotices();
+        }
     }
 }
 
@@ -409,7 +848,20 @@ function publishResults() {
 }
 
 function editCandidate(id) {
-    const candidate = mockDashboardData.candidates.find(c => c.id === id);
+    // Check if it's a custom candidate (ID >= 1000)
+    let candidate = null;
+    let isCustom = id >= 1000;
+    let customIndex = -1;
+    
+    if (isCustom) {
+        customIndex = customCandidates.findIndex(c => c && c.id === id);
+        if (customIndex !== -1) {
+            candidate = customCandidates[customIndex];
+        }
+    } else {
+        candidate = mockDashboardData.candidates.find(c => c.id === id);
+    }
+    
     if (!candidate) {
         showAlert('প্রার্থীর তথ্য পাওয়া যায়নি', 'error');
         return;
@@ -464,7 +916,7 @@ function editCandidate(id) {
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">পরিবর্তন সংরক্ষণ করুন</button>
+                <button type="submit" class="btn btn-primary" data-candidate-id="${id}" data-is-custom="${isCustom}" data-custom-index="${customIndex}">পরিবর্তন সংরক্ষণ করুন</button>
                 <button type="button" class="btn btn-secondary" onclick="closeCandidateModal()">বাতিল করুন</button>
             </div>
         </form>
@@ -482,21 +934,35 @@ function editCandidate(id) {
             const originalText = btn.textContent;
             btn.textContent = 'সংরক্ষণ হচ্ছে...';
             
+            const candidateId = parseInt(btn.dataset.candidateId);
+            const isCustomCandidate = btn.dataset.isCustom === 'true';
+            const customIdx = parseInt(btn.dataset.customIndex);
+            
             setTimeout(() => {
-                // Update candidate data
-                candidate.name = document.getElementById('editCandidateName').value;
-                candidate.party = document.getElementById('editCandidateParty').value;
-                candidate.area = document.getElementById('editCandidateArea').value;
-                candidate.phone = document.getElementById('editCandidatePhone').value;
-                candidate.email = document.getElementById('editCandidateEmail').value;
-                candidate.status = document.getElementById('editCandidateStatus').value;
-                candidate.bio = document.getElementById('editCandidateBio').value;
-
-                // Reload candidates table
-                loadCandidatesData();
+                // Get the candidate reference
+                let candidateToUpdate = null;
+                if (isCustomCandidate && customIdx !== -1) {
+                    candidateToUpdate = customCandidates[customIdx];
+                } else if (!isCustomCandidate) {
+                    candidateToUpdate = mockDashboardData.candidates.find(c => c.id === candidateId);
+                }
                 
-                showAlert('প্রার্থীর তথ্য সফলভাবে আপডেট হয়েছে', 'success');
-                closeCandidateModal();
+                if (candidateToUpdate) {
+                    // Update candidate data
+                    candidateToUpdate.name = document.getElementById('editCandidateName').value;
+                    candidateToUpdate.party = document.getElementById('editCandidateParty').value;
+                    candidateToUpdate.area = document.getElementById('editCandidateArea').value;
+                    candidateToUpdate.phone = document.getElementById('editCandidatePhone').value;
+                    candidateToUpdate.email = document.getElementById('editCandidateEmail').value;
+                    candidateToUpdate.status = document.getElementById('editCandidateStatus').value;
+                    candidateToUpdate.bio = document.getElementById('editCandidateBio').value;
+
+                    // Reload candidates table
+                    loadCandidatesData();
+                    
+                    showAlert('প্রার্থীর তথ্য সফলভাবে আপডেট হয়েছে', 'success');
+                    closeCandidateModal();
+                }
                 
                 btn.disabled = false;
                 btn.classList.remove('btn-loading');
@@ -510,8 +976,75 @@ function editCandidate(id) {
 
 function deleteCandidate(id) {
     if (confirm('আপনি কি এই প্রার্থী মুছে ফেলতে চান?')) {
-        showAlert('প্রার্থী সফলভাবে মুছে ফেলা হয়েছে', 'success');
+        // Check if it's a custom candidate (ID >= 1000)
+        if (id >= 1000) {
+            const customIndex = customCandidates.findIndex(c => c && c.id === id);
+            if (customIndex !== -1) {
+                customCandidates[customIndex] = null;
+                customCandidateCount--;
+                showAlert('প্রার্থী সফলভাবে মুছে ফেলা হয়েছে', 'success');
+                loadCandidatesData();
+            }
+        } else {
+            // Mock candidate - just show message
+            showAlert('প্রার্থী সফলভাবে মুছে ফেলা হয়েছে', 'success');
+        }
     }
+}
+
+function addNewBallotOption() {
+    const newBallotNameInput = document.getElementById('newBallotName');
+    const newBallotLocationInput = document.getElementById('newBallotLocation');
+    
+    const ballotName = (newBallotNameInput?.value || '').trim();
+    const ballotLocation = (newBallotLocationInput?.value || '').trim();
+    
+    // Validation
+    if (!ballotName && !ballotLocation) {
+        showAlert('অনুগ্রহ করে ব্যালটের নাম বা নির্বাচন এলাকা লিখুন', 'warning');
+        return;
+    }
+    
+    if (ballotName && ballotLocation) {
+        // Check for duplicate combination (same ballot name + same area)
+        for (let i = 0; i < ballotNameCount; i++) {
+            for (let j = 0; j < ballotLocationCount; j++) {
+                if (customBallotNames[i] === ballotName && customBallotLocations[j] === ballotLocation) {
+                    showAlert(`"${ballotName}" এবং "${ballotLocation}" এই সংমিশ্রণ ইতিমধ্যে রয়েছে। অন্য এলাকা নির্বাচন করুন।`, 'error');
+                    return;
+                }
+            }
+        }
+    }
+    
+    if (ballotName && ballotNameCount >= 20) {
+        showAlert('সর্বোচ্চ ২০টি ব্যালটের নাম যোগ করা যায়', 'warning');
+        return;
+    }
+    
+    if (ballotLocation && ballotLocationCount >= 20) {
+        showAlert('সর্বোচ্চ ২০টি নির্বাচন এলাকা যোগ করা যায়', 'warning');
+        return;
+    }
+    
+    // Add ballot name
+    if (ballotName) {
+        customBallotNames[ballotNameCount] = ballotName;
+        ballotNameCount++;
+        newBallotNameInput.value = '';
+        showAlert(`"${ballotName}" ব্যালটের নাম যোগ হয়েছে`, 'success');
+    }
+    
+    // Add ballot location
+    if (ballotLocation) {
+        customBallotLocations[ballotLocationCount] = ballotLocation;
+        ballotLocationCount++;
+        newBallotLocationInput.value = '';
+        showAlert(`"${ballotLocation}" নির্বাচন এলাকা যোগ হয়েছে`, 'success');
+    }
+    
+    // Update the dropdowns
+    populateBallotFormOptions();
 }
 
 function sendMessage() {
@@ -547,7 +1080,6 @@ function sendMessage() {
             sendBtn.classList.remove('btn-loading');
         }
         
-        showAlert('বার্তা পাঠানো হয়েছে', 'success');
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }, 1000);
 }
@@ -626,32 +1158,57 @@ const candidateData = {
 function viewCandidateDetails(candidateId) {
     const modal = document.getElementById('candidateModal');
     const modalBody = document.getElementById('candidateModalBody');
-    const candidate = candidateData[candidateId];
+    const modalHeader = document.querySelector('#candidateModal .modal-header h2');
+    
+    // Check if it's a custom candidate (ID >= 1000)
+    let candidate = null;
+    if (candidateId >= 1000) {
+        const customIndex = customCandidates.findIndex(c => c && c.id === candidateId);
+        if (customIndex !== -1) {
+            candidate = customCandidates[customIndex];
+        }
+    } else {
+        candidate = mockDashboardData.candidates.find(c => c.id === candidateId);
+    }
 
     if (!candidate) {
-        alert("প্রার্থীর তথ্য পাওয়া যায়নি");
+        showAlert("প্রার্থীর তথ্য পাওয়া যায়নি", 'error');
         return;
     }
 
-    let manifestoHtml = '<ul class="detail-list">';
-    candidate.manifesto.forEach(item => {
-        manifestoHtml += `<li>${item}</li>`;
-    });
-    manifestoHtml += '</ul>';
+    modalHeader.textContent = 'প্রার্থীর বিবরণ';
+    
+    // Build manifesto HTML if exists
+    let manifestoHtml = '';
+    if (candidate.manifesto && Array.isArray(candidate.manifesto)) {
+        manifestoHtml = '<ul class="detail-list">';
+        candidate.manifesto.forEach(item => {
+            manifestoHtml += `<li>${item}</li>`;
+        });
+        manifestoHtml += '</ul>';
+    }
 
-    let socialHtml = '<ul class="detail-list">';
-    candidate.socialActivities.forEach(item => {
-        socialHtml += `<li>${item}</li>`;
-    });
-    socialHtml += '</ul>';
+    // Build social activities HTML if exists
+    let socialHtml = '';
+    if (candidate.socialActivities && Array.isArray(candidate.socialActivities)) {
+        socialHtml = '<ul class="detail-list">';
+        candidate.socialActivities.forEach(item => {
+            socialHtml += `<li>${item}</li>`;
+        });
+        socialHtml += '</ul>';
+    }
 
-    modalBody.innerHTML = `
+    // Handle different image sources (mock has photo, custom has image)
+    const imageSrc = candidate.photo || candidate.image || 'assets/images/default-avatar.png';
+    const symbolDisplay = candidate.symbol ? `<img src="${candidate.symbol}" alt="প্রতীক" class="party-symbol-small">` : (candidate.symbolSvg || '');
+
+    let detailsHtml = `
         <div class="candidate-profile-header">
-            <img src="${candidate.photo}" alt="${candidate.name}" class="candidate-profile-img">
+            <img src="${imageSrc}" alt="${candidate.name}" class="candidate-profile-img" onerror="this.src='assets/images/default-avatar.png'">
             <div class="candidate-profile-info">
                 <h3>${candidate.name}</h3>
                 <div class="candidate-party-info">
-                    <img src="${candidate.symbol}" alt="প্রতীক" class="party-symbol-small">
+                    ${symbolDisplay}
                     <strong>${candidate.party}</strong>
                 </div>
             </div>
@@ -659,25 +1216,38 @@ function viewCandidateDetails(candidateId) {
 
         <div class="detail-section">
             <h4>জীবনী</h4>
-            <p>${candidate.bio}</p>
-        </div>
-
-        <div class="detail-section">
-            <h4>নির্বাচনী ইশতেহার</h4>
-            ${manifestoHtml}
-        </div>
-
-        <div class="detail-section">
-            <h4>সামাজিক কর্মকাণ্ড</h4>
-            ${socialHtml}
-        </div>
-
-        <div class="detail-section">
-            <h4>দলীয় ইতিহাস</h4>
-            <p>${candidate.partyHistory}</p>
+            <p>${candidate.bio || 'তথ্য উপলব্ধ নেই'}</p>
         </div>
     `;
 
+    if (manifestoHtml) {
+        detailsHtml += `
+            <div class="detail-section">
+                <h4>নির্বাচনী ইশতেহার</h4>
+                ${manifestoHtml}
+            </div>
+        `;
+    }
+
+    if (socialHtml) {
+        detailsHtml += `
+            <div class="detail-section">
+                <h4>সামাজিক কর্মকাণ্ড</h4>
+                ${socialHtml}
+            </div>
+        `;
+    }
+
+    if (candidate.partyHistory) {
+        detailsHtml += `
+            <div class="detail-section">
+                <h4>দলীয় ইতিহাস</h4>
+                <p>${candidate.partyHistory}</p>
+            </div>
+        `;
+    }
+
+    modalBody.innerHTML = detailsHtml;
     modal.style.display = "block";
 }
 
