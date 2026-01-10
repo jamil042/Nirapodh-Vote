@@ -141,112 +141,8 @@ const mockDashboardData = {
 
 // Mock data for ballot form selections
 const ballotMockData = {
-    ballotTypes: [
-        { value: "জাতীয় সংসদ নির্বাচন", label: "জাতীয় সংসদ নির্বাচন" },
-        { value: "সিটি কর্পোরেশন নির্বাচন", label: "সিটি কর্পোরেশন নির্বাচন" },
-        { value: "জেলা পরিষদ নির্বাচন", label: "জেলা পরিষদ নির্বাচন" },
-        { value: "উপজেলা পরিষদ নির্বাচন", label: "উপজেলা পরিষদ নির্বাচন" },
-        { value: "পৌরসভা নির্বাচন", label: "পৌরসভা নির্বাচন" }
-    ],
-    ballotLocations: [
-        { value: "পঞ্চগড়-১", label: "পঞ্চগড়-১" },
-        { value: "পঞ্চগড়-২", label: "পঞ্চগড়-২" },
-        { value: "ঠাকুরগাঁও-১", label: "ঠাকুরগাঁও-১" },
-        { value: "ঠাকুরগাঁও-২", label: "ঠাকুরগাঁও-২" },
-        { value: "ঠাকুরগাঁও-৩", label: "ঠাকুরগাঁও-৩" },
-        { value: "দিনাজপুর-১", label: "দিনাজপুর-১" },
-        { value: "দিনাজপুর-২", label: "দিনাজপুর-২" },
-        { value: "দিনাজপুর-৩", label: "দিনাজপুর-৩" },
-        { value: "দিনাজপুর-৪", label: "দিনাজপুর-৪" },
-        { value: "দিনাজপুর-৫", label: "দিনাজপুর-৫" },
-        { value: "দিনাজপুর-৬", label: "দিনাজপুর-৬" },
-        { value: "নীলফামারী-১", label: "নীলফামারী-১" },
-        { value: "নীলফামারী-২", label: "নীলফামারী-২" },
-        { value: "নীলফামারী-৩", label: "নীলফামারী-৩" },
-        { value: "নীলফামারী-৪", label: "নীলফামারী-৪" },
-        { value: "লালমনিরহাট-১", label: "লালমনিরহাট-১" },
-        { value: "লালমনিরহাট-২", label: "লালমনিরহাট-২" },
-        { value: "লালমনিরহাট-৩", label: "লালমনিরহাট-৩" },
-        { value: "রংপুর-১", label: "রংপুর-১" },
-        { value: "রংপুর-২", label: "রংপুর-২" },
-        { value: "রংপুর-৩", label: "রংপুর-৩" },
-        { value: "রংপুর-৪", label: "রংপুর-৪" },
-        { value: "রংপুর-৫", label: "রংপুর-৫" },
-        { value: "রংপুর-৬", label: "রংপুর-৬" },
-        { value: "কুড়িগ্রাম-১", label: "কুড়িগ্রাম-১" },
-        { value: "কুড়িগ্রাম-২", label: "কুড়িগ্রাম-২" },
-        { value: "কুড়িগ্রাম-৩", label: "কুড়িগ্রাম-৩" },
-        { value: "কুড়িগ্রাম-৪", label: "কুড়িগ্রাম-৪" },
-        { value: "গাইবান্ধা-১", label: "গাইবান্ধা-১" },
-        { value: "গাইবান্ধা-২", label: "গাইবান্ধা-২" },
-        { value: "গাইবান্ধা-৩", label: "গাইবান্ধা-৩" },
-        { value: "গাইবান্ধা-৪", label: "গাইবান্ধা-৪" },
-        { value: "গাইবান্ধা-৫", label: "গাইবান্ধা-৫" },
-        { value: "জয়পুরহাট-১", label: "জয়পুরহাট-১" },
-        { value: "জয়পুরহাট-২", label: "জয়পুরহাট-২" },
-        { value: "বগুড়া-১", label: "বগুড়া-১" },
-        { value: "বগুড়া-২", label: "বগুড়া-২" },
-        { value: "বগুড়া-৩", label: "বগুড়া-৩" },
-        { value: "বগুড়া-৪", label: "বগুড়া-৪" },
-        { value: "বগুড়া-৫", label: "বগুড়া-৫" },
-        { value: "বগুড়া-৬", label: "বগুড়া-৬" },
-        { value: "বগুড়া-৭", label: "বগুড়া-৭" },
-        { value: "চাঁপাইনবাবগঞ্জ-১", label: "চাঁপাইনবাবগঞ্জ-১" },
-        { value: "চাঁপাইনবাবগঞ্জ-২", label: "চাঁপাইনবাবগঞ্জ-২" },
-        { value: "চাঁপাইনবাবগঞ্জ-৩", label: "চাঁপাইনবাবগঞ্জ-৩" },
-        { value: "নওগাঁ-১", label: "নওগাঁ-১" },
-        { value: "নওগাঁ-২", label: "নওগাঁ-২" },
-        { value: "নওগাঁ-৩", label: "নওগাঁ-৩" },
-        { value: "নওগাঁ-৪", label: "নওগাঁ-৪" },
-        { value: "নওগাঁ-৫", label: "নওগাঁ-৫" },
-        { value: "নওগাঁ-৬", label: "নওগাঁ-৬" },
-        { value: "রাজশাহী-১", label: "রাজশাহী-১" },
-        { value: "রাজশাহী-২", label: "রাজশাহী-২" },
-        { value: "রাজশাহী-৩", label: "রাজশাহী-৩" },
-        { value: "রাজশাহী-৪", label: "রাজশাহী-৪" },
-        { value: "রাজশাহী-৫", label: "রাজশাহী-৫" },
-        { value: "রাজশাহী-৬", label: "রাজশাহী-৬" },
-        { value: "নাটোর-১", label: "নাটোর-১" },
-        { value: "নাটোর-২", label: "নাটোর-২" },
-        { value: "নাটোর-৩", label: "নাটোর-৩" },
-        { value: "নাটোর-৪", label: "নাটোর-৪" },
-        { value: "সিরাজগঞ্জ-১", label: "সিরাজগঞ্জ-১" },
-        { value: "সিরাজগঞ্জ-২", label: "সিরাজগঞ্জ-২" },
-        { value: "সিরাজগঞ্জ-৩", label: "সিরাজগঞ্জ-৩" },
-        { value: "সিরাজগঞ্জ-৪", label: "সিরাজগঞ্জ-৪" },
-        { value: "সিরাজগঞ্জ-৫", label: "সিরাজগঞ্জ-৫" },
-        { value: "সিরাজগঞ্জ-৬", label: "সিরাজগঞ্জ-৬" },
-        { value: "পাবনা-১", label: "পাবনা-১" },
-        { value: "পাবনা-২", label: "পাবনা-২" },
-        { value: "পাবনা-৩", label: "পাবনা-৩" },
-        { value: "পাবনা-৪", label: "পাবনা-৪" },
-        { value: "পাবনা-৫", label: "পাবনা-৫" },
-        { value: "মেহেরপুর-১", label: "মেহেরপুর-১" },
-        { value: "মেহেরপুর-২", label: "মেহেরপুর-২" },
-        { value: "কুষ্টিয়া-১", label: "কুষ্টিয়া-১" },
-        { value: "কুষ্টিয়া-২", label: "কুষ্টিয়া-২" },
-        { value: "কুষ্টিয়া-৩", label: "কুষ্টিয়া-৩" },
-        { value: "কুষ্টিয়া-৪", label: "কুষ্টিয়া-৪" },
-        { value: "চুয়াডাঙ্গা-১", label: "চুয়াডাঙ্গা-১" },
-        { value: "চুয়াডাঙ্গা-২", label: "চুয়াডাঙ্গা-২" },
-        { value: "ঝিনাইদহ-১", label: "ঝিনাইদহ-১" },
-        { value: "ঝিনাইদহ-২", label: "ঝিনাইদহ-২" },
-        { value: "ঝিনাইদহ-৩", label: "ঝিনাইদহ-৩" },
-        { value: "ঝিনাইদহ-৪", label: "ঝিনাইদহ-৪" },
-        { value: "যশোর-১", label: "যশোর-১" },
-        { value: "যশোর-২", label: "যশোর-২" },
-        { value: "যশোর-৩", label: "যশোর-৩" },
-        { value: "যশোর-৪", label: "যশোর-৪" },
-        { value: "যশোর-৫", label: "যশোর-৫" },
-        { value: "যশোর-৬", label: "যশোর-৬" },
-        { value: "মাগুরা-১", label: "মাগুরা-১" },
-        { value: "মাগুরা-২", label: "মাগুরা-২" },
-        { value: "নড়াইল-১", label: "নড়াইল-১" },
-        { value: "নড়াইল-২", label: "নড়াইল-২" },
-        { value: "বাগেরহাট-১", label: "বাগেরহাট-১" },
-        { value: "বাগেরহাট-২", label: "বাগেরহাট-২" },
-        { value: "বাগেরহাট-৩", label: "বাগেরহাট-৩" }
-    ]
+    ballotTypes: [],
+    ballotLocations: []
 };
 
 function loadDashboardData() {
@@ -288,7 +184,13 @@ function loadDashboardData() {
 function loadCandidatesData() {
     const candidatesTableBody = document.getElementById('candidatesTableBody');
     if (candidatesTableBody) {
-        candidatesTableBody.innerHTML = mockDashboardData.candidates.map(candidate => {
+        // Combine mock candidates with custom candidates
+        const allCandidates = [
+            ...mockDashboardData.candidates,
+            ...customCandidates.filter(c => c) // Filter out null/undefined entries
+        ];
+        
+        candidatesTableBody.innerHTML = allCandidates.map(candidate => {
             const statusBadge = candidate.status === 'active' 
                 ? '<span class="badge badge-success">সক্রিয়</span>' 
                 : '<span class="badge badge-danger">নিষ্ক্রিয়</span>';
