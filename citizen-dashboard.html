@@ -377,6 +377,15 @@
 
         <!-- Chat Input -->
         <div class="global-chat-input-container">
+          <!-- Reply Preview -->
+          <div id="replyPreview" class="reply-preview" style="display: none; position: absolute; top: -60px; left: 14px; right: 14px;">
+            <div class="reply-preview-content">
+              <div class="reply-preview-label">উত্তর দিচ্ছেন</div>
+              <div class="reply-preview-text" id="replyPreviewText"></div>
+            </div>
+            <button type="button" onclick="cancelReply()" class="reply-preview-close" aria-label="বাতিল করুন">×</button>
+          </div>
+          
           <input
             type="text"
             id="globalChatInput"

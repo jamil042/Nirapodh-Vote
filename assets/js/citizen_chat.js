@@ -7,6 +7,7 @@
   let socket = null;
   let mySocketId = null;
   const messageIds = new Set(); // Prevent duplicate messages
+  let replyingTo = null; // Track message being replied to
 
   // ===== Utility =====
   function formatTime(timestamp) {
@@ -41,7 +42,7 @@
   }
 
   // ===== Public UI helpers =====
-  NirapodChat.addChatMessage = function (message, timestamp, isOwn = false, id = null) {
+  NirapodChat.addChatMessage = function (message, timestamp, isOwn = false, id = null, replyTo = null) {
     const messagesContainer = document.getElementById('globalChatMessages');
     if (!messagesContainer) return;
 
@@ -52,11 +53,21 @@
     const messageDiv = document.createElement('div');
     messageDiv.className = `global-message ${isOwn ? 'own-message' : 'other-message'}`;
     messageDiv.dataset.messageId = key;
+    messageDiv.dataset.messageText = message;
 
     const bubbleDiv = document.createElement('div');
     bubbleDiv.className = 'message-bubble';
 
-    // ❌ Username removed for anonymity
+    // Add reply indicator if this is a reply
+    if (replyTo) {
+      const replyIndicator = document.createElement('div');
+      replyIndicator.className = 'message-reply-indicator';
+      replyIndicator.innerHTML = `
+        <div class="reply-indicator-text">↩ উত্তর</div>
+        <div class="reply-indicator-message">${replyTo}</div>
+      `;
+      bubbleDiv.appendChild(replyIndicator);
+    }
 
     const textDiv = document.createElement('div');
     textDiv.className = 'message-text';
@@ -69,6 +80,20 @@
     bubbleDiv.appendChild(timeSpan);
 
     messageDiv.appendChild(bubbleDiv);
+
+    // Add reply button
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'message-actions';
+    actionsDiv.innerHTML = `
+      <button class="reply-btn" onclick="replyToMessage('${key}')" aria-label="উত্তর দিন">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 14L4 9l5-5"></path>
+          <path d="M20 20v-7a4 4 0 0 0-4-4H4"></path>
+        </svg>
+      </button>
+    `;
+    messageDiv.appendChild(actionsDiv);
+
     messagesContainer.appendChild(messageDiv);
 
     scrollToBottom();
@@ -133,7 +158,7 @@
     socket.on('receive_global_message', (data) => {
       // Check if this is my own message
       const isOwn = data.socketId && data.socketId === mySocketId;
-      NirapodChat.addChatMessage(data.message, data.timestamp, isOwn, data.id);
+      NirapodChat.addChatMessage(data.message, data.timestamp, isOwn, data.id, data.replyTo);
     });
 
     socket.on('message_history', (payload) => {
@@ -141,7 +166,7 @@
       msgs.forEach(m => {
         // Old messages won't have socketId, so they'll be shown as others' messages
         const isOwn = m.socketId && m.socketId === mySocketId;
-        NirapodChat.addChatMessage(m.message, m.timestamp, isOwn, m.id);
+        NirapodChat.addChatMessage(m.message, m.timestamp, isOwn, m.id, m.replyTo);
       });
     });
 
@@ -182,10 +207,16 @@
     const payload = {
       message,
       timestamp: new Date().toISOString(),
-      socketId: mySocketId
+      socketId: mySocketId,
+      replyTo: replyingTo ? replyingTo.text : null
     };
 
     socket.emit('global_message', payload);
+
+    // Clear reply state
+    replyingTo = null;
+    const replyPreview = document.getElementById('replyPreview');
+    if (replyPreview) replyPreview.style.display = 'none';
 
     // Server থেকে broadcast হলে দেখাবে, এখানে দেখাবো না
 
@@ -193,6 +224,33 @@
       input.value = '';
       input.focus();
     }
+  };
+
+  // Reply functionality
+  NirapodChat.replyToMessage = function(messageId) {
+    const messageEl = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (!messageEl) return;
+
+    const messageText = messageEl.dataset.messageText;
+    if (!messageText) return;
+
+    replyingTo = { id: messageId, text: messageText };
+
+    const replyPreview = document.getElementById('replyPreview');
+    const replyPreviewText = document.getElementById('replyPreviewText');
+    
+    if (replyPreview && replyPreviewText) {
+      replyPreviewText.textContent = messageText;
+      replyPreview.style.display = 'flex';
+    }
+
+    document.getElementById('globalChatInput')?.focus();
+  };
+
+  NirapodChat.cancelReply = function() {
+    replyingTo = null;
+    const replyPreview = document.getElementById('replyPreview');
+    if (replyPreview) replyPreview.style.display = 'none';
   };
 
   // ===== Bind DOM events =====
@@ -221,6 +279,8 @@
 
   // ===== Expose for HTML onclick =====
   window.sendGlobalMessage = () => NirapodChat.sendGlobalMessage();
+  window.replyToMessage = (id) => NirapodChat.replyToMessage(id);
+  window.cancelReply = () => NirapodChat.cancelReply();
 
   // ===== Boot =====
   document.addEventListener('DOMContentLoaded', () => {
