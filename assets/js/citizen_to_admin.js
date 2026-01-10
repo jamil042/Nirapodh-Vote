@@ -76,17 +76,19 @@
   function showChatWindow() {
     const loginForm = document.querySelector('.chat-nid-login');
     const chatWindow = document.querySelector('.chat-window');
+    const logoutBtn = document.querySelector('.logout-btn');
 
     if (loginForm) loginForm.style.display = 'none';
     if (chatWindow) chatWindow.style.display = 'flex';
+    if (logoutBtn) logoutBtn.style.display = 'inline-block';
 
-    // Update header
     const headerName = document.getElementById('chat-header-name');
     const headerNID = document.querySelector('.chat-header-nid');
 
     if (headerName) headerName.textContent = 'প্রশাসক';
-    if (headerNID) headerNID.textContent = `আপনার NID: ${citizenInfo.nid}`;
-  }
+    if (headerNID && citizenInfo) headerNID.textContent = `আপনার NID: ${citizenInfo.nid}`;
+}
+
 
   // Send message to admin
   window.sendChatMessage = function() {
