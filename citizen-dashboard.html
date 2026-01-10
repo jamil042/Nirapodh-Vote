@@ -6,9 +6,12 @@
     <title>নাগরিক ড্যাশবোর্ড - নিরাপদ ভোট</title>
     <link rel="stylesheet" href="assets/css/common.css">
     <link rel="stylesheet" href="assets/css/citizen-dashboard.css">
+    <link rel="stylesheet" href="assets/css/citizen_chat.css">
 </head>
 </head>
 <body>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
     <!-- Header -->
     <header class="dashboard-header">
         <div class="header-content">
@@ -330,111 +333,70 @@
                 </div>
             </div>
 
-            <!-- Chat with Admin Section -->
-            <div id="chat-section" class="content-section">
-                <div class="section-header">
-                    <h2>
-                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
-                            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
-                        </svg>
-                        প্রশাসকের সাথে চ্যাট
-                    </h2>
-                    <p class="private-note">
-                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;">
-                            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
-                        </svg>
-                        এটি একটি ব্যক্তিগত চ্যাট
-                    </p>
-                </div>
 
-                <div class="chat-container">
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="chat-message admin">
-                            <div class="message-bubble">
-                                <p>স্বাগতম! আমি আপনাকে কীভাবে সাহায্য করতে পারি?</p>
-                                <span class="message-time">১০:৩০ AM</span>
-                            </div>
-                        </div>
+<!-- Chat Section - Namespaced & Production-Safe -->
+<section id="chat-section" class="content-section" data-section="chat">
+  <div class="section-header">
+    <h2>💬 নাগরিক গ্লোবাল চ্যাট</h2>
+    <p class="chat-subtitle">সকল নাগরিকদের সাথে কথা বলুন</p>
+  </div>
 
-                        <div class="chat-message user">
-                            <div class="message-bubble">
-                                <p>ভোট প্রদানের সময় কি?</p>
-                                <span class="message-time">১০:৩২ AM</span>
-                            </div>
-                        </div>
-
-                        <div class="chat-message admin">
-                            <div class="message-bubble">
-                                <p>ভোট প্রদানের সময় সকাল ৮টা থেকে বিকাল ৪টা পর্যন্ত। আপনি এই সময়ের মধ্যে যেকোনো সময় ভোট দিতে পারবেন।</p>
-                                <span class="message-time">১০:৩২ AM</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="chat-input">
-                        <input type="text" id="chatInput" placeholder="বার্তা লিখুন..." class="input-field">
-                        <button onclick="sendChatMessage()" class="btn btn-primary">পাঠান</button>
-                    </div>
-                </div>
+  <!-- Chat Interface (Auto-visible) -->
+  <div id="chatInterface" class="chat-interface" data-chat="ui">
+    <div class="chat-main-container">
+      <!-- Chat Messages Area -->
+      <div class="chat-content-area" style="grid-column: 1 / -1;">
+        <div class="chat-header-bar">
+          <div class="chat-header-left">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" aria-hidden="true">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <div>
+              <h3 style="margin: 0; font-size: 16px;">গ্লোবাল চ্যাট</h3>
+              <p class="online-count">
+                <span class="online-dot"></span>
+                সকল নাগরিকদের সাথে কথা বলুন
+              </p>
             </div>
+          </div>
+        </div>
 
-            <!-- Complaints Section -->
-            <div id="complaints-section" class="content-section">
-                <div class="section-header">
-                    <h2>
-                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
-                            <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-                        </svg>
-                        অভিযোগ দাখিল
-                    </h2>
-                </div>
+        <!-- Messages Container -->
+        <div
+          class="global-chat-messages"
+          id="globalChatMessages"
+          role="log"
+          aria-live="polite"
+          aria-relevant="additions"
+        >
+          <!-- Messages will be appended here -->
+        </div>
 
-                <div class="complaints-container">
-                    <div class="card">
-                        <h3>নতুন অভিযোগ দাখিল করুন</h3>
-                        
-                        <form id="complaintForm" onsubmit="submitComplaint(event)">
-                            <div class="form-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="anonymousComplaint" checked>
-                                    বেনামী অভিযোগ (আপনার পরিচয় গোপন থাকবে)
-                                </label>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="complaintText">অভিযোগের বিবরণ</label>
-                                <textarea id="complaintText" rows="5" class="input-field" placeholder="আপনার অভিযোগ বিস্তারিত লিখুন..." required></textarea>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary">অভিযোগ জমা দিন</button>
-                        </form>
-                    </div>
-
-                    <div class="card">
-                        <h3>আপনার অভিযোগসমূহ</h3>
-                        
-                        <div class="complaint-item">
-                            <div class="complaint-header">
-                                <span class="complaint-status pending">⏳ প্রক্রিয়াধীন</span>
-                                <span class="complaint-date">০৪ জানুয়ারি ২০২৫</span>
-                            </div>
-                            <p class="complaint-text">ভোট প্রদান করার সময় সিস্টেম ধীরগতিতে চলছিল।</p>
-                        </div>
-
-                        <div class="complaint-item">
-                            <div class="complaint-header">
-                                <span class="complaint-status replied">✓ উত্তর প্রদান</span>
-                                <span class="complaint-date">০৩ জানুয়ারি ২০২৫</span>
-                            </div>
-                            <p class="complaint-text">প্রার্থীর ছবি ঠিকমতো দেখা যাচ্ছে না।</p>
-                            <div class="admin-reply">
-                                <strong>প্রশাসকের উত্তর:</strong>
-                                <p>সমস্যাটি সমাধান করা হয়েছে। এখন সব ছবি সঠিকভাবে দেখা যাচ্ছে। অসুবিধার জন্য দুঃখিত।</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!-- Chat Input -->
+        <div class="global-chat-input-container">
+          <input
+            type="text"
+            id="globalChatInput"
+            class="input-field"
+            placeholder="বার্তা লিখুন..."
+            maxlength="500"
+            aria-label="চ্যাট বার্তা"
+          >
+          <button type="button" onclick="sendGlobalMessage()" class="btn btn-primary" aria-label="বার্তা পাঠান">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;" aria-hidden="true">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+            পাঠান
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
             <!-- Notices Section -->
             <div id="notices-section" class="content-section">
@@ -555,5 +517,6 @@
 
     <script src="assets/js/common.js"></script>
     <script src="assets/js/citizen-dashboard.js"></script>
+    <script src="assets/js/citizen_chat.js"></script>
 </body>
 </html>

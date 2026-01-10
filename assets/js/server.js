@@ -1,53 +1,48 @@
-
-// assets/js/server.js - Express 5 Compatible (Updated)
+// assets/js/server.js - Anonymous Chat Version
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-const { randomUUID } = require('crypto'); // 🆕 For unique message IDs
+const { randomUUID } = require('crypto');
 
 const app = express();
 const server = http.createServer(app);
 
 // CORS middleware
 app.use(cors({
-  origin: '*', // TODO: Production: replace with your exact domain, e.g. 'https://nirapod-vote.example.com'
+  origin: '*',
   credentials: true
 }));
 
-// Express 5 built-in body parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: '*', // TODO: Production: set to your exact origin
+    origin: '*',
     methods: ['GET', 'POST'],
     credentials: true
   },
   transports: ['websocket', 'polling'],
-  allowEIO3: true // Backward compatibility if older clients connect
+  allowEIO3: true
 });
 
-// In-memory state (Development only)
-const onlineUsers = new Map(); // socketId -> { username, joinedAt }
+// In-memory state
+const onlineUsers = new Set(); // Just track socket IDs
 let globalMessageHistory = [];
 const MAX_HISTORY = 100;
 const MAX_MESSAGE_LENGTH = 500;
 
 // ===== Utility functions =====
 
-function broadcastOnlineUsers() {
-  const users = Array.from(onlineUsers.values())
-    .map(u => u.username)
-    .filter((v, i, a) => a.indexOf(v) === i); // Ensure uniqueness
-
-  io.emit('users_online', { users });
-  console.log(`📊 Online users: ${users.length}`);
+function broadcastOnlineCount() {
+  io.emit('users_online', { 
+    users: Array.from({ length: onlineUsers.size }, (_, i) => `User${i + 1}`)
+  });
+  console.log(`📊 Online users: ${onlineUsers.size}`);
 }
 
-// 🛡️ Stronger HTML entity encoding for safety
 function sanitizeMessage(text) {
   const trimmed = (text || '').trim().slice(0, MAX_MESSAGE_LENGTH);
   return trimmed
@@ -58,15 +53,13 @@ function sanitizeMessage(text) {
     .replace(/'/g, '&#39;');
 }
 
-function validateUsername(username) {
-  if (!username || typeof username !== 'string') return false;
-  const cleaned = username.trim();
-  return cleaned.length >= 2 && cleaned.length <= 20;
-}
-
 // ===== Socket.IO connection handling =====
 io.on('connection', (socket) => {
   console.log(`🔌 Client connected: ${socket.id}`);
+  
+  // Add to online users
+  onlineUsers.add(socket.id);
+  broadcastOnlineCount();
 
   // Send connection confirmation
   socket.emit('connection_status', {
@@ -75,97 +68,30 @@ io.on('connection', (socket) => {
     timestamp: new Date().toISOString()
   });
 
-  // ---- User login
-  socket.on('user_login', (data) => {
-    const username = data?.username?.trim();
-
-    if (!validateUsername(username)) {
-      // ❗ custom app-level error event
-      socket.emit('chat_error', { msg: 'নাম ২-২০ অক্ষরের মধ্যে হতে হবে' });
-      return;
-    }
-
-    // Check if username already exists
-    const existingUser = Array.from(onlineUsers.values())
-      .find(u => u.username === username);
-
-    if (existingUser) {
-      socket.emit('chat_error', { msg: 'এই নাম ইতিমধ্যে ব্যবহৃত হচ্ছে। অন্য নাম চেষ্টা করুন।' });
-      return;
-    }
-
-    // Register user
-    onlineUsers.set(socket.id, {
-      username,
-      joinedAt: new Date().toISOString()
-    });
-
-    console.log(`✅ ${username} logged in (${socket.id})`);
-
-    // Broadcast to all clients
-    io.emit('user_status', { username, online: true });
-    broadcastOnlineUsers();
-
-    // Send success to the user
-    socket.emit('login_success', { username });
-  });
-
-  // ---- User logout
-  socket.on('user_logout', () => {
-    const info = onlineUsers.get(socket.id);
-    if (info) {
-      console.log(`👋 ${info.username} logged out (${socket.id})`);
-      onlineUsers.delete(socket.id);
-      io.emit('user_status', { username: info.username, online: false });
-      broadcastOnlineUsers();
-    }
-  });
-
   // ---- Request message history
   socket.on('request_message_history', () => {
-    const info = onlineUsers.get(socket.id);
-    if (!info) {
-      socket.emit('chat_error', { msg: 'অননুমোদিত ব্যবহারকারী' });
-      return;
-    }
-
-    // Send last 50 messages
     const recentMessages = globalMessageHistory.slice(-50);
     socket.emit('message_history', {
       messages: recentMessages,
       count: recentMessages.length
     });
-
-    console.log(`📜 Sent ${recentMessages.length} messages to ${info.username}`);
+    console.log(`📜 Sent ${recentMessages.length} messages to ${socket.id}`);
   });
 
-  // ---- Global message
+  // ---- Global message (Anonymous)
   socket.on('global_message', (data) => {
-    const info = onlineUsers.get(socket.id);
-    if (!info) {
-      socket.emit('chat_error', { msg: 'অননুমোদিত ব্যবহারকারী। আগে লগইন করুন।' });
-      return;
-    }
-
-    const sender = data?.from?.trim();
     const message = sanitizeMessage(data?.message || '');
-
-    // Verify sender
-    if (info.username !== sender) {
-      socket.emit('chat_error', { msg: 'অননুমোদিত প্রেরক' });
-      return;
-    }
 
     if (!message || message.length === 0) {
       return; // Empty message, ignore
     }
 
-    // 🆔 Create message object with UUID
+    // Create message object
     const msgObj = {
-      id: randomUUID(),
-      from: sender,
+      id: data.id || randomUUID(),
       message,
-      timestamp: new Date().toISOString()
+      timestamp: data.timestamp || new Date().toISOString(),
+      socketId: socket.id // ✅ Add sender's socket ID
     };
 
     // Store in history
@@ -174,40 +100,29 @@ io.on('connection', (socket) => {
       globalMessageHistory.shift();
     }
 
-    // Broadcast to all clients
+    // Broadcast to ALL clients (including sender)
     io.emit('receive_global_message', msgObj);
 
-    console.log(`💬 ${sender}: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}`);
+    console.log(`💬 [${socket.id.slice(0, 8)}]: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}`);
   });
 
-  // ---- Typing indicator (optional)
-  socket.on('typing_status', (data) => {
-    const info = onlineUsers.get(socket.id);
-    if (!info) return;
-
-    socket.broadcast.emit('typing_status', {
-      from: info.username,
-      typing: !!data?.typing
-    });
+  // ---- User logout (optional cleanup)
+  socket.on('user_logout', () => {
+    onlineUsers.delete(socket.id);
+    broadcastOnlineCount();
+    console.log(`👋 ${socket.id} logged out`);
   });
 
   // ---- Disconnect handler
   socket.on('disconnect', (reason) => {
-    const info = onlineUsers.get(socket.id);
-
-    if (info) {
-      console.log(`🔌 ${info.username} disconnected: ${reason}`);
-      onlineUsers.delete(socket.id);
-      io.emit('user_status', { username: info.username, online: false });
-      broadcastOnlineUsers();
-    } else {
-      console.log(`🔌 Socket ${socket.id} disconnected: ${reason}`);
-    }
+    onlineUsers.delete(socket.id);
+    broadcastOnlineCount();
+    console.log(`🔌 Socket ${socket.id} disconnected: ${reason}`);
   });
 
-  // ---- Low-level error handler (transport-level)
+  // ---- Error handler
   socket.on('error', (error) => {
-    console.error(`❌ Socket low-level error (${socket.id}):`, error);
+    console.error(`❌ Socket error (${socket.id}):`, error);
   });
 });
 
@@ -215,7 +130,7 @@ io.on('connection', (socket) => {
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
-    message: 'Nirapod Vote Chat Server',
+    message: 'Nirapod Vote Anonymous Chat Server',
     onlineUsers: onlineUsers.size,
     messagesInHistory: globalMessageHistory.length
   });
@@ -233,10 +148,6 @@ app.get('/health', (req, res) => {
 app.get('/stats', (req, res) => {
   res.json({
     totalUsers: onlineUsers.size,
-    users: Array.from(onlineUsers.values()).map(u => ({
-      username: u.username,
-      joinedAt: u.joinedAt
-    })),
     messageHistory: globalMessageHistory.length
   });
 });
@@ -251,12 +162,12 @@ app.use((err, req, res, next) => {
 });
 
 // ===== Start server =====
-const PORT = process.env.PORT || 5500;
+const PORT = process.env.PORT || 5501;
 const HOST = process.env.HOST || '0.0.0.0';
 
 server.listen(PORT, HOST, () => {
   console.log('╔════════════════════════════════════════╗');
-  console.log('║   🚀 Nirapod Vote Chat Server        ║');
+  console.log('║   🚀 Anonymous Chat Server           ║');
   console.log('╠════════════════════════════════════════╣');
   console.log(`║   Server: http://localhost:${PORT}     ║`);
   console.log(`║   Status: ✅ Running                   ║`);
