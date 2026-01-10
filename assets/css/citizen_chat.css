@@ -120,6 +120,7 @@
   display: flex;
   margin-bottom: 14px;
   animation: fadeUp 0.25s ease;
+  position: relative;
 }
 
 @keyframes fadeUp {
@@ -193,6 +194,140 @@
   font-weight: 500;
   font-size: 11px;
   margin-top: 4px;
+}
+
+/* ===============================
+   Reply Feature
+================================ */
+
+.reply-preview {
+  background: rgba(3, 144, 54, 0.1);
+  border-left: 3px solid #039036;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #027028;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.reply-preview-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.reply-preview-label {
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: #039036;
+}
+
+.reply-preview-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #1b5e20;
+}
+
+.reply-preview-close {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 18px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.reply-preview-close:hover {
+  color: #e53935;
+}
+
+.message-reply-indicator {
+  background: rgba(3, 144, 54, 0.15);
+  border-left: 3px solid #039036;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #027028;
+}
+
+/* Reply indicator for own messages - use white/light colors */
+.global-message.own-message .message-reply-indicator {
+  background: rgba(255, 255, 255, 0.2);
+  border-left: 3px solid rgba(255, 255, 255, 0.6);
+}
+
+.reply-indicator-text {
+  font-weight: 600;
+  color: #039036;
+  margin-bottom: 2px;
+}
+
+/* Reply text for own messages - use white */
+.global-message.own-message .reply-indicator-text {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.reply-indicator-message {
+  color: #1b5e20;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-style: italic;
+}
+
+/* Reply message for own messages - use white */
+.global-message.own-message .reply-indicator-message {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.message-actions {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.global-message:hover .message-actions {
+  opacity: 1;
+}
+
+.global-message.own-message .message-actions {
+  left: -32px;
+}
+
+.global-message:not(.own-message) .message-actions {
+  right: -32px;
+}
+
+.reply-btn {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.reply-btn:hover {
+  background: #039036;
+  border-color: #039036;
+  transform: scale(1.1);
+}
+
+.reply-btn:hover svg {
+  stroke: #ffffff;
 }
 
 /* ===============================

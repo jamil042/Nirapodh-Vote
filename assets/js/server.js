@@ -91,7 +91,8 @@ io.on('connection', (socket) => {
       id: data.id || randomUUID(),
       message,
       timestamp: data.timestamp || new Date().toISOString(),
-      socketId: socket.id // ✅ Add sender's socket ID
+      socketId: socket.id, // ✅ Add sender's socket ID
+      replyTo: data.replyTo || null // ✅ Add reply info
     };
 
     // Store in history
@@ -103,7 +104,8 @@ io.on('connection', (socket) => {
     // Broadcast to ALL clients (including sender)
     io.emit('receive_global_message', msgObj);
 
-    console.log(`💬 [${socket.id.slice(0, 8)}]: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}`);
+    const replyInfo = msgObj.replyTo ? ` (replying to: "${msgObj.replyTo.substring(0, 20)}...")` : '';
+    console.log(`💬 [${socket.id.slice(0, 8)}]: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}${replyInfo}`);
   });
 
   // ---- User logout (optional cleanup)
