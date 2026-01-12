@@ -1,5 +1,5 @@
 // ===================================
-// Citizen-Admin Chat System
+// Citizen-Admin Chat System with Validation
 // ===================================
 
 (function() {
@@ -11,7 +11,9 @@
   function initSocket() {
     socket = io('http://localhost:5501', {
       transports: ['websocket', 'polling'],
-      reconnection: true
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5
     });
 
     socket.on('connect', () => {
@@ -21,17 +23,46 @@
       }
     });
 
+    // ✅ Join success
+    socket.on('join_success', (data) => {
+      console.log('✅ Join successful:', data);
+      showChatWindow();
+    });
+
+    // ✅ Join error (NID validation failed)
+    socket.on('join_error', (data) => {
+      console.error('❌ Join error:', data.message);
+      alert(data.message);
+      
+      // Clear saved info and reload
+      localStorage.removeItem('citizenChatInfo');
+      citizenInfo = null;
+      location.reload();
+    });
+
     socket.on('receive_admin_message', (data) => {
+      console.log('📩 Received admin message:', data);
       appendMessage(data.message, 'admin', data.timestamp);
-      playNotificationSound();
     });
 
     socket.on('admin_typing', (data) => {
       showTypingIndicator(data.typing);
     });
 
-    socket.on('message_history', (messages) => {
-      loadMessageHistory(messages);
+    // ✅ Receive chat history
+    socket.on('admin_chat_history', (data) => {
+      console.log('📜 Received message history:', data.messages ? data.messages.length : 0);
+      if (data.messages) {
+        loadMessageHistory(data.messages);
+      }
+    });
+
+    socket.on('disconnect', () => {
+      console.log('❌ Disconnected from chat server');
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('❌ Connection error:', error);
     });
   }
 
@@ -60,16 +91,13 @@
     localStorage.setItem('citizenChatInfo', JSON.stringify(citizenInfo));
 
     // Initialize socket
-    if (!socket) initSocket();
+    if (!socket) {
+      initSocket();
+    } else if (socket.connected) {
+      socket.emit('citizen_join', citizenInfo);
+    }
 
-    // Show chat window
-    showChatWindow();
-
-    // Join chat room
-    socket.emit('citizen_join', citizenInfo);
-
-    // Request message history
-    socket.emit('request_admin_chat_history', { nid: nid });
+    console.log('🔄 Attempting login as:', name, 'NID:', nid);
   };
 
   // Show chat window
@@ -87,15 +115,24 @@
 
     if (headerName) headerName.textContent = 'প্রশাসক';
     if (headerNID && citizenInfo) headerNID.textContent = `আপনার NID: ${citizenInfo.nid}`;
-}
 
+    console.log('✅ Chat window shown');
+  }
 
   // Send message to admin
   window.sendChatMessage = function() {
     const input = document.getElementById('chatInput');
     const message = input?.value?.trim();
 
-    if (!message || !citizenInfo) return;
+    if (!message || !citizenInfo) {
+      console.warn('⚠️ Cannot send: no message or not logged in');
+      return;
+    }
+
+    if (!socket || !socket.connected) {
+      alert('সার্ভারের সাথে সংযোগ নেই। দয়া করে পুনরায় চেষ্টা করুন।');
+      return;
+    }
 
     const messageData = {
       message: message,
@@ -107,6 +144,8 @@
 
     // Send via socket
     socket.emit('citizen_message', messageData);
+
+    console.log('📤 Message sent:', message);
 
     // Append to UI
     appendMessage(message, 'user', messageData.timestamp);
@@ -120,6 +159,10 @@
   function appendMessage(text, type, timestamp) {
     const container = document.getElementById('chat-messages-container');
     if (!container) return;
+
+    // Remove empty state if exists
+    const emptyState = container.querySelector('.chat-empty-state');
+    if (emptyState) emptyState.remove();
 
     const messageDiv = document.createElement('div');
     messageDiv.className = `chat-message ${type}`;
@@ -153,6 +196,15 @@
 
     container.innerHTML = '';
     
+    if (!messages || messages.length === 0) {
+      container.innerHTML = `
+        <div class="chat-empty-state">
+          <p>এখানে আপনার কথোপকথন দেখা যাবে</p>
+        </div>
+      `;
+      return;
+    }
+
     messages.forEach(msg => {
       appendMessage(
         msg.message,
@@ -160,6 +212,8 @@
         msg.timestamp
       );
     });
+
+    console.log('✅ Loaded', messages.length, 'messages');
   }
 
   // Format time
@@ -178,9 +232,11 @@
   // Show typing indicator
   function showTypingIndicator(isTyping) {
     let indicator = document.getElementById('typing-indicator');
+    const container = document.getElementById('chat-messages-container');
     
+    if (!container) return;
+
     if (isTyping && !indicator) {
-      const container = document.getElementById('chat-messages-container');
       indicator = document.createElement('div');
       indicator.id = 'typing-indicator';
       indicator.className = 'chat-message admin';
@@ -196,15 +252,10 @@
     }
   }
 
-  // Notification sound
-  function playNotificationSound() {
-    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSiByNu6+T');
-    audio.volume = 0.3;
-    audio.play().catch(() => {});
-  }
-
   // Enter key to send
   document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 Citizen Chat Initializing...');
+
     const chatInput = document.getElementById('chatInput');
     if (chatInput) {
       chatInput.addEventListener('keypress', (e) => {
@@ -216,7 +267,7 @@
       // Emit typing event
       let typingTimer;
       chatInput.addEventListener('input', () => {
-        if (!socket || !citizenInfo) return;
+        if (!socket || !citizenInfo || !socket.connected) return;
         
         socket.emit('citizen_typing', {
           nid: citizenInfo.nid,
@@ -233,24 +284,32 @@
       });
     }
 
-    // Auto-login if info exists
+    // ✅ Auto-login if info exists
     const savedInfo = localStorage.getItem('citizenChatInfo');
     if (savedInfo) {
-      citizenInfo = JSON.parse(savedInfo);
-      initSocket();
-      showChatWindow();
+      try {
+        citizenInfo = JSON.parse(savedInfo);
+        console.log('✅ Auto-login:', citizenInfo.name);
+        initSocket();
+      } catch (e) {
+        console.error('❌ Failed to parse saved info:', e);
+        localStorage.removeItem('citizenChatInfo');
+      }
     }
+
+    console.log('✅ Citizen Chat Ready');
   });
 
   // Logout function
   window.logoutFromAdminChat = function() {
-    if (socket) {
+    if (socket && citizenInfo) {
       socket.emit('citizen_logout', { nid: citizenInfo.nid });
       socket.disconnect();
     }
     
     localStorage.removeItem('citizenChatInfo');
     citizenInfo = null;
+    socket = null;
     
     location.reload();
   };

@@ -55,7 +55,6 @@ function initializeDashboard() {
     loadDashboardData(); // Load mock data
     loadCandidatesData(); // Load mock candidates data
     loadComplaintsData(); // Load mock complaints data
-    loadChatData(); // Load mock chat data
     loadAdminProfile(); // Load mock admin info
     renderCharts(); // Render charts
     populateBallotFormOptions(); // Load ballot form options from mock data
@@ -74,16 +73,6 @@ function initializeDashboard() {
     const changePasswordForm = document.getElementById('changePasswordForm');
     if (changePasswordForm) {
         changePasswordForm.addEventListener('submit', handlePasswordChange);
-    }
-    
-    const chatMessageInput = document.getElementById('chatMessage');
-    if (chatMessageInput) {
-        chatMessageInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
     }
 }
 
@@ -1047,42 +1036,6 @@ function addNewBallotOption() {
     populateBallotFormOptions();
 }
 
-function sendMessage() {
-    const messageInput = document.getElementById('chatMessage');
-    const sendBtn = document.querySelector('.chat-input-area button');
-    
-    if (!messageInput || !messageInput.value.trim()) return;
-    
-    const chatMessages = document.querySelector('.chat-messages');
-    const message = messageInput.value;
-    
-    // Show loading state
-    if (sendBtn) {
-        sendBtn.disabled = true;
-        sendBtn.classList.add('btn-loading');
-    }
-    messageInput.disabled = true;
-    
-    setTimeout(() => {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message admin-message';
-        messageDiv.innerHTML = `
-            <p>${message}</p>
-            <span class="message-time">${new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' })}</span>
-        `;
-        
-        chatMessages.appendChild(messageDiv);
-        messageInput.value = '';
-        messageInput.disabled = false;
-        
-        if (sendBtn) {
-            sendBtn.disabled = false;
-            sendBtn.classList.remove('btn-loading');
-        }
-        
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }, 1000);
-}
 
 function handlePasswordChange(e) {
     e.preventDefault();
@@ -1263,16 +1216,7 @@ window.onclick = function(event) {
     }
 }
 
-function selectChat(chatId) {
-    // Update active state in mock data (in a real app, this would fetch data)
-    mockDashboardData.chatList.forEach(chat => {
-        chat.active = (chat.id === chatId);
-        if (chat.active) chat.unread = 0; // Mark as read
-    });
 
-    // Re-render chat list to show active state
-    loadChatData();
-}
 function resolveComplaint(complaintId) {
     const btn = event?.target;
     if (!btn) return;
