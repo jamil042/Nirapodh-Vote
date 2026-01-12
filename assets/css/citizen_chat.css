@@ -325,11 +325,11 @@
 }
 
 .global-message.own-message .message-actions {
-  left: -36px;
+  right: 70px;
 }
 
 .global-message:not(.own-message):not(.system-message) .message-actions {
-  right: -36px;
+  left: 70px;
 }
 
 .reply-btn {
