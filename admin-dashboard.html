@@ -6,9 +6,13 @@
     <title>প্রশাসক ড্যাশবোর্ড - নিরাপদ ভোট</title>
     <link rel="stylesheet" href="assets/css/common.css">
     <link rel="stylesheet" href="assets/css/admin.css">
+    <link rel="stylesheet" href="assets/css/admin_to_citizen.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 </head>
 <body>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
     <header class="header">
         <div class="header-content">
             <img src="assets/images/election_comission_logo-removebg-preview.png" alt="বাংলাদেশ সরকার" class="logo">
@@ -454,32 +458,62 @@
                 </div>
             </section>
 
-            <section id="chat-section" class="content-section">
-                <div class="section-header">
-                    <h2>নাগরিক চ্যাট</h2>
-                    <p>নাগরিকদের সাথে সরাসরি যোগাযোগ</p>
+    <section id="chat-section" class="content-section">
+        <div class="section-header">  
+            <h1>🏛️ Admin Chat Panel</h1>
+            <p>নাগরিকদের সাথে সরাসরি যোগাযোগ করুন</p>
+        </div>
+
+        <div class="chat-container">
+            <!-- Chat List -->
+            <div class="chat-list">
+                <div class="chat-list-header">
+                    <h3>নাগরিক তালিকা</h3>
+                    <span id="citizenCount">0</span>
                 </div>
 
-                <div class="chat-container">
-                    <div class="chat-list card" id="chat-list-container">
-                        <!-- Chat list will be loaded here -->
-                    </div>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="🔍 নাম বা NID দিয়ে খুঁজুন...">
+                </div>
 
-                    <div class="chat-window card">
-                        <div class="chat-header">
-                            <h3 id="chat-header-name"></h3>
-                            <span class="chat-status" id="chat-header-status">অনলাইন</span>
-                        </div>
-                        <div class="chat-messages" id="chat-messages-container">
-                            <!-- Chat messages will be loaded here -->
-                        </div>
-                        <div class="chat-input">
-                            <input type="text" placeholder="বার্তা লিখুন..." id="chatMessage">
-                            <button class="btn btn-primary" onclick="sendMessage()">পাঠান</button>
-                        </div>
+                <div id="chatListContainer">
+                    <div class="chat-empty-state">
+                        <svg fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+                        </svg>
+                        <h3>কোন নাগরিক নেই</h3>
+                        <p>নাগরিকরা যোগ দিলে এখানে দেখা যাবে</p>
                     </div>
                 </div>
-            </section>
+            </div>
+
+            <!-- Chat Window -->
+            <div class="chat-window">
+                <div class="chat-header">
+                    <div class="chat-header-info">
+                        <h3 id="chatHeaderName">নাগরিক নির্বাচন করুন</h3>
+                        <div class="chat-header-nid" id="chatHeaderNID"></div>
+                    </div>
+                    <span class="chat-status" id="chatStatus" style="display: none;">অনলাইন</span>
+                </div>
+
+                <div class="chat-messages" id="chatMessagesContainer">
+                    <div class="chat-empty-state">
+                        <svg fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+                        </svg>
+                        <h3>কথোপকথন শুরু করুন</h3>
+                        <p>বামদিক থেকে একজন নাগরিক নির্বাচন করুন</p>
+                    </div>
+                </div>
+
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="বার্তা লিখুন..." disabled>
+                    <button id="sendButton" onclick="sendAdminMessage()" disabled>পাঠান</button>
+                </div>
+            </div>
+        </div>
+    </section>
 
              <section id="settings-section" class="content-section">
                 <div class="section-header">
@@ -535,5 +569,6 @@
     <script src="assets/js/common.js"></script>
     <script src="assets/js/admin-mock-data.js"></script>
     <script src="assets/js/admin.js"></script>
+    <script src="assets/js/admin_to_citizen.js"></script>
 </body>
 </html>
