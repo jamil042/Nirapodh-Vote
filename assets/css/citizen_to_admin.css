@@ -417,7 +417,7 @@
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
-.chat-input .btn {
+.chat-input .chat-btn {
   padding: 12px 24px;
   border-radius: 24px;
   font-weight: 700;
@@ -454,27 +454,4 @@
 .chat-empty-state p {
   font-size: 14px;
   color: #94a3b8;
-}
-
-/* ===============================
-   Responsive
-================================ */
-
-@media (max-width: 768px) {
-  .chat-container {
-    grid-template-columns: 1fr;
-    height: auto;
-  }
-
-  .chat-list {
-    max-height: 300px;
-  }
-
-  .chat-window {
-    height: 500px;
-  }
-
-  .message-bubble {
-    max-width: 85%;
-  }
 }

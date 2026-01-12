@@ -420,7 +420,7 @@
    Buttons
 ================================ */
 
-.btn {
+.chat-btn {
   border-radius: 24px;
   padding: 12px 24px;
   font-size: 14px;
@@ -434,50 +434,27 @@
   font-family: inherit;
 }
 
-.btn-primary {
+.btn-primary_chat {
   background: linear-gradient(135deg, #059669, #047857);
   color: #ffffff;
+  font-size: 14px;
+  align-items: center;
+  border-radius: 24px;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-weight: 700;
+  font-family: inherit;
+  padding: 12px 24px;
   box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
 }
 
-.btn-primary:hover {
+.btn-primary_chat:hover {
   background: linear-gradient(135deg, #047857, #065f46);
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(5, 150, 105, 0.35);
 }
 
-.btn-primary:active {
+.btn-primary_chat:active {
   transform: translateY(0);
   box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
-}
-
-/* ===============================
-   Responsive
-================================ */
-
-@media (max-width: 768px) {
-  #discussion-section {
-    padding: 12px;
-  }
-
-  .global-chat-messages {
-    height: 420px;
-  }
-
-  .message-bubble {
-    max-width: 85%;
-  }
-
-  .global-chat-input-container {
-    padding: 12px;
-    gap: 10px;
-  }
-
-  .input-field {
-    font-size: 16px; /* Prevents zoom on iOS */
-  }
-
-  .message-actions {
-    opacity: 1; /* Always show on mobile */
-  }
 }
