@@ -131,7 +131,7 @@
 
   // ===== Socket init =====
   NirapodChat.initializeSocket = function () {
-    socket = io('http://localhost:5501', {
+    socket = io('http://localhost:3000', {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
