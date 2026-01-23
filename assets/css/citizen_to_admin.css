@@ -206,12 +206,13 @@
 }
 
 .chat-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9em;
+    gap: 6px;
+    color: #22c55e;
+    font-weight: 600;
 }
 
 .chat-status::before {
