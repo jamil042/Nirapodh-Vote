@@ -81,18 +81,10 @@
 
     messageDiv.appendChild(bubbleDiv);
 
-    // Add reply button
-    const actionsDiv = document.createElement('div');
-    actionsDiv.className = 'message-actions';
-    actionsDiv.innerHTML = `
-      <button class="reply-btn" onclick="replyToMessage('${key}')" aria-label="উত্তর দিন">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 14L4 9l5-5"></path>
-          <path d="M20 20v-7a4 4 0 0 0-4-4H4"></path>
-        </svg>
-      </button>
-    `;
-    messageDiv.appendChild(actionsDiv);
+    // Add double-click to reply
+    bubbleDiv.addEventListener('dblclick', function() {
+      replyToMessage(key);
+    });
 
     messagesContainer.appendChild(messageDiv);
 

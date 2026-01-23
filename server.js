@@ -620,18 +620,18 @@ connectDB().then(() => {
   server.listen(PORT, () => {
     console.log(`
 ╔═══════════════════════════════════════════════════╗
-║   🗳️  NirapodhVote Backend Server (Merged)        ║
-║   ✅ Server running on port ${PORT}                  ║
-║   ✅ MongoDB Connected                            ║
-║   🌐 http://localhost:${PORT}                      ║
+║   🗳️  NirapodhVote Backend Server (Merged)       ║
+║   ✅ Server running on port ${PORT}              ║
+║   ✅ MongoDB Connected                           ║
+║   🌐 http://localhost:${PORT}                    ║
 ║                                                   ║
 ║   Features:                                       ║
-║   - OTP Authentication & Registration            ║
-║   - Voting System                                ║
-║   - Admin Dashboard                              ║
-║   - Anonymous Chat                               ║
-║   - Admin-Citizen Chat (NID Validated)           ║
-║   - Persistent Chat History                      ║
+║   - OTP Authentication & Registration             ║
+║   - Voting System                                 ║
+║   - Admin Dashboard                               ║
+║   - Anonymous Chat                                ║
+║   - Admin-Citizen Chat (NID Validated)            ║
+║   - Persistent Chat History                       ║
 ╚═══════════════════════════════════════════════════╝
     `);
   });

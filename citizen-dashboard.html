@@ -403,7 +403,16 @@
             <!-- Messages will appear here -->
         </div>
         
-        <div class="chat-input">
+        <div class="chat-input" style="position: relative;">
+            <!-- Reply Preview -->
+            <div id="citizenReplyPreview" class="reply-preview" style="display: none; position: absolute; top: -60px; left: 14px; right: 14px;">
+                <div class="reply-preview-content">
+                    <div class="reply-preview-label">উত্তর দিচ্ছেন</div>
+                    <div class="reply-preview-text" id="citizenReplyPreviewText"></div>
+                </div>
+                <button type="button" onclick="cancelCitizenReply()" class="reply-preview-close">×</button>
+            </div>
+            
             <input type="text" id="chatInput" placeholder="বার্তা লিখুন...">
             <button onclick="sendChatMessage()" class="chat-btn btn-primary_chat">পাঠান</button>
         </div>
