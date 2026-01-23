@@ -80,16 +80,6 @@ function showSection(sectionName) {
             item.classList.add('active');
         }
     });
-    
-    // Clear notification badges when section is opened
-    if (sectionName === 'discussion') {
-        const badge = document.getElementById('discussionBadge');
-        if (badge) badge.classList.add('hidden');
-    }
-    if (sectionName === 'chat') {
-        const badge = document.getElementById('chatBadge');
-        if (badge) badge.classList.add('hidden');
-    }
 }
 
 // Setup mobile menu
@@ -279,8 +269,58 @@ function highlightUserVote() {
 
 // ============= DISCUSSION FUNCTIONS =============
 
+let dashboardSocket = null;
+
 // Setup realtime features
 function setupRealtimeFeatures() {
+    // Connect to server
+    dashboardSocket = io('http://localhost:3000', {
+        transports: ['websocket', 'polling'],
+        reconnection: true
+    });
+
+    dashboardSocket.on('connect', () => {
+        console.log('✅ Connected to server');
+        
+        // Send dashboard login event
+        const userData = getUserData();
+        if (userData && userData.name && userData.nid) {
+            dashboardSocket.emit('dashboard_login', {
+                name: userData.name,
+                nid: userData.nid
+            });
+            console.log('📤 Dashboard login sent:', userData.name);
+        }
+    });
+
+    // Listen for dashboard count updates
+    dashboardSocket.on('dashboard_count', (data) => {
+        console.log('📥 Received dashboard_count:', JSON.stringify(data));
+        
+        const badge = document.getElementById('onlineUserCount');
+        
+        if (!badge) {
+            console.error('❌ Badge element NOT FOUND! Check HTML for id="onlineUserCount"');
+            return;
+        }
+        
+        const count = data && data.count ? data.count : 0;
+        console.log('🔢 Raw count value:', count, 'Type:', typeof count);
+        
+        // Convert to Bengali
+        const bengaliText = `${toBengaliNumber(count)} জন অনলাইন`;
+        console.log('📝 Setting badge text to:', bengaliText);
+        
+        badge.textContent = bengaliText;
+        badge.style.display = 'inline-block'; // Force show
+        
+        console.log('✅ Badge text now:', badge.textContent);
+    });
+
+    dashboardSocket.on('disconnect', () => {
+        console.log('❌ Disconnected from server');
+    });
+
     // Simulate receiving new messages
     startDiscussionSimulation();
     startChatSimulation();
@@ -339,15 +379,6 @@ function addDiscussionMessage(message, isCurrentUser) {
     
     messagesContainer.appendChild(messageDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    
-    if (!isCurrentUser) {
-        // Show notification badge if not on discussion section
-        const currentSection = document.querySelector('.content-section.active');
-        if (!currentSection || currentSection.id !== 'discussion-section') {
-            const badge = document.getElementById('discussionBadge');
-            if (badge) badge.classList.remove('hidden');
-        }
-    }
 }
 
 // ============= CHAT FUNCTIONS =============
@@ -403,19 +434,6 @@ function addChatMessage(message, type) {
     
     messagesContainer.appendChild(messageDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    
-    if (type === 'admin') {
-        // Show notification badge if not on chat section
-        const currentSection = document.querySelector('.content-section.active');
-        if (!currentSection || currentSection.id !== 'chat-section') {
-            const badge = document.getElementById('chatBadge');
-            if (badge) {
-                badge.classList.remove('hidden');
-                const currentCount = parseInt(badge.textContent) || 0;
-                badge.textContent = currentCount + 1;
-            }
-        }
-    }
 }
 
 // ============= COMPLAINT FUNCTIONS =============
