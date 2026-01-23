@@ -286,14 +286,28 @@ function appendMessage(message) {
     messageDiv.className = `chat-message ${message.type}`;
     
     const time = formatTime(message.timestamp);
-
-    messageDiv.innerHTML = `
-        <div class="message-bubble">
-            <p>${escapeHtml(message.text)}</p>
-            <span class="message-time">${time}</span>
-        </div>
-    `;
-
+    
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    bubble.style.cursor = 'pointer';
+    bubble.style.userSelect = 'none';
+    
+    const p = document.createElement('p');
+    p.textContent = message.text;
+    
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'message-time';
+    timeSpan.textContent = time;
+    
+    bubble.appendChild(p);
+    bubble.appendChild(timeSpan);
+    
+    // Double-click to reply
+    bubble.addEventListener('dblclick', function() {
+      showAdminReplyPreview(message.text);
+    });
+    
+    messageDiv.appendChild(bubble);
     container.appendChild(messageDiv);
     container.scrollTop = container.scrollHeight;
 }
@@ -396,6 +410,27 @@ function formatTime(timestamp) {
         const n = parseInt(c);
         return isNaN(n) ? c : bn[n];
     }).join('');
+}
+
+// Show reply preview
+function showAdminReplyPreview(text) {
+    const preview = document.getElementById('adminReplyPreview');
+    const previewText = document.getElementById('adminReplyPreviewText');
+    const input = document.getElementById('messageInput');
+    
+    if (preview && previewText && input) {
+        previewText.textContent = text.substring(0, 80) + (text.length > 80 ? '...' : '');
+        preview.style.display = 'flex';
+        input.focus();
+    }
+}
+
+// Cancel reply
+function cancelAdminReply() {
+    const preview = document.getElementById('adminReplyPreview');
+    if (preview) {
+        preview.style.display = 'none';
+    }
 }
 
 // Escape HTML
