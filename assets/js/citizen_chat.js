@@ -8,6 +8,25 @@
   let mySocketId = null;
   const messageIds = new Set(); // Prevent duplicate messages
   let replyingTo = null; // Track message being replied to
+  
+  // Track own messages in localStorage
+  function getMyMessageIds() {
+    try {
+      const stored = localStorage.getItem('nirapodh_my_messages');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  }
+  
+  function addMyMessageId(id) {
+    const myMessages = getMyMessageIds();
+    myMessages.add(id);
+    // Keep only last 100 messages
+    const arr = Array.from(myMessages);
+    if (arr.length > 100) arr.shift();
+    localStorage.setItem('nirapodh_my_messages', JSON.stringify(arr));
+  }
 
   // ===== Utility =====
   function formatTime(timestamp) {
@@ -49,9 +68,13 @@
     const key = id || `${timestamp}-${message.substring(0, 20)}`;
     if (messageIds.has(key)) return;
     messageIds.add(key);
+    
+    // Check if this is my message from localStorage
+    const myMessages = getMyMessageIds();
+    const isMyMessage = isOwn || myMessages.has(key);
 
     const messageDiv = document.createElement('div');
-    messageDiv.className = `global-message ${isOwn ? 'own-message' : 'other-message'}`;
+    messageDiv.className = `global-message ${isMyMessage ? 'own-message' : 'other-message'}`;
     messageDiv.dataset.messageId = key;
     messageDiv.dataset.messageText = message;
 
@@ -196,12 +219,17 @@
       return;
     }
 
+    const messageId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const payload = {
+      id: messageId,
       message,
       timestamp: new Date().toISOString(),
       socketId: mySocketId,
       replyTo: replyingTo ? replyingTo.text : null
     };
+    
+    // Store this message ID as mine
+    addMyMessageId(messageId);
 
     socket.emit('global_message', payload);
 
