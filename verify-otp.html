@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP যাচাইকরণ - নিরাপদ ভোট</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/common.css">
+    <link rel="stylesheet" href="assets/css/auth.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="index.html">
+                <img src="assets/images/election_comission_logo-removebg-preview.png" alt="বাংলাদেশ সরকার" class="logo">
+            </a>
+            <div class="header-title">
+                <h1>নিরাপদ ভোট</h1>
+                <p>স্বচ্ছ ও নিরাপদ ডিজিটাল ভোটিং সিস্টেম</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="auth-container">
+            <div class="auth-card card">
+                <div class="auth-header">
+                    <h2>OTP যাচাইকরণ</h2>
+                    <p>আপনার মোবাইলে পাঠানো OTP কোডটি প্রদান করুন</p>
+                </div>
+
+                <div id="alertContainer"></div>
+
+                <!-- reCAPTCHA Container for Firebase (hidden by default) -->
+                <div id="recaptcha-container" style="margin-bottom: 20px; display: none; justify-content: center;"></div>
+
+                <div class="info-box" style="margin-bottom: 20px;">
+                    <p><i class="fa-solid fa-mobile-screen-button"></i> OTP পাঠানো হবে: <strong id="displayPhone"></strong></p>
+                    <p><i class="fa-solid fa-clock"></i> মেয়াদ: <strong><span id="expiryTime">2</span> মিনিট</strong></p>
+                </div>
+
+                <!-- Send OTP Button (hidden by default for backend mode) -->
+                <button type="button" class="btn btn-primary btn-full" id="sendOtpBtn" onclick="sendBackendOTP()" style="display: none; margin-bottom: 20px;">
+                    <span id="sendBtnText">📱 OTP পাঠান</span>
+                    <span id="sendBtnLoader" class="loading" style="display: none;"></span>
+                </button>
+
+                <form id="otpForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="otp">OTP কোড *</label>
+                        <input 
+                            type="text" 
+                            id="otp" 
+                            name="otp" 
+                            placeholder="৬ সংখ্যার OTP লিখুন"
+                            required
+                            maxlength="6"
+                            pattern="[0-9]{6}"
+                            autocomplete="off"
+                        >
+                        <small class="form-hint">আপনার ফোনে পাওয়া ৬ সংখ্যার কোডটি লিখুন</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="presentAddress">বর্তমান ঠিকানা *</label>
+                        <textarea 
+                            id="presentAddress" 
+                            name="presentAddress" 
+                            rows="3"
+                            placeholder="আপনার বর্তমান ঠিকানা লিখুন"
+                            required
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">পাসওয়ার্ড *</label>
+                        <div class="password-input-wrapper">
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                placeholder="শক্তিশালী পাসওয়ার্ড তৈরি করুন"
+                                required
+                                minlength="6"
+                            >
+                            <button type="button" class="toggle-password" onclick="togglePassword('password')">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                        <small class="form-hint">কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">পাসওয়ার্ড নিশ্চিত করুন *</label>
+                        <div class="password-input-wrapper">
+                            <input 
+                                type="password" 
+                                id="confirmPassword" 
+                                name="confirmPassword" 
+                                placeholder="পুনরায় পাসওয়ার্ড লিখুন"
+                                required
+                            >
+                            <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword')">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full" id="submitBtn">
+                        <span id="btnText">যাচাই করুন ও নিবন্ধন সম্পূর্ণ করুন</span>
+                        <span id="btnLoader" class="loading" style="display: none;"></span>
+                    </button>
+
+                    <div class="form-group" style="text-align: center; margin-top: 15px;">
+                        <button type="button" class="btn btn-secondary" id="resendBtn" onclick="resendOTP()">
+                            <i class="fa-solid fa-rotate"></i> পুনরায় OTP পাঠান
+                        </button>
+                    </div>
+                </form>
+
+                <div class="back-home">
+                    <a href="register.html">← পিছনে ফিরে যান</a>
+                </div>
+            </div>
+
+            <div class="help-section card">
+                <h3><i class="fa-solid fa-lightbulb"></i> সহায়তা</h3>
+                <div class="help-item">
+                    <h4>OTP পাচ্ছেন না?</h4>
+                    <p>কিছুক্ষণ অপেক্ষা করুন। নেটওয়ার্ক সমস্যার কারণে সর্বোচ্চ ২ মিনিট সময় লাগতে পারে।</p>
+                </div>
+                <div class="help-item">
+                    <h4>OTP মেয়াদোত্তীর্ণ?</h4>
+                    <p>"পুনরায় OTP পাঠান" বাটনে ক্লিক করে নতুন OTP পান।</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; ২০২৫ নিরাপদ ভোট সিস্টেম। সর্বস্বত্ব সংরক্ষিত।</p>
+        </div>
+    </footer>
+
+    <script src="assets/js/common.js"></script>
+    <script src="assets/js/api-config.js"></script>
+    <script src="assets/js/verify-otp.js"></script>
+</body>
+</html>
