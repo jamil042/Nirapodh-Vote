@@ -161,7 +161,7 @@ function showSuccessState() {
 // Validate Form
 function validateLoginForm() {
     const errors = [];
-    const nid = document.getElementById('nid').value.trim();
+    const nid = document.getElementById('nid').value.trim().replace(/-/g, ''); // Remove dashes
     const password = document.getElementById('password').value;
 
     if (!nid) {
@@ -196,7 +196,7 @@ async function handleLogin(e) {
     showLoadingState();
 
     try {
-        const nid = document.getElementById('nid').value.trim();
+        const nid = document.getElementById('nid').value.trim().replace(/-/g, ''); // Remove dashes for backend
         const password = document.getElementById('password').value; // Don't trim password
 
         // Call Backend API
