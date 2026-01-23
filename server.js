@@ -52,6 +52,9 @@ const io = new Server(server, {
 const onlineUsers = new Map(); // socketId -> { username, joinedAt }
 let globalMessageHistory = [];
 
+// Dashboard users tracking
+const dashboardUsers = new Map(); // socketId -> { name, nid, loginAt }
+
 // Admin-Citizen chat state
 const activeCitizens = new Map(); // nid -> { socket, name, nid, timestamp }
 const registeredCitizens = new Map(); // nid -> { name, registeredAt } (PERMANENT RECORD)
@@ -85,6 +88,12 @@ function broadcastOnlineUsers() {
     .filter((v, i, a) => a.indexOf(v) === i);
   io.emit('users_online', { users });
   console.log(`📊 Anonymous chat users: ${users.length}`);
+}
+
+function broadcastDashboardCount() {
+  const count = dashboardUsers.size;
+  io.emit('dashboard_count', { count });
+  console.log(`👥 Dashboard users: ${count}`);
 }
 
 function broadcastActiveCitizens() {
@@ -214,6 +223,23 @@ io.on('connection', (socket) => {
     onlineUsers.delete(socket.id);
     broadcastOnlineUsers();
     console.log(`👋 Anonymous user ${socket.id} logged out`);
+  });
+
+  // ===== DASHBOARD USER TRACKING =====
+
+  socket.on('dashboard_login', (data) => {
+    const { name, nid } = data;
+    
+    if (!name || !nid) return;
+
+    dashboardUsers.set(socket.id, {
+      name,
+      nid,
+      loginAt: new Date().toISOString()
+    });
+
+    console.log(`✅ Dashboard user ${dashboardUsers.size}: ${name} (${nid})`);
+    broadcastDashboardCount();
   });
 
   // ===== ADMIN-CITIZEN CHAT EVENTS =====
@@ -466,6 +492,14 @@ io.on('connection', (socket) => {
 
   // ===== DISCONNECT HANDLER =====
   socket.on('disconnect', (reason) => {
+    // Handle dashboard user disconnect
+    const dashUser = dashboardUsers.get(socket.id);
+    if (dashUser) {
+      dashboardUsers.delete(socket.id);
+      console.log(`👋 Dashboard user left: ${dashUser.name} (Total: ${dashboardUsers.size})`);
+      broadcastDashboardCount();
+    }
+
     // Handle anonymous user disconnect
     const user = onlineUsers.get(socket.id);
     if (user) {
