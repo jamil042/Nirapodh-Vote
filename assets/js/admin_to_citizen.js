@@ -9,7 +9,7 @@ let unreadCounts = {};
 
 // Initialize socket connection
 function initAdminSocket() {
-    socket = io('http://localhost:5501', {
+    socket = io('http://localhost:3000', {
         transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionDelay: 1000,

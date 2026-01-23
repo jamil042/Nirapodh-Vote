@@ -9,7 +9,7 @@
 
   // Initialize socket connection
   function initSocket() {
-    socket = io('http://localhost:5501', {
+    socket = io('http://localhost:3000', {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
