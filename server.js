@@ -205,6 +205,7 @@ io.on('connection', (socket) => {
       message,
       timestamp: data.timestamp || new Date().toISOString(),
       socketId: socket.id,
+      userId: data.userId || socket.id, // Use userId for persistent identification
       replyTo: data.replyTo || null
     };
 
