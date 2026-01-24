@@ -3,12 +3,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('loginForm');
     
-    // Check if already logged in
-    const token = getAuthToken();
-    if (token) {
-        // Verify token is still valid
-        verifyAndRedirect();
-    }
+    // Always show login page, don't auto-redirect
+    // This ensures users must actively log in each time
     
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
@@ -33,7 +29,7 @@ async function verifyAndRedirect() {
 async function handleLogin(e) {
     e.preventDefault();
     
-    const nid = document.getElementById('nid').value.trim();
+    const nid = document.getElementById('nid').value.trim().replace(/-/g, ''); // Remove dashes
     const password = document.getElementById('password').value;
 
     // Validation
