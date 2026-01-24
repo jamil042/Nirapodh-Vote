@@ -40,10 +40,22 @@
                             name="nid" 
                             placeholder="১০ বা ১৭ সংখ্যার NID নম্বর লিখুন"
                             required
-                            maxlength="17"
-                            pattern="[0-9]{10,17}"
+                            maxlength="21"
+                            inputmode="numeric"
                         >
-                        <small class="form-hint">উদাহরণ: ১২৩৪৫৬৭৮৯০</small>
+                        <small class="form-hint">উদাহরণ: ১২৩৪-৫৬৭৮-৯০</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phoneNumber">মোবাইল নম্বর *</label>
+                        <input 
+                            type="tel" 
+                            id="phoneNumber" 
+                            name="phoneNumber" 
+                            placeholder="আপনার মোবাইল নম্বর লিখুন"
+                            required
+                        >
+                        <small class="form-hint">উদাহরণ: 01788504010 বা +8801788504010</small>
                     </div>
 
                     <div class="form-group">
@@ -114,6 +126,33 @@
     </footer>
 
     <script src="assets/js/common.js"></script>
-    <script src="assets/js/register.js"></script>
+    <script src="assets/js/api-config.js"></script>
+    <script src="assets/js/register-backend.js"></script>
+    
+    <script>
+        console.log('=== PAGE LOADED ===');
+        console.log('Checking if scripts loaded...');
+        
+        setTimeout(function() {
+            console.log('apiRequest available?', typeof apiRequest === 'function');
+            console.log('handleRegister available?', typeof handleRegister === 'function');
+        }, 500);
+        
+        // NID auto-formatting
+        document.getElementById('nid').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/[^0-9]/g, ''); // Remove all non-digits
+            let formatted = '';
+            
+            // Add dash after every 4 digits
+            for (let i = 0; i < value.length; i++) {
+                if (i > 0 && i % 4 === 0) {
+                    formatted += '-';
+                }
+                formatted += value[i];
+            }
+            
+            e.target.value = formatted;
+        });
+    </script>
 </body>
 </html>
