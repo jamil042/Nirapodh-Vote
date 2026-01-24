@@ -6,12 +6,6 @@ document.addEventListener('DOMContentLoaded', function() {
     setupMobileMenu();
     loadUserData();
     updateTimeRemaining();
-    
-    // Clear session when tab/window is closed or navigated away
-    window.addEventListener('beforeunload', function(e) {
-        // Clear all session data to force re-login
-        sessionStorage.clear();
-    });
 });
 
 // Initialize dashboard
@@ -137,8 +131,8 @@ function closeSidebarMobile() {
 
 // Get user data
 function getUserData() {
-    // Try to get from sessionStorage (set by login)
-    const storedUser = sessionStorage.getItem('nirapodh_user');
+    // Try to get from localStorage (set by login)
+    const storedUser = localStorage.getItem('nirapodh_user');
     if (storedUser) {
         try {
             return JSON.parse(storedUser);
