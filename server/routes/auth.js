@@ -118,14 +118,22 @@ router.post('/send-otp', async (req, res) => {
       }
     }
 
+    // Prepare response data
+    const responseData = {
+      nid,
+      phoneNumber: normalizedPhone,
+      expiresIn: process.env.OTP_EXPIRY_MINUTES || 2
+    };
+
+    // In development mode, include OTP in response for easy testing
+    if (isDevelopment) {
+      responseData.devOtp = otpCode;
+    }
+
     res.json({
       success: true,
       message: 'OTP আপনার ফোনে পাঠানো হয়েছে',
-      data: {
-        nid,
-        phoneNumber: normalizedPhone,
-        expiresIn: process.env.OTP_EXPIRY_MINUTES || 2
-      }
+      data: responseData
     });
   } catch (error) {
     console.error('Send OTP error:', error);
@@ -139,7 +147,7 @@ router.post('/send-otp', async (req, res) => {
 // Step 2: Verify OTP and Register User
 router.post('/verify-otp-register', async (req, res) => {
   try {
-    const { nid, otp, password, presentAddress } = req.body;
+    let { nid, otp, password, presentAddress } = req.body;
 
     // Validation
     if (!nid || !otp || !password || !presentAddress) {
@@ -148,6 +156,10 @@ router.post('/verify-otp-register', async (req, res) => {
         message: 'সকল তথ্য প্রদান করুন' 
       });
     }
+
+    // Normalize NID - remove hyphens, spaces, and any non-digit characters
+    nid = nid.replace(/[-\s]/g, '');
+    console.log('🆔 Normalized NID for OTP verification:', nid);
 
     if (password.length < 6) {
       return res.status(400).json({ 
@@ -158,6 +170,7 @@ router.post('/verify-otp-register', async (req, res) => {
 
     // Find OTP record
     const otpRecord = await OTP.findOne({ nid, otp, verified: false });
+    console.log('🔍 OTP record found:', otpRecord ? 'YES' : 'NO');
     
     if (!otpRecord) {
       return res.status(400).json({ 

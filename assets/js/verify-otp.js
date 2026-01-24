@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const nid = sessionStorage.getItem('otp_nid');
     const phone = sessionStorage.getItem('otp_phone');
     const expiresIn = sessionStorage.getItem('otp_expires');
+    const devOtp = sessionStorage.getItem('otp_dev_code'); // For development testing
     
     if (!nid || !phone) {
         showAlert('অবৈধ অনুরোধ। নিবন্ধন পেজে ফিরে যান', 'error');
@@ -19,10 +20,19 @@ document.addEventListener('DOMContentLoaded', async function() {
         return;
     }
     
-    // Display phone number and expiry time
-    document.getElementById('displayPhone').textContent = phone;
+    // Display masked phone number
+    document.getElementById('displayPhone').textContent = maskPhoneNumber(phone);
+    
+    // Show success message with OTP if in development mode
+    if (devOtp) {
+        showAlert(`OTP পাঠানো হয়েছে! টেস্টিং কোড: ${devOtp}`, 'success', '✓ সফল', 8000);
+    } else {
+        showAlert('আপনার মোবাইলে OTP পাঠানো হয়েছে', 'success', '', 3000);
+    }
+    
+    // Start countdown timer
     if (expiresIn) {
-        document.getElementById('expiryTime').textContent = expiresIn;
+        startCountdown(parseInt(expiresIn) * 60); // Convert minutes to seconds
     }
 
     // Initialize SMS Mode directly
@@ -33,6 +43,76 @@ document.addEventListener('DOMContentLoaded', async function() {
         otpForm.addEventListener('submit', handleVerifyOTP);
     }
 });
+
+// Function to mask phone number
+function maskPhoneNumber(phone) {
+    // Remove any spaces or special characters
+    const cleaned = phone.replace(/\D/g, '');
+    
+    // Get last 10-11 digits (Bangladesh phone format)
+    const phoneDigits = cleaned.slice(-11);
+    
+    if (phoneDigits.length >= 5) {
+        // Show first 3 and last 2 digits
+        const first3 = phoneDigits.substring(0, 3);
+        const last2 = phoneDigits.substring(phoneDigits.length - 2);
+        const masked = first3 + '*'.repeat(phoneDigits.length - 5) + last2;
+        return masked;
+    }
+    
+    return phone; // Return original if too short
+}
+
+// Countdown timer
+let countdownInterval;
+function startCountdown(seconds) {
+    const expiryElement = document.getElementById('expiryTime');
+    if (!expiryElement) return;
+    
+    let remainingSeconds = seconds;
+    
+    // Update immediately
+    updateTimerDisplay(remainingSeconds, expiryElement);
+    
+    // Clear any existing interval
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+    }
+    
+    // Update every second
+    countdownInterval = setInterval(() => {
+        remainingSeconds--;
+        
+        if (remainingSeconds <= 0) {
+            clearInterval(countdownInterval);
+            expiryElement.textContent = 'মেয়াদোত্তীর্ণ';
+            expiryElement.style.color = '#d32f2f';
+            showAlert('OTP মেয়াদোত্তীর্ণ হয়েছে। নতুন OTP পাঠান', 'error');
+        } else {
+            updateTimerDisplay(remainingSeconds, expiryElement);
+        }
+    }, 1000);
+}
+
+function updateTimerDisplay(seconds, element) {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    
+    if (minutes > 0) {
+        element.textContent = `${minutes} মিনিট ${secs} সেকেন্ড`;
+    } else {
+        element.textContent = `${secs} সেকেন্ড`;
+    }
+    
+    // Change color based on remaining time
+    if (seconds <= 30) {
+        element.style.color = '#d32f2f'; // Red
+    } else if (seconds <= 60) {
+        element.style.color = '#f57c00'; // Orange
+    } else {
+        element.style.color = '#2e7d32'; // Green
+    }
+}
 
 async function initializeBackendMode() {
     // Show backend specific UI
@@ -288,16 +368,18 @@ async function resendBackendOTP() {
             console.log('✅ OTP resent successfully');
             console.log('🔑 New OTP:', response.data.devOtp || 'Check backend console');
             
+            // Update expiry time and dev OTP
+            if (response.data.expiresIn) {
+                sessionStorage.setItem('otp_expires', response.data.expiresIn);
+                startCountdown(parseInt(response.data.expiresIn) * 60);
+            }
+            
+            // Store dev OTP if available
             if (response.data.devOtp) {
+                sessionStorage.setItem('otp_dev_code', response.data.devOtp);
                 showAlert(`নতুন OTP: ${response.data.devOtp}`, 'success', '✓ সফল', 8000);
             } else {
                 showAlert('নতুন OTP পাঠানো হয়েছে', 'success');
-            }
-            
-            // Update expiry time
-            if (response.data.expiresIn) {
-                sessionStorage.setItem('otp_expires', response.data.expiresIn);
-                document.getElementById('expiryTime').textContent = response.data.expiresIn;
             }
         } else {
             console.error('❌ Failed to resend OTP:', response.message);

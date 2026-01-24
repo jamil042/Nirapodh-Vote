@@ -56,8 +56,16 @@ const sendSMS = async (phoneNumber, message) => {
     }
 
     console.log(`📤 Sending SMS to ${formattedPhone} via ${apiUrl} (Masking: ${params.from ? 'Yes' : 'No'})...`);
+    console.log(`📋 SMS Params:`, { ...params, password: '***hidden***' });
 
-    const response = await axios.get(apiUrl, { params });
+    const response = await axios.get(apiUrl, { 
+        params,
+        timeout: 15000, // 15 seconds timeout
+        validateStatus: false // Don't throw on any status code
+    });
+
+    console.log(`📥 SMS Response Status: ${response.status}`);
+    console.log(`📥 SMS Response Data:`, response.data);
 
     /* 
     Sample Response:
