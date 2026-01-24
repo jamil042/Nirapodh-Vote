@@ -19,10 +19,15 @@ document.addEventListener('DOMContentLoaded', async function() {
         return;
     }
     
-    // Display phone number and expiry time
-    document.getElementById('displayPhone').textContent = phone;
+    // Mask phone number for security (show only last 4 digits)
+    const maskedPhone = maskPhoneNumber(phone);
+    
+    // Display masked phone number and expiry time
+    document.getElementById('displayPhone').textContent = maskedPhone;
+    
+    // Start countdown timer
     if (expiresIn) {
-        document.getElementById('expiryTime').textContent = expiresIn;
+        startCountdownTimer(expiresIn);
     }
 
     // Initialize SMS Mode directly
@@ -294,10 +299,10 @@ async function resendBackendOTP() {
                 showAlert('নতুন OTP পাঠানো হয়েছে', 'success');
             }
             
-            // Update expiry time
+            // Update expiry time and restart countdown
             if (response.data.expiresIn) {
                 sessionStorage.setItem('otp_expires', response.data.expiresIn);
-                document.getElementById('expiryTime').textContent = response.data.expiresIn;
+                startCountdownTimer(response.data.expiresIn);
             }
         } else {
             console.error('❌ Failed to resend OTP:', response.message);
@@ -453,4 +458,97 @@ function saveAuthToken(token) {
  */
 function saveUserData(user) {
     sessionStorage.setItem('nirapodh_user', JSON.stringify(user));
+}
+
+/**
+ * Start countdown timer for OTP expiry
+ */
+function startCountdownTimer(minutes) {
+    let totalSeconds = minutes * 60;
+    const expiryElement = document.getElementById('expiryTime');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    const timer = setInterval(() => {
+        if (totalSeconds <= 0) {
+            clearInterval(timer);
+            expiryElement.textContent = 'মেয়াদ শেষ';
+            expiryElement.style.color = '#e74c3c';
+            if (submitBtn) submitBtn.disabled = true;
+            showAlert('OTP এর মেয়াদ শেষ। পুনরায় OTP পাঠান', 'error');
+            return;
+        }
+        
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = totalSeconds % 60;
+        
+        // Convert to Bangla numerals
+        const banglaMinutes = toBengaliNumber(mins);
+        const banglaSeconds = toBengaliNumber(secs);
+        
+        // Format display
+        let timeText = '';
+        if (mins > 0) {
+            timeText = `${banglaMinutes} মিনিট ${banglaSeconds} সেকেন্ড`;
+        } else {
+            timeText = `${banglaSeconds} সেকেন্ড`;
+        }
+        
+        expiryElement.textContent = timeText;
+        
+        // Change color when time is running out (last 30 seconds)
+        if (totalSeconds <= 30) {
+            expiryElement.style.color = '#e74c3c';
+        } else if (totalSeconds <= 60) {
+            expiryElement.style.color = '#f39c12';
+        }
+        
+        totalSeconds--;
+    }, 1000);
+}
+
+/**
+ * Convert English numbers to Bengali
+ */
+function toBengaliNumber(num) {
+    const bengaliNumerals = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    return num.toString().split('').map(char => {
+        if (char >= '0' && char <= '9') {
+            return bengaliNumerals[parseInt(char)];
+        }
+        return char;
+    }).join('');
+}
+
+/**
+ * Mask phone number for security
+ * Example: +8801743536875 -> +880****75
+ */
+function maskPhoneNumber(phone) {
+    if (!phone) return '';
+    
+    // Keep country code and last 4 digits, mask the middle
+    const phoneStr = phone.toString();
+    
+    if (phoneStr.length <= 4) {
+        return phoneStr; // Too short to mask
+    }
+    
+    // For Bangladesh numbers like +8801743536875 or 8801743536875
+    if (phoneStr.startsWith('+880') || phoneStr.startsWith('880')) {
+        const prefix = phoneStr.startsWith('+') ? '+880' : '880';
+        const lastTwo = phoneStr.slice(-2);
+        return `${prefix}****${lastTwo}`;
+    }
+    
+    // For other formats, show first 3 and last 4
+    if (phoneStr.length > 7) {
+        const first = phoneStr.substring(0, 3);
+        const last = phoneStr.slice(-2);
+        return `${first}****${last}`;
+    }
+    
+    // Default: mask middle characters
+    const first = phoneStr.substring(0, 2);
+    const last = phoneStr.slice(-2);
+    return `${first}****${last}`;
 }
