@@ -200,6 +200,21 @@
 
     NirapodChat.addSystemMessage('গ্লোবাল চ্যাটে স্বাগতম!');
 
+    // Auto login with user data from localStorage
+    try {
+      const userData = JSON.parse(localStorage.getItem('nirapodh_user_data'));
+      if (userData && userData.name && userData.nid) {
+        // Send user login with NID for proper tracking
+        socket.emit('user_login', {
+          username: userData.name,
+          nid: userData.nid
+        });
+        console.log('📤 Auto-login with NID:', userData.nid);
+      }
+    } catch (e) {
+      console.warn('Could not auto-login:', e);
+    }
+
     // Request message history
     socket.emit('request_message_history');
 

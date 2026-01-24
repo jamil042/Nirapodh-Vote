@@ -48,12 +48,13 @@ const io = new Server(server, {
 
 // ===== CHAT STATE MANAGEMENT =====
 
-// Anonymous chat state
-const onlineUsers = new Map(); // socketId -> { username, joinedAt }
+// Anonymous chat state - Track by NID to prevent duplicate counting
+const onlineUsers = new Map(); // nid -> { username, sockets: Set, joinedAt }
 let globalMessageHistory = [];
 
-// Dashboard users tracking
-const dashboardUsers = new Map(); // socketId -> { name, nid, loginAt }
+// Dashboard users tracking - Track by NID to prevent duplicate counting
+const dashboardUsers = new Map(); // nid -> { name, nid, sockets: Set, loginAt }
+const socketToNID = new Map(); // socketId -> nid (for reverse lookup)
 
 // Admin-Citizen chat state
 const activeCitizens = new Map(); // nid -> { socket, name, nid, timestamp }
@@ -83,14 +84,16 @@ function validateUsername(username) {
 }
 
 function broadcastOnlineUsers() {
+  // Count unique NIDs only
+  const uniqueUsers = onlineUsers.size;
   const users = Array.from(onlineUsers.values())
-    .map(u => u.username)
-    .filter((v, i, a) => a.indexOf(v) === i);
-  io.emit('users_online', { users });
-  console.log(`📊 Anonymous chat users: ${users.length}`);
+    .map(u => u.username);
+  io.emit('users_online', { users, count: uniqueUsers });
+  console.log(`📊 Anonymous chat users (unique): ${uniqueUsers}`);
 }
 
 function broadcastDashboardCount() {
+  // Count unique NIDs only (not tabs/sockets)
   const count = dashboardUsers.size;
   io.emit('dashboard_count', { count });
   console.log(`👥 Dashboard users: ${count}`);
@@ -123,6 +126,7 @@ io.on('connection', (socket) => {
 
   socket.on('user_login', (data) => {
     const username = data?.username?.trim();
+    const userNID = data?.nid || socket.id; // Use NID if provided, else socket.id as fallback
 
     if (!validateUsername(username)) {
       socket.emit('chat_error', { msg: 'নাম ২-২০ অক্ষরের মধ্যে হতে হবে' });
@@ -130,33 +134,45 @@ io.on('connection', (socket) => {
     }
 
     const existingUser = Array.from(onlineUsers.values())
-      .find(u => u.username === username);
+      .find(u => u.username === username && !onlineUsers.has(userNID));
 
     if (existingUser) {
       socket.emit('chat_error', { msg: 'এই নাম ইতিমধ্যে ব্যবহৃত হচ্ছে। অন্য নাম চেষ্টা করুন।' });
       return;
     }
 
-    onlineUsers.set(socket.id, {
-      username,
-      joinedAt: new Date().toISOString()
-    });
+    // Store socket to NID mapping
+    socketToNID.set(socket.id, userNID);
+
+    // If user already exists, just add this socket
+    if (onlineUsers.has(userNID)) {
+      onlineUsers.get(userNID).sockets.add(socket.id);
+      console.log(`🔄 User ${username} opened new tab (total: ${onlineUsers.get(userNID).sockets.size})`);
+    } else {
+      // New user
+      onlineUsers.set(userNID, {
+        username,
+        sockets: new Set([socket.id]),
+        joinedAt: new Date().toISOString()
+      });
+      
+      io.emit('user_joined', { 
+        username,
+        timestamp: new Date().toISOString()
+      });
+      
+      console.log(`✅ Anonymous user logged in: ${username}`);
+    }
 
     socket.emit('login_success', { username });
     socket.emit('message_history', { messages: globalMessageHistory });
     
     broadcastOnlineUsers();
-    
-    io.emit('user_joined', { 
-      username,
-      timestamp: new Date().toISOString()
-    });
-
-    console.log(`✅ Anonymous user logged in: ${username}`);
   });
 
   socket.on('send_message', (data) => {
-    const user = onlineUsers.get(socket.id);
+    const userNID = socketToNID.get(socket.id);
+    const user = userNID ? onlineUsers.get(userNID) : null;
     if (!user) {
       socket.emit('chat_error', { msg: 'প্রথমে লগইন করুন' });
       return;
@@ -205,7 +221,6 @@ io.on('connection', (socket) => {
       message,
       timestamp: data.timestamp || new Date().toISOString(),
       socketId: socket.id,
-      userId: data.userId || socket.id, // Use userId for persistent identification
       replyTo: data.replyTo || null
     };
 
@@ -221,9 +236,21 @@ io.on('connection', (socket) => {
   });
 
   socket.on('user_logout', () => {
-    onlineUsers.delete(socket.id);
-    broadcastOnlineUsers();
-    console.log(`👋 Anonymous user ${socket.id} logged out`);
+    const userNID = socketToNID.get(socket.id);
+    if (userNID && onlineUsers.has(userNID)) {
+      const user = onlineUsers.get(userNID);
+      user.sockets.delete(socket.id);
+      
+      // If no more sockets, remove user completely
+      if (user.sockets.size === 0) {
+        onlineUsers.delete(userNID);
+        console.log(`👋 Anonymous user ${user.username} fully logged out`);
+        broadcastOnlineUsers();
+      } else {
+        console.log(`🔄 User ${user.username} closed one tab (remaining: ${user.sockets.size})`);
+      }
+    }
+    socketToNID.delete(socket.id);
   });
 
   // ===== DASHBOARD USER TRACKING =====
@@ -233,11 +260,23 @@ io.on('connection', (socket) => {
     
     if (!name || !nid) return;
 
-    dashboardUsers.set(socket.id, {
-      name,
-      nid,
-      loginAt: new Date().toISOString()
-    });
+    // Store socket to NID mapping
+    socketToNID.set(socket.id, nid);
+
+    // If user already exists, just add this socket
+    if (dashboardUsers.has(nid)) {
+      dashboardUsers.get(nid).sockets.add(socket.id);
+      console.log(`🔄 Dashboard user ${name} opened new tab (total: ${dashboardUsers.get(nid).sockets.size})`);
+    } else {
+      // New user
+      dashboardUsers.set(nid, {
+        name,
+        nid,
+        sockets: new Set([socket.id]),
+        loginAt: new Date().toISOString()
+      });
+      console.log(`✅ Dashboard user logged in: ${name} (NID: ${nid})`);
+    }
 
     console.log(`✅ Dashboard user ${dashboardUsers.size}: ${name} (${nid})`);
     broadcastDashboardCount();
@@ -493,27 +532,47 @@ io.on('connection', (socket) => {
 
   // ===== DISCONNECT HANDLER =====
   socket.on('disconnect', (reason) => {
+    // Get NID mapping for this socket
+    const userNID = socketToNID.get(socket.id);
+    
     // Handle dashboard user disconnect
-    const dashUser = dashboardUsers.get(socket.id);
-    if (dashUser) {
-      dashboardUsers.delete(socket.id);
-      console.log(`👋 Dashboard user left: ${dashUser.name} (Total: ${dashboardUsers.size})`);
-      broadcastDashboardCount();
+    if (userNID && dashboardUsers.has(userNID)) {
+      const dashUser = dashboardUsers.get(userNID);
+      dashUser.sockets.delete(socket.id);
+      
+      // If no more sockets, remove user completely
+      if (dashUser.sockets.size === 0) {
+        dashboardUsers.delete(userNID);
+        console.log(`👋 Dashboard user fully logged out: ${dashUser.name} (Total: ${dashboardUsers.size})`);
+        broadcastDashboardCount();
+      } else {
+        console.log(`🔄 Dashboard user ${dashUser.name} closed one tab (remaining: ${dashUser.sockets.size})`);
+      }
     }
 
     // Handle anonymous user disconnect
-    const user = onlineUsers.get(socket.id);
-    if (user) {
-      onlineUsers.delete(socket.id);
-      broadcastOnlineUsers();
+    if (userNID && onlineUsers.has(userNID)) {
+      const user = onlineUsers.get(userNID);
+      user.sockets.delete(socket.id);
       
-      io.emit('user_left', {
-        username: user.username,
-        timestamp: new Date().toISOString()
-      });
+      // If no more sockets, remove user completely
+      if (user.sockets.size === 0) {
+        onlineUsers.delete(userNID);
+        broadcastOnlineUsers();
+        
+        io.emit('user_left', {
+          username: user.username,
+          timestamp: new Date().toISOString()
+        });
 
-      console.log(`👋 Anonymous user disconnected: ${user.username} (${reason})`);
+        console.log(`👋 Anonymous user fully disconnected: ${user.username} (${reason})`);
+      } else {
+        console.log(`🔄 Anonymous user ${user.username} closed one tab (remaining: ${user.sockets.size})`);
+      }
     }
+    
+    // Clean up socket to NID mapping
+    socketToNID.delete(socket.id);
 
     // Handle admin disconnect
     if (adminSocket === socket.id) {

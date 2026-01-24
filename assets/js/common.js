@@ -127,8 +127,10 @@ function setButtonLoading(buttonId, loading = true, textId = 'btnText', loaderId
 
 // Validate NID
 function validateNID(nid) {
+    // Remove dashes before validation
+    const cleanNid = nid.replace(/-/g, '');
     const nidPattern = /^[0-9]{10,17}$/;
-    return nidPattern.test(nid);
+    return nidPattern.test(cleanNid);
 }
 
 // Validate password strength

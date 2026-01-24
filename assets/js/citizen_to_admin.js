@@ -69,7 +69,8 @@
   // Login with NID
   window.loginToChatWithNID = function() {
     const name = document.getElementById('citizenChatName')?.value?.trim();
-    const nid = document.getElementById('citizenChatNID')?.value?.trim();
+    const nidRaw = document.getElementById('citizenChatNID')?.value?.trim();
+    const nid = nidRaw.replace(/-/g, ''); // Remove dashes for backend
 
     if (!name || !nid) {
       alert('দয়া করে নাম এবং এনআইডি নম্বর প্রদান করুন');
