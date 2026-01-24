@@ -553,7 +553,13 @@
                         </div>
                     </div>
 
-                    <div class="card">
+                    <!-- Center Button for Password Change -->
+                    <div id="passwordChangeButtonContainer" style="text-align: center; margin: 30px 0;">
+                        <button onclick="togglePasswordChange()" class="btn btn-primary" style="padding: 12px 40px; font-size: 16px;">পাসওয়ার্ড পরিবর্তন</button>
+                    </div>
+
+                    <div class="card" id="passwordChangeCard" style="display: none; position: relative;">
+                        <button onclick="togglePasswordChange()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666; line-height: 1;" title="বন্ধ করুন">&times;</button>
                         <h3>পাসওয়ার্ড পরিবর্তন</h3>
                         <form id="passwordForm" onsubmit="changePassword(event)">
                             <div class="form-group">
@@ -601,6 +607,18 @@
     <script src="assets/js/citizen_to_admin.js"></script>
     
     <script>
+        // Toggle password change form
+        function togglePasswordChange() {
+            const card = document.getElementById('passwordChangeCard');
+            const buttonContainer = document.getElementById('passwordChangeButtonContainer');
+            if (card.style.display === 'none') {
+                card.style.display = 'block';
+                buttonContainer.style.display = 'none';
+            } else {
+                card.style.display = 'none';
+                buttonContainer.style.display = 'block';
+            }
+        }
         // NID auto-formatting for citizen chat (XXXX-XXXX-XXXX-XXXX-X format)
         document.getElementById('citizenChatNID').addEventListener('input', function(e) {
             let value = e.target.value.replace(/[^0-9]/g, '');
