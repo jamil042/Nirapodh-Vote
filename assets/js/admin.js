@@ -1037,6 +1037,29 @@ function addNewBallotOption() {
 }
 
 
+function togglePasswordChange() {
+    const container = document.getElementById('passwordChangeContainer');
+    if (container) {
+        if (container.style.display === 'none' || !container.style.display) {
+            container.style.display = 'block';
+            // Add smooth animation
+            setTimeout(() => {
+                container.classList.add('show');
+            }, 10);
+            // Scroll to the form
+            container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+            container.classList.remove('show');
+            setTimeout(() => {
+                container.style.display = 'none';
+                // Clear form when closing
+                const form = document.getElementById('changePasswordForm');
+                if (form) form.reset();
+            }, 300);
+        }
+    }
+}
+
 function handlePasswordChange(e) {
     e.preventDefault();
     
@@ -1061,8 +1084,38 @@ function handlePasswordChange(e) {
         const originalText = btn.textContent;
         btn.textContent = 'পরিবর্তন হচ্ছে...';
         
-        setTimeout(() => {
-            showAlert('পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!', 'success');
+        // Call backend API
+        const token = sessionStorage.getItem('nirapodh_admin_token');
+        fetch('http://localhost:3000/api/admin/change-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                currentPassword,
+                newPassword,
+                confirmPassword: confirmNewPassword
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showAlert(result.message || 'পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!', 'success');
+                e.target.reset();
+                // Close the password change form after successful change
+                setTimeout(() => {
+                    togglePasswordChange();
+                }, 1500);
+            } else {
+                showAlert(result.message || 'পাসওয়ার্ড পরিবর্তন করতে ব্যর্থ হয়েছে', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Password change error:', error);
+            showAlert('পাসওয়ার্ড পরিবর্তন করতে ব্যর্থ হয়েছে', 'error');
+        })
+        .finally(() => {
             btn.disabled = false;
             btn.classList.remove('btn-loading');
             btn.textContent = originalText;
