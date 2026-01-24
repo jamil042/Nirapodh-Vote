@@ -1,7 +1,13 @@
 {
+<<<<<<< HEAD
   "name": "nirapod-vote-chat-server",
   "version": "1.0.0",
   "description": "Socket.IO server for Nirapod Vote global chat",
+=======
+  "name": "nirapod-vote-backend",
+  "version": "1.0.0",
+  "description": "NirapodhVote Backend with MongoDB, Express, and Socket.IO",
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
@@ -11,13 +17,29 @@
   "keywords": [
     "socket.io",
     "chat",
+<<<<<<< HEAD
     "realtime"
+=======
+    "realtime",
+    "voting",
+    "mongodb"
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
   ],
   "author": "",
   "license": "ISC",
   "dependencies": {
+<<<<<<< HEAD
     "cors": "^2.8.5",
     "express": "^5.2.1",
+=======
+    "axios": "^1.13.2",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.1.2",
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
