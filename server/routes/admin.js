@@ -20,20 +20,12 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Only allow 'admin' username
-    if (username !== 'admin') {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'ভুল ইউজারনেম। শুধুমাত্র "admin" ইউজারনেম ব্যবহার করুন' 
-      });
-    }
-
     // Find admin
-    const admin = await Admin.findOne({ username: 'admin' });
+    const admin = await Admin.findOne({ username });
     if (!admin) {
       return res.status(401).json({ 
         success: false, 
-        message: 'অ্যাডমিন পাওয়া যায়নি। প্রথমে অ্যাডমিন তৈরি করুন' 
+        message: 'ভুল ইউজারনেম অথবা পাসওয়ার্ড' 
       });
     }
 
@@ -42,7 +34,7 @@ router.post('/login', async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ 
         success: false, 
-        message: 'ভুল পাসওয়ার্ড' 
+        message: 'ভুল ইউজারনেম অথবা পাসওয়ার্ড' 
       });
     }
 
@@ -199,59 +191,6 @@ router.post('/create-initial-admin', async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'অ্যাডমিন তৈরি করতে ব্যর্থ হয়েছে' 
-    });
-  }
-});
-
-// Change Admin Password
-router.post('/change-password', authenticateAdmin, async (req, res) => {
-  try {
-    const { currentPassword, newPassword, confirmPassword } = req.body;
-
-    // Validation
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'সকল ফিল্ড পূরণ করুন' 
-      });
-    }
-
-    if (newPassword !== confirmPassword) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'নতুন পাসওয়ার্ড এবং নিশ্চিত পাসওয়ার্ড মিলছে না' 
-      });
-    }
-
-    if (newPassword.length < 6) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে' 
-      });
-    }
-
-    // Verify current password
-    const isMatch = await req.admin.comparePassword(currentPassword);
-    if (!isMatch) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'বর্তমান পাসওয়ার্ড ভুল' 
-      });
-    }
-
-    // Update password
-    req.admin.password = newPassword;
-    await req.admin.save();
-
-    res.json({
-      success: true,
-      message: 'পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে'
-    });
-  } catch (error) {
-    console.error('Change password error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'পাসওয়ার্ড পরিবর্তন করতে ব্যর্থ হয়েছে' 
     });
   }
 });

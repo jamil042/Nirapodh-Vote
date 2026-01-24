@@ -3,13 +3,24 @@
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('adminLoginForm');
     
-    // Always show login page, don't auto-redirect
-    // This ensures admins must actively log in each time
+    // Check if already logged in as admin
+    const token = localStorage.getItem('nirapodh_admin_token');
+    if (token) {
+        verifyAdminAndRedirect();
+    }
     
     if (loginForm) {
         loginForm.addEventListener('submit', handleAdminLogin);
     }
 });
+
+async function verifyAdminAndRedirect() {
+    const token = localStorage.getItem('nirapodh_admin_token');
+    if (token) {
+        // Redirect to admin dashboard
+        window.location.href = 'admin-dashboard.html';
+    }
+}
 
 // Handle Admin Login
 async function handleAdminLogin(e) {
@@ -17,10 +28,6 @@ async function handleAdminLogin(e) {
     
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
-
-    console.log('=== Admin Login Attempt ===');
-    console.log('Username:', username);
-    console.log('Password length:', password.length);
 
     // Validation
     if (!username || !password) {
@@ -33,9 +40,6 @@ async function handleAdminLogin(e) {
     try {
         // Admin login via API
         const url = `${API_CONFIG.API_URL}/admin/login`;
-        console.log('API URL:', url);
-        console.log('Sending request...');
-        
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -44,14 +48,12 @@ async function handleAdminLogin(e) {
             body: JSON.stringify({ username, password })
         });
 
-        console.log('Response status:', response.status);
         const result = await response.json();
-        console.log('Response data:', result);
 
         if (result.success) {
             // Save admin token
-            sessionStorage.setItem('nirapodh_admin_token', result.token);
-            sessionStorage.setItem('nirapodh_admin_user', JSON.stringify(result.admin));
+            localStorage.setItem('nirapodh_admin_token', result.token);
+            localStorage.setItem('nirapodh_admin_user', JSON.stringify(result.admin));
 
             hideLoadingState();
             showAlert('লগইন সফল হয়েছে!', 'success');
@@ -64,7 +66,6 @@ async function handleAdminLogin(e) {
             throw new Error(result.message);
         }
     } catch (error) {
-        console.error('Login error:', error);
         hideLoadingState();
         showAlert(error.message || 'লগইন ব্যর্থ হয়েছে', 'error');
     }

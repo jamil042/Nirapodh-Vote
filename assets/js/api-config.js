@@ -48,7 +48,7 @@ async function apiRequest(endpoint, method = 'GET', data = null, requiresAuth = 
 
   // Add auth token if required
   if (requiresAuth) {
-    const token = sessionStorage.getItem('nirapodh_token');
+    const token = localStorage.getItem('nirapodh_token');
     if (token) {
       options.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -81,28 +81,28 @@ async function apiRequest(endpoint, method = 'GET', data = null, requiresAuth = 
 
 // Storage helpers
 function saveAuthToken(token) {
-  sessionStorage.setItem('nirapodh_token', token);
+  localStorage.setItem('nirapodh_token', token);
 }
 
 function getAuthToken() {
-  return sessionStorage.getItem('nirapodh_token');
+  return localStorage.getItem('nirapodh_token');
 }
 
 function removeAuthToken() {
-  sessionStorage.removeItem('nirapodh_token');
+  localStorage.removeItem('nirapodh_token');
 }
 
 function saveUserData(userData) {
-  sessionStorage.setItem('nirapodh_user', JSON.stringify(userData));
+  localStorage.setItem('nirapodh_user', JSON.stringify(userData));
 }
 
 function getUserData() {
-  const data = sessionStorage.getItem('nirapodh_user');
+  const data = localStorage.getItem('nirapodh_user');
   return data ? JSON.parse(data) : null;
 }
 
 function removeUserData() {
-  sessionStorage.removeItem('nirapodh_user');
+  localStorage.removeItem('nirapodh_user');
 }
 
 function logout() {
