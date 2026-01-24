@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     registerForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        e.stopImmediatePropagation(); // Prevent any other handlers from firing
         
         if (isSubmitting) {
             console.log('⚠️ Form already submitting, ignoring double click');
@@ -25,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         console.log('🎯 FORM SUBMIT EVENT TRIGGERED!');
         handleRegister(e);
-    });
+    }, { once: false }); // Use standard listener, not 'once', so validation errors can be retried
     
     // Remove the click handler on submitBtn as it might be redundant or confusing
     
@@ -38,7 +39,16 @@ document.addEventListener('DOMContentLoaded', function() {
 async function handleRegister(e) {
     // e.preventDefault(); // Already called in listener
     
+    if (isSubmitting) {
+        console.log('⚠️ Already submitting, returning early');
+        return;
+    }
+    
     isSubmitting = true;
+    // Immediately disable the submit button
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) submitBtn.disabled = true;
+    
     console.log('=== Register Form Submitted ===');
     
     // Get form values
@@ -53,6 +63,7 @@ async function handleRegister(e) {
         console.log('Validation failed: Missing fields');
         showAlert('সকল তথ্য প্রদান করুন', 'error');
         isSubmitting = false; // Reset flag
+        if (submitBtn) submitBtn.disabled = false; // Re-enable button
         return;
     }
     
@@ -60,6 +71,7 @@ async function handleRegister(e) {
         console.log('Validation failed: Invalid NID length');
         showAlert('বৈধ NID নম্বর প্রদান করুন', 'error');
         isSubmitting = false; // Reset flag
+        if (submitBtn) submitBtn.disabled = false; // Re-enable button
         return;
     }
     
@@ -102,6 +114,8 @@ async function handleRegister(e) {
         console.log('Removing button loading state...');
         setButtonLoading('submitBtn', false);
         isSubmitting = false; // Reset flag so user can try again
+        const submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) submitBtn.disabled = false; // Re-enable button
     }
 }
 
