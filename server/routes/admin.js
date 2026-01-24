@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 const User = require('../models/User');
 const Vote = require('../models/Vote');
+const Ballot = require('../models/Ballot');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
@@ -191,6 +192,136 @@ router.post('/create-initial-admin', async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'অ্যাডমিন তৈরি করতে ব্যর্থ হয়েছে' 
+    });
+  }
+});
+
+// ===== BALLOT MANAGEMENT ROUTES =====
+
+// Create new ballot name/location
+router.post('/ballots', authenticateAdmin, async (req, res) => {
+  try {
+    const { name, location } = req.body;
+
+    if (!name || !location) {
+      return res.status(400).json({
+        success: false,
+        message: 'ব্যালটের নাম এবং এলাকা প্রদান করুন'
+      });
+    }
+
+    // Check if ballot with same name and location already exists
+    const existingBallot = await Ballot.findOne({ name, location });
+    if (existingBallot) {
+      return res.status(400).json({
+        success: false,
+        message: 'এই ব্যালট ইতিমধ্যে বিদ্যমান'
+      });
+    }
+
+    const ballot = new Ballot({
+      name: name.trim(),
+      location: location.trim(),
+      createdBy: req.admin._id
+    });
+
+    await ballot.save();
+
+    res.json({
+      success: true,
+      message: 'ব্যালট সফলভাবে যোগ হয়েছে',
+      ballot: {
+        id: ballot._id,
+        name: ballot.name,
+        location: ballot.location
+      }
+    });
+  } catch (error) {
+    console.error('Create ballot error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'ব্যালট তৈরি করতে ব্যর্থ হয়েছে'
+    });
+  }
+});
+
+// Get all unique ballot names
+router.get('/ballot-names', authenticateAdmin, async (req, res) => {
+  try {
+    const ballotNames = await Ballot.distinct('name');
+    
+    res.json({
+      success: true,
+      ballotNames: ballotNames.sort()
+    });
+  } catch (error) {
+    console.error('Get ballot names error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'ব্যালটের নাম লোড করতে ব্যর্থ হয়েছে'
+    });
+  }
+});
+
+// Get all unique ballot locations
+router.get('/ballot-locations', authenticateAdmin, async (req, res) => {
+  try {
+    const ballotLocations = await Ballot.distinct('location');
+    
+    res.json({
+      success: true,
+      ballotLocations: ballotLocations.sort()
+    });
+  } catch (error) {
+    console.error('Get ballot locations error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'নির্বাচন এলাকা লোড করতে ব্যর্থ হয়েছে'
+    });
+  }
+});
+
+// Get all ballots
+router.get('/ballots', authenticateAdmin, async (req, res) => {
+  try {
+    const ballots = await Ballot.find()
+      .populate('createdBy', 'username')
+      .sort({ createdAt: -1 });
+    
+    res.json({
+      success: true,
+      ballots
+    });
+  } catch (error) {
+    console.error('Get ballots error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'ব্যালট লোড করতে ব্যর্থ হয়েছে'
+    });
+  }
+});
+
+// Delete ballot
+router.delete('/ballots/:id', authenticateAdmin, async (req, res) => {
+  try {
+    const ballot = await Ballot.findByIdAndDelete(req.params.id);
+    
+    if (!ballot) {
+      return res.status(404).json({
+        success: false,
+        message: 'ব্যালট পাওয়া যায়নি'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'ব্যালট সফলভাবে মুছে ফেলা হয়েছে'
+    });
+  } catch (error) {
+    console.error('Delete ballot error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'ব্যালট মুছে ফেলতে ব্যর্থ হয়েছে'
     });
   }
 });

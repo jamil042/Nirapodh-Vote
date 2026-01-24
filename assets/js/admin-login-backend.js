@@ -3,11 +3,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('adminLoginForm');
     
-    // Check if already logged in as admin
-    const token = localStorage.getItem('nirapodh_admin_token');
-    if (token) {
-        verifyAdminAndRedirect();
-    }
+    // Don't auto-redirect - let user login again if they want
+    // Clear any old tokens on login page visit for fresh login
     
     if (loginForm) {
         loginForm.addEventListener('submit', handleAdminLogin);
@@ -51,9 +48,9 @@ async function handleAdminLogin(e) {
         const result = await response.json();
 
         if (result.success) {
-            // Save admin token
-            localStorage.setItem('nirapodh_admin_token', result.token);
-            localStorage.setItem('nirapodh_admin_user', JSON.stringify(result.admin));
+            // Save admin token to sessionStorage
+            sessionStorage.setItem('nirapodh_admin_token', result.token);
+            sessionStorage.setItem('nirapodh_admin_user', JSON.stringify(result.admin));
 
             hideLoadingState();
             showAlert('লগইন সফল হয়েছে!', 'success');
