@@ -23,12 +23,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Display masked phone number
     document.getElementById('displayPhone').textContent = maskPhoneNumber(phone);
     
-    // Show success message with OTP if in development mode
-    if (devOtp) {
-        showAlert(`OTP পাঠানো হয়েছে! টেস্টিং কোড: ${devOtp}`, 'success', '✓ সফল', 8000);
-    } else {
-        showAlert('আপনার মোবাইলে OTP পাঠানো হয়েছে', 'success', '', 3000);
-    }
+    // Show success message
+    showAlert('আপনার মোবাইলে OTP পাঠানো হয়েছে', 'success', '', 3000);
     
     // Start countdown timer
     if (expiresIn) {
@@ -166,12 +162,8 @@ async function sendBackendOTP() {
             const sendBtn = document.getElementById('sendOtpBtn');
             if (sendBtn) sendBtn.style.display = 'none';
             
-            // Show OTP in alert for easy testing
-            if (response.data.devOtp) {
-                showAlert(`OTP পাঠানো হয়েছে! টেস্টিং OTP: ${response.data.devOtp}`, 'success', '✓ সফল', 8000);
-            } else {
-                showAlert('OTP পাঠানো হয়েছে! ব্যাকএন্ড কনসোল চেক করুন', 'success');
-            }
+            // Show generic success message
+            showAlert('আপনার মোবাইলে OTP পাঠানো হয়েছে', 'success', '✓ সফল', 3000);
             
             return true;
         } else {
@@ -377,7 +369,7 @@ async function resendBackendOTP() {
             // Store dev OTP if available
             if (response.data.devOtp) {
                 sessionStorage.setItem('otp_dev_code', response.data.devOtp);
-                showAlert(`নতুন OTP: ${response.data.devOtp}`, 'success', '✓ সফল', 8000);
+                showAlert('নতুন OTP পাঠানো হয়েছে', 'success', '✓ সফল', 3000);
             } else {
                 showAlert('নতুন OTP পাঠানো হয়েছে', 'success');
             }

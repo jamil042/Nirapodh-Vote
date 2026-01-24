@@ -103,7 +103,7 @@ router.post('/send-otp', async (req, res) => {
         
         // In development, allow OTP to work without SMS
         if (isDevelopment) {
-          console.log(`⚠️ Development Mode: OTP saved but SMS failed. OTP: ${otpCode}`);
+          // console.log(`⚠️ Development Mode: OTP saved but SMS failed. OTP: ${otpCode}`);
         } else {
           // In production, SMS must work
           throw new Error("SMS sending failed");
@@ -114,7 +114,7 @@ router.post('/send-otp', async (req, res) => {
       
       // In development mode, show OTP in console
       if (isDevelopment) {
-        console.log(`🔐 Development Mode - OTP for ${normalizedPhone}: ${otpCode}`);
+        // console.log(`🔐 Development Mode - OTP for ${normalizedPhone}: ${otpCode}`);
       }
     }
 
@@ -126,9 +126,11 @@ router.post('/send-otp', async (req, res) => {
     };
 
     // In development mode, include OTP in response for easy testing
+    /*
     if (isDevelopment) {
       responseData.devOtp = otpCode;
     }
+    */
 
     res.json({
       success: true,
