@@ -65,7 +65,6 @@
                         </svg>
                     </span>
                     <span class="nav-text">আলোচনা</span>
-                    <span class="notification-badge" id="discussionBadge">নতুন</span>
                 </button>
                 <button class="nav-item" data-section="chat">
                     <span class="nav-icon">
@@ -74,7 +73,6 @@
                         </svg>
                     </span>
                     <span class="nav-text">প্রশাসকের সাথে চ্যাট</span>
-                    <span class="notification-badge hidden" id="chatBadge">৩</span>
                 </button>
                 <button class="nav-item" data-section="complaints">
                     <span class="nav-icon">
@@ -319,7 +317,7 @@
                             <h3 style="margin: 0; font-size: 16px;">গ্লোবাল চ্যাট</h3>
                             <p class="online-count">
                                 <span class="online-dot"></span>
-                                সকল নাগরিকদের সাথে কথা বলুন
+                                <span id="onlineUserCount">০ জন অনলাইন</span>
                             </p>
                         </div>
                     </div>
@@ -405,7 +403,16 @@
             <!-- Messages will appear here -->
         </div>
         
-        <div class="chat-input">
+        <div class="chat-input" style="position: relative;">
+            <!-- Reply Preview -->
+            <div id="citizenReplyPreview" class="reply-preview" style="display: none; position: absolute; top: -60px; left: 14px; right: 14px;">
+                <div class="reply-preview-content">
+                    <div class="reply-preview-label">উত্তর দিচ্ছেন</div>
+                    <div class="reply-preview-text" id="citizenReplyPreviewText"></div>
+                </div>
+                <button type="button" onclick="cancelCitizenReply()" class="reply-preview-close">×</button>
+            </div>
+            
             <input type="text" id="chatInput" placeholder="বার্তা লিখুন...">
             <button onclick="sendChatMessage()" class="chat-btn btn-primary_chat">পাঠান</button>
         </div>
@@ -587,6 +594,7 @@
         </div>
     </div>
 
+    <script src="assets/js/api-config.js"></script>
     <script src="assets/js/common.js"></script>
     <script src="assets/js/citizen-dashboard.js"></script>
     <script src="assets/js/citizen_chat.js"></script>

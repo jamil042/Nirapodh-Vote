@@ -507,7 +507,16 @@
                     </div>
                 </div>
 
-                <div class="chat-input">
+                <div class="chat-input" style="position: relative;">
+                    <!-- Reply Preview -->
+                    <div id="adminReplyPreview" class="reply-preview" style="display: none; position: absolute; top: -60px; left: 14px; right: 14px;">
+                        <div class="reply-preview-content">
+                            <div class="reply-preview-label">উত্তর দিচ্ছেন</div>
+                            <div class="reply-preview-text" id="adminReplyPreviewText"></div>
+                        </div>
+                        <button type="button" onclick="cancelAdminReply()" class="reply-preview-close">×</button>
+                    </div>
+                    
                     <input type="text" id="messageInput" placeholder="বার্তা লিখুন..." disabled>
                     <button id="sendButton" onclick="sendAdminMessage()" disabled>পাঠান</button>
                 </div>

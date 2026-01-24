@@ -9,7 +9,7 @@
 
   // Initialize socket connection
   function initSocket() {
-    socket = io('http://localhost:5501', {
+    socket = io('http://localhost:3000', {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
@@ -179,6 +179,14 @@
 
     bubble.appendChild(p);
     bubble.appendChild(time);
+    
+    // Double-click to reply
+    bubble.style.cursor = 'pointer';
+    bubble.style.userSelect = 'none';
+    bubble.addEventListener('dblclick', function() {
+      showCitizenReplyPreview(text);
+    });
+    
     messageDiv.appendChild(bubble);
     container.appendChild(messageDiv);
 
@@ -228,6 +236,27 @@
       return isNaN(n) ? c : bn[n];
     }).join('');
   }
+
+  // Show reply preview
+  window.showCitizenReplyPreview = function(text) {
+    const preview = document.getElementById('citizenReplyPreview');
+    const previewText = document.getElementById('citizenReplyPreviewText');
+    const input = document.getElementById('chatInput');
+    
+    if (preview && previewText && input) {
+      previewText.textContent = text.substring(0, 80) + (text.length > 80 ? '...' : '');
+      preview.style.display = 'flex';
+      input.focus();
+    }
+  };
+
+  // Cancel reply
+  window.cancelCitizenReply = function() {
+    const preview = document.getElementById('citizenReplyPreview');
+    if (preview) {
+      preview.style.display = 'none';
+    }
+  };
 
   // Show typing indicator
   function showTypingIndicator(isTyping) {

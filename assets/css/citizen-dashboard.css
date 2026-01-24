@@ -231,39 +231,6 @@
     letter-spacing: 0.01em;
 }
 
-.notification-badge {
-    background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
-    color: white;
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    box-shadow: 0 2px 6px rgba(255, 68, 68, 0.3);
-    animation: pulse-badge 2.5s ease-in-out infinite;
-    transition: all 0.3s ease;
-}
-
-.nav-item:hover .notification-badge {
-    transform: scale(1.05);
-}
-
-@keyframes pulse-badge {
-
-    0%,
-    100% {
-        transform: scale(1);
-        box-shadow: 0 2px 6px rgba(255, 68, 68, 0.3),
-            0 0 0 0 rgba(255, 68, 68, 0.4);
-    }
-
-    50% {
-        transform: scale(1.05);
-        box-shadow: 0 3px 8px rgba(255, 68, 68, 0.5),
-            0 0 0 6px rgba(255, 68, 68, 0);
-    }
-}
-
-
 @keyframes fadeInFooter {
     from {
         opacity: 0;
@@ -515,7 +482,7 @@
 
 .result-card h3 {
     font-size: 1.5rem;
-    color: var(--primary-green);
+    color:black;
     margin-bottom: 15px;
 }
 
@@ -530,13 +497,13 @@
 
 .result-status.live {
     background: var(--danger-red);
-    color: white;
+    color: black;
     animation: pulse 2s infinite;
 }
 
 .result-status.completed {
     background: var(--success-green);
-    color: white;
+    color: rgb(0, 0, 0);
 }
 
 @keyframes pulse {
@@ -626,7 +593,7 @@
 
 .winner-announcement {
     background: linear-gradient(135deg, var(--success-green), var(--primary-green));
-    color: white;
+    color: rgb(0, 0, 0);
     padding: 25px;
     border-radius: 8px;
     text-align: center;
@@ -1645,11 +1612,6 @@
         letter-spacing: 0;
     }
 
-    .notification-badge {
-        font-size: 0.65rem;
-        padding: 3px 8px;
-    }
-
     .header-content {
         flex-direction: column;
         gap: 10px;
@@ -2122,12 +2084,6 @@
 
     .nav-item.active .nav-text {
         display: inline;
-    }
-
-    .notification-badge {
-        font-size: 0.75rem;
-        padding: 4px 8px;
-        margin-left: auto;
     }
 
     .content-area {

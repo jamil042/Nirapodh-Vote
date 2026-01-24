@@ -8,6 +8,25 @@
   let mySocketId = null;
   const messageIds = new Set(); // Prevent duplicate messages
   let replyingTo = null; // Track message being replied to
+  
+  // Track own messages in localStorage
+  function getMyMessageIds() {
+    try {
+      const stored = localStorage.getItem('nirapodh_my_messages');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  }
+  
+  function addMyMessageId(id) {
+    const myMessages = getMyMessageIds();
+    myMessages.add(id);
+    // Keep only last 100 messages
+    const arr = Array.from(myMessages);
+    if (arr.length > 100) arr.shift();
+    localStorage.setItem('nirapodh_my_messages', JSON.stringify(arr));
+  }
 
   // ===== Utility =====
   function formatTime(timestamp) {
@@ -49,9 +68,13 @@
     const key = id || `${timestamp}-${message.substring(0, 20)}`;
     if (messageIds.has(key)) return;
     messageIds.add(key);
+    
+    // Check if this is my message from localStorage
+    const myMessages = getMyMessageIds();
+    const isMyMessage = isOwn || myMessages.has(key);
 
     const messageDiv = document.createElement('div');
-    messageDiv.className = `global-message ${isOwn ? 'own-message' : 'other-message'}`;
+    messageDiv.className = `global-message ${isMyMessage ? 'own-message' : 'other-message'}`;
     messageDiv.dataset.messageId = key;
     messageDiv.dataset.messageText = message;
 
@@ -81,18 +104,10 @@
 
     messageDiv.appendChild(bubbleDiv);
 
-    // Add reply button
-    const actionsDiv = document.createElement('div');
-    actionsDiv.className = 'message-actions';
-    actionsDiv.innerHTML = `
-      <button class="reply-btn" onclick="replyToMessage('${key}')" aria-label="উত্তর দিন">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 14L4 9l5-5"></path>
-          <path d="M20 20v-7a4 4 0 0 0-4-4H4"></path>
-        </svg>
-      </button>
-    `;
-    messageDiv.appendChild(actionsDiv);
+    // Add double-click to reply
+    bubbleDiv.addEventListener('dblclick', function() {
+      replyToMessage(key);
+    });
 
     messagesContainer.appendChild(messageDiv);
 
@@ -131,7 +146,7 @@
 
   // ===== Socket init =====
   NirapodChat.initializeSocket = function () {
-    socket = io('http://localhost:5501', {
+    socket = io('http://localhost:3000', {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
@@ -204,12 +219,17 @@
       return;
     }
 
+    const messageId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const payload = {
+      id: messageId,
       message,
       timestamp: new Date().toISOString(),
       socketId: mySocketId,
       replyTo: replyingTo ? replyingTo.text : null
     };
+    
+    // Store this message ID as mine
+    addMyMessageId(messageId);
 
     socket.emit('global_message', payload);
 
