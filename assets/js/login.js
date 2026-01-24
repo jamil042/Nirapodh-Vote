@@ -100,13 +100,16 @@ function showLoadingState() {
 
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.classList.add('loading');
+        submitBtn.classList.add('is-loading');
     }
 
-    if (btnText) btnText.style.display = 'none';
+    if (btnText) {
+        btnText.textContent = 'লগইন হচ্ছে...';
+    }
+    
+    // Ensure loader is hidden as we are using text
     if (btnLoader) {
-        btnLoader.classList.remove('hidden');
-        btnLoader.style.display = 'inline-block';
+        btnLoader.style.display = 'none';
     }
 }
 
@@ -118,10 +121,13 @@ function hideLoadingState() {
 
     if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.classList.remove('loading');
+        submitBtn.classList.remove('is-loading');
     }
 
-    if (btnText) btnText.style.display = 'inline';
+    if (btnText) {
+        btnText.textContent = 'লগইন করুন';
+    }
+    
     if (btnLoader) {
         btnLoader.classList.add('hidden');
         btnLoader.style.display = 'none';

@@ -143,17 +143,14 @@ function showLoadingState() {
 
     const submitBtn = document.getElementById('submitBtn');
     const btnText = document.getElementById('btnText');
-    const btnLoader = document.getElementById('btnLoader');
 
     if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.classList.add('loading');
     }
 
-    if (btnText) btnText.style.display = 'none';
-    if (btnLoader) {
-        btnLoader.classList.remove('hidden');
-        btnLoader.style.display = 'inline-block';
+    if (btnText) {
+        btnText.textContent = 'লগইন হচ্ছে...';
     }
 }
 
@@ -161,17 +158,14 @@ function showLoadingState() {
 function hideLoadingState() {
     const submitBtn = document.getElementById('submitBtn');
     const btnText = document.getElementById('btnText');
-    const btnLoader = document.getElementById('btnLoader');
 
     if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.classList.remove('loading');
     }
 
-    if (btnText) btnText.style.display = 'inline';
-    if (btnLoader) {
-        btnLoader.classList.add('hidden');
-        btnLoader.style.display = 'none';
+    if (btnText) {
+        btnText.textContent = 'লগইন করুন';
     }
 }
 
