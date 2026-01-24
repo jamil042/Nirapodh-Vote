@@ -1,29 +1,31 @@
-// Main Server File - NirapodhVote Backend (Merged: OTP + Chat Features)
+// server.js - UPDATED COMPLETE VERSION
 require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const connectDB = require('./server/config/db');
-const { randomUUID } = require('crypto');
 
 // Import routes
 const authRoutes = require('./server/routes/auth');
 const voteRoutes = require('./server/routes/vote');
 const adminRoutes = require('./server/routes/admin');
+const ballotRoutes = require('./server/routes/ballot');
+const noticeRoutes = require('./server/routes/notice');
+const complaintRoutes = require('./server/routes/complaint');
 
 const app = express();
 const server = http.createServer(app);
 
 // CORS configuration
 app.use(cors({
-  origin: '*', // In production, replace with your domain
+  origin: '*',
   credentials: true
 }));
 
 // Body parser middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' })); // Increased for base64 images
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Serve static files
 app.use(express.static(__dirname));
@@ -32,6 +34,9 @@ app.use(express.static(__dirname));
 app.use('/api/auth', authRoutes);
 app.use('/api/vote', voteRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/ballot', ballotRoutes);
+app.use('/api/notice', noticeRoutes);
+app.use('/api/complaint', complaintRoutes);
 
 // Socket.IO setup for chat
 const io = new Server(server, {
@@ -41,27 +46,23 @@ const io = new Server(server, {
     credentials: true
   },
   transports: ['websocket', 'polling'],
-  allowEIO3: true,
-  pingTimeout: 60000,
-  pingInterval: 25000
+  allowEIO3: true
 });
 
-// ===== CHAT STATE MANAGEMENT =====
-
-// Anonymous chat state
-const onlineUsers = new Map(); // socketId -> { username, joinedAt }
+// In-memory chat state
+const onlineUsers = new Map();
 let globalMessageHistory = [];
-
-// Admin-Citizen chat state
-const activeCitizens = new Map(); // nid -> { socket, name, nid, timestamp }
-const registeredCitizens = new Map(); // nid -> { name, registeredAt } (PERMANENT RECORD)
-let adminSocket = null;
-const chatHistory = new Map(); // nid -> messages[] (PERSISTENT STORAGE)
-
 const MAX_HISTORY = 100;
 const MAX_MESSAGE_LENGTH = 500;
 
-// ===== UTILITY FUNCTIONS =====
+// Socket.IO functions
+function broadcastOnlineUsers() {
+  const users = Array.from(onlineUsers.values())
+    .map(u => u.username)
+    .filter((v, i, a) => a.indexOf(v) === i);
+  io.emit('users_online', { users });
+  console.log(`📊 Online users: ${users.length}`);
+}
 
 function sanitizeMessage(text) {
   const trimmed = (text || '').trim().slice(0, MAX_MESSAGE_LENGTH);
@@ -79,28 +80,7 @@ function validateUsername(username) {
   return cleaned.length >= 2 && cleaned.length <= 20;
 }
 
-function broadcastOnlineUsers() {
-  const users = Array.from(onlineUsers.values())
-    .map(u => u.username)
-    .filter((v, i, a) => a.indexOf(v) === i);
-  io.emit('users_online', { users });
-  console.log(`📊 Anonymous chat users: ${users.length}`);
-}
-
-function broadcastActiveCitizens() {
-  const citizens = Array.from(activeCitizens.values()).map(c => ({
-    name: c.name,
-    nid: c.nid,
-    timestamp: c.timestamp
-  }));
-  
-  if (adminSocket) {
-    io.to(adminSocket).emit('active_citizens', { citizens });
-    console.log(`📤 Sent ${citizens.length} active citizens to admin`);
-  }
-}
-
-// ===== SOCKET.IO CONNECTION HANDLING =====
+// Socket.IO connection handling
 io.on('connection', (socket) => {
   console.log(`🔌 Client connected: ${socket.id}`);
 
@@ -109,8 +89,6 @@ io.on('connection', (socket) => {
     socketId: socket.id,
     timestamp: new Date().toISOString()
   });
-
-  // ===== ANONYMOUS CHAT EVENTS =====
 
   socket.on('user_login', (data) => {
     const username = data?.username?.trim();
@@ -143,7 +121,7 @@ io.on('connection', (socket) => {
       timestamp: new Date().toISOString()
     });
 
-    console.log(`✅ Anonymous user logged in: ${username}`);
+    console.log(`✅ User logged in: ${username}`);
   });
 
   socket.on('send_message', (data) => {
@@ -172,301 +150,10 @@ io.on('connection', (socket) => {
     }
 
     io.emit('new_message', msgObj);
-    console.log(`💬 Anonymous [${user.username}]: ${sanitized.substring(0, 50)}...`);
+    console.log(`💬 ${user.username}: ${sanitized.substring(0, 50)}...`);
   });
 
-  socket.on('request_message_history', () => {
-    const recentMessages = globalMessageHistory.slice(-50);
-    socket.emit('message_history', {
-      messages: recentMessages,
-      count: recentMessages.length
-    });
-    console.log(`📜 Sent ${recentMessages.length} anonymous messages to ${socket.id}`);
-  });
-
-  socket.on('global_message', (data) => {
-    const message = sanitizeMessage(data?.message || '');
-
-    if (!message || message.length === 0) {
-      return;
-    }
-
-    const msgObj = {
-      id: data.id || randomUUID(),
-      message,
-      timestamp: data.timestamp || new Date().toISOString(),
-      socketId: socket.id,
-      replyTo: data.replyTo || null
-    };
-
-    globalMessageHistory.push(msgObj);
-    if (globalMessageHistory.length > MAX_HISTORY) {
-      globalMessageHistory.shift();
-    }
-
-    io.emit('receive_global_message', msgObj);
-
-    const replyInfo = msgObj.replyTo ? ` (replying to: "${msgObj.replyTo.substring(0, 20)}...")` : '';
-    console.log(`💬 Global [${socket.id.slice(0, 8)}]: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}${replyInfo}`);
-  });
-
-  socket.on('user_logout', () => {
-    onlineUsers.delete(socket.id);
-    broadcastOnlineUsers();
-    console.log(`👋 Anonymous user ${socket.id} logged out`);
-  });
-
-  // ===== ADMIN-CITIZEN CHAT EVENTS =====
-
-  socket.on('admin_join', () => {
-    if (adminSocket && adminSocket !== socket.id) {
-      socket.emit('admin_already_connected', {
-        message: 'অন্য একজন এডমিন ইতিমধ্যে সংযুক্ত আছে'
-      });
-      console.log(`⚠️ Admin join rejected: ${socket.id} (Admin already connected: ${adminSocket})`);
-      return;
-    }
-    
-    adminSocket = socket.id;
-    console.log(`👨‍💼 Admin joined: ${socket.id}`);
-    
-    broadcastActiveCitizens();
-  });
-
-  socket.on('citizen_join', (data) => {
-    const { name, nid, timestamp } = data;
-    
-    if (!name || !nid) {
-      socket.emit('join_error', { message: 'নাম এবং NID প্রদান করুন' });
-      console.log(`❌ Invalid citizen join data from ${socket.id}`);
-      return;
-    }
-
-    // Check if NID is already registered with different name
-    const registered = registeredCitizens.get(nid);
-    if (registered && registered.name !== name) {
-      socket.emit('join_error', { 
-        message: `এই NID (${nid}) ইতিমধ্যে "${registered.name}" নামে নিবন্ধিত। আপনি "${name}" নামে লগইন করতে পারবেন না।`
-      });
-      console.log(`⚠️ NID ${nid} already registered as "${registered.name}", rejected login as "${name}"`);
-      return;
-    }
-
-    // Check if already logged in from another device/socket
-    const existing = activeCitizens.get(nid);
-    if (existing && existing.socket !== socket.id) {
-      socket.emit('join_error', { 
-        message: 'এই NID ইতিমধ্যে অন্য ডিভাইস থেকে লগইন করা আছে'
-      });
-      console.log(`⚠️ NID ${nid} already active on socket ${existing.socket}`);
-      return;
-    }
-
-    // Register citizen for first time
-    if (!registered) {
-      registeredCitizens.set(nid, {
-        name: name,
-        registeredAt: new Date().toISOString()
-      });
-      console.log(`📝 New citizen registered: ${name} (NID: ${nid})`);
-    }
-
-    // Get persistent chat history
-    const persistentHistory = chatHistory.get(nid) || [];
-    
-    // Store citizen info
-    activeCitizens.set(nid, {
-      socket: socket.id,
-      name,
-      nid,
-      timestamp: timestamp || new Date().toISOString()
-    });
-
-    console.log(`👤 Citizen ${existing ? 'reconnected' : 'joined'}: ${name} (NID: ${nid}) - ${persistentHistory.length} messages in history`);
-
-    // Send chat history to citizen
-    socket.emit('admin_chat_history', {
-      messages: persistentHistory,
-      count: persistentHistory.length
-    });
-
-    // Send success confirmation
-    socket.emit('join_success', {
-      name: name,
-      nid: nid,
-      messageCount: persistentHistory.length
-    });
-
-    // Notify admin if connected
-    if (adminSocket) {
-      io.to(adminSocket).emit('citizen_joined', {
-        name,
-        nid,
-        timestamp: timestamp || new Date().toISOString()
-      });
-    }
-
-    broadcastActiveCitizens();
-  });
-
-  socket.on('citizen_message', (data) => {
-    const { message, senderNID, senderName, timestamp } = data;
-    
-    if (!message || !senderNID) {
-      console.log(`❌ Invalid citizen message from ${socket.id}`);
-      return;
-    }
-
-    const sanitized = sanitizeMessage(message);
-    
-    const msgObj = {
-      message: sanitized,
-      senderNID,
-      senderName,
-      timestamp: timestamp || new Date().toISOString(),
-      type: 'citizen_to_admin'
-    };
-
-    // Store in PERSISTENT chatHistory
-    if (!chatHistory.has(senderNID)) {
-      chatHistory.set(senderNID, []);
-    }
-    const history = chatHistory.get(senderNID);
-    history.push(msgObj);
-    
-    if (history.length > MAX_HISTORY) {
-      history.shift();
-    }
-
-    console.log(`💬 Citizen ${senderName} (${senderNID}): ${sanitized.substring(0, 50)}${sanitized.length > 50 ? '...' : ''}`);
-
-    // Send to admin if connected
-    if (adminSocket) {
-      io.to(adminSocket).emit('receive_citizen_message', msgObj);
-      console.log(`📤 Forwarded message to admin`);
-    } else {
-      console.log(`⚠️ No admin connected to receive message`);
-    }
-  });
-
-  socket.on('admin_message', (data) => {
-    const { message, recipientNID, timestamp } = data;
-    
-    if (!message || !recipientNID) {
-      console.log(`❌ Invalid admin message from ${socket.id}`);
-      return;
-    }
-
-    const sanitized = sanitizeMessage(message);
-    
-    const msgObj = {
-      message: sanitized,
-      recipientNID,
-      timestamp: timestamp || new Date().toISOString(),
-      type: 'admin_to_citizen'
-    };
-
-    // Store in PERSISTENT chatHistory
-    if (!chatHistory.has(recipientNID)) {
-      chatHistory.set(recipientNID, []);
-    }
-    const history = chatHistory.get(recipientNID);
-    history.push(msgObj);
-    
-    if (history.length > MAX_HISTORY) {
-      history.shift();
-    }
-
-    console.log(`👨‍💼 Admin to ${recipientNID}: ${sanitized.substring(0, 50)}${sanitized.length > 50 ? '...' : ''}`);
-
-    // Send to the citizen
-    const citizen = activeCitizens.get(recipientNID);
-    if (citizen) {
-      io.to(citizen.socket).emit('receive_admin_message', msgObj);
-      console.log(`📤 Sent message to citizen ${recipientNID}`);
-    } else {
-      console.log(`⚠️ Citizen ${recipientNID} not connected (message saved in history)`);
-    }
-  });
-
-  socket.on('citizen_typing', (data) => {
-    const { nid, typing } = data;
-    
-    if (!nid) return;
-
-    if (adminSocket) {
-      io.to(adminSocket).emit('citizen_typing_status', {
-        nid,
-        typing
-      });
-    }
-  });
-
-  socket.on('admin_typing', (data) => {
-    const { recipientNID, typing } = data;
-    
-    if (!recipientNID) return;
-
-    const citizen = activeCitizens.get(recipientNID);
-    if (citizen) {
-      io.to(citizen.socket).emit('admin_typing', { typing });
-    }
-  });
-
-  socket.on('request_citizen_chat_history', (data) => {
-    const { nid } = data;
-    
-    if (!nid) {
-      console.log(`❌ No NID provided for history request`);
-      return;
-    }
-
-    const messages = chatHistory.get(nid) || [];
-    socket.emit('citizen_chat_history', { 
-      nid: nid,
-      messages: messages,
-      count: messages.length
-    });
-    
-    console.log(`📜 Sent ${messages.length} chat messages to admin for citizen ${nid}`);
-  });
-
-  socket.on('request_admin_chat_history', (data) => {
-    const { nid } = data;
-    
-    if (!nid) {
-      console.log(`❌ No NID provided for history request`);
-      return;
-    }
-
-    const messages = chatHistory.get(nid) || [];
-    socket.emit('admin_chat_history', { 
-      messages: messages,
-      count: messages.length
-    });
-    
-    console.log(`📜 Sent ${messages.length} chat messages to citizen ${nid}`);
-  });
-
-  socket.on('citizen_logout', (data) => {
-    const { nid } = data;
-    
-    if (!nid) return;
-
-    activeCitizens.delete(nid);
-    
-    console.log(`👋 Citizen ${nid} logged out (chat history preserved)`);
-
-    if (adminSocket) {
-      io.to(adminSocket).emit('citizen_left', { nid });
-    }
-
-    broadcastActiveCitizens();
-  });
-
-  // ===== DISCONNECT HANDLER =====
-  socket.on('disconnect', (reason) => {
-    // Handle anonymous user disconnect
+  socket.on('disconnect', () => {
     const user = onlineUsers.get(socket.id);
     if (user) {
       onlineUsers.delete(socket.id);
@@ -477,105 +164,28 @@ io.on('connection', (socket) => {
         timestamp: new Date().toISOString()
       });
 
-      console.log(`👋 Anonymous user disconnected: ${user.username} (${reason})`);
+      console.log(`👋 User disconnected: ${user.username}`);
+    } else {
+      console.log(`🔌 Client disconnected: ${socket.id}`);
     }
-
-    // Handle admin disconnect
-    if (adminSocket === socket.id) {
-      adminSocket = null;
-      console.log(`👨‍💼 Admin disconnected: ${socket.id} (${reason})`);
-    }
-
-    // Handle citizen disconnect
-    for (const [nid, citizen] of activeCitizens.entries()) {
-      if (citizen.socket === socket.id) {
-        activeCitizens.delete(nid);
-        console.log(`👤 Citizen ${nid} disconnected (${reason}) - chat history preserved`);
-        
-        if (adminSocket) {
-          io.to(adminSocket).emit('citizen_left', { nid });
-        }
-        
-        broadcastActiveCitizens();
-        break;
-      }
-    }
-
-    console.log(`🔌 Socket ${socket.id} disconnected: ${reason}`);
-  });
-
-  socket.on('error', (error) => {
-    console.error(`❌ Socket error (${socket.id}):`, error);
   });
 });
-
-// ===== HTTP ENDPOINTS =====
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 
     success: true, 
     message: 'NirapodhVote Backend is running',
-    timestamp: new Date().toISOString(),
-    anonymousUsers: onlineUsers.size,
-    activeCitizens: activeCitizens.size,
-    registeredCitizens: registeredCitizens.size,
-    adminConnected: adminSocket !== null
+    timestamp: new Date().toISOString()
   });
 });
 
-// Stats endpoint
-app.get('/api/stats', (req, res) => {
-  res.json({
-    anonymousUsers: onlineUsers.size,
-    activeCitizens: activeCitizens.size,
-    registeredCitizens: registeredCitizens.size,
-    adminConnected: adminSocket !== null,
-    messageHistory: globalMessageHistory.length,
-    chatHistoryCount: chatHistory.size,
-    activeCitizensList: Array.from(activeCitizens.entries()).map(([nid, c]) => ({
-      name: c.name,
-      nid: nid,
-      socket: c.socket
-    })),
-    registeredCitizensList: Array.from(registeredCitizens.entries()).map(([nid, data]) => ({
-      nid: nid,
-      name: data.name,
-      registeredAt: data.registeredAt,
-      messageCount: (chatHistory.get(nid) || []).length
-    }))
-  });
-});
-
-// Stats endpoint
-app.get('/api/stats', (req, res) => {
-  res.json({
-    anonymousUsers: onlineUsers.size,
-    activeCitizens: activeCitizens.size,
-    registeredCitizens: registeredCitizens.size,
-    adminConnected: adminSocket !== null,
-    messageHistory: globalMessageHistory.length,
-    chatHistoryCount: chatHistory.size,
-    activeCitizensList: Array.from(activeCitizens.entries()).map(([nid, c]) => ({
-      name: c.name,
-      nid: nid,
-      socket: c.socket
-    })),
-    registeredCitizensList: Array.from(registeredCitizens.entries()).map(([nid, data]) => ({
-      nid: nid,
-      name: data.name,
-      registeredAt: data.registeredAt,
-      messageCount: (chatHistory.get(nid) || []).length
-    }))
-  });
-});
-
-// Error handler
+// Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('❌ Server error:', err);
+  console.error('Server error:', err);
   res.status(500).json({
-    error: 'Internal server error',
-    message: err.message
+    success: false,
+    message: 'সার্ভার ত্রুটি ঘটেছে'
   });
 });
 
@@ -585,42 +195,17 @@ const PORT = process.env.PORT || 3000;
 connectDB().then(() => {
   server.listen(PORT, () => {
     console.log(`
-╔═══════════════════════════════════════════════════╗
-║   🗳️  NirapodhVote Backend Server (Merged)        ║
-║   ✅ Server running on port ${PORT}                  ║
-║   ✅ MongoDB Connected                            ║
-║   🌐 http://localhost:${PORT}                      ║
-║                                                   ║
-║   Features:                                       ║
-║   - OTP Authentication & Registration            ║
-║   - Voting System                                ║
-║   - Admin Dashboard                              ║
-║   - Anonymous Chat                               ║
-║   - Admin-Citizen Chat (NID Validated)           ║
-║   - Persistent Chat History                      ║
-╚═══════════════════════════════════════════════════╝
+╔═══════════════════════════════════════════╗
+║   🗳️  NirapodhVote Backend Server         ║
+║   ✅ Server running on port ${PORT}          ║
+║   ✅ MongoDB Connected                     ║
+║   🌐 http://localhost:${PORT}               ║
+╚═══════════════════════════════════════════╝
     `);
   });
 }).catch(err => {
   console.error('Failed to start server:', err);
   process.exit(1);
-});
-
-// Graceful shutdown handlers
-process.on('SIGTERM', () => {
-  console.log('⚠️  SIGTERM received, shutting down gracefully...');
-  server.close(() => {
-    console.log('✅ Server closed');
-    process.exit(0);
-  });
-});
-
-process.on('SIGINT', () => {
-  console.log('\n⚠️  SIGINT received, shutting down gracefully...');
-  server.close(() => {
-    console.log('✅ Server closed');
-    process.exit(0);
-  });
 });
 
 module.exports = { app, server, io };

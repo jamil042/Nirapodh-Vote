@@ -1,38 +1,22 @@
 // Common JavaScript functions for all pages
 
 // Show alert message
-function showAlert(message, type = 'info', title = '', duration = 5000) {
+function showAlert(message, type = 'info') {
     const alertContainer = document.getElementById('alertContainer');
     if (!alertContainer) return;
     
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type}`;
-    
-    // Set default titles based on type if not provided
-    if (!title) {
-        switch(type) {
-            case 'success': title = '✓ সফল'; break;
-            case 'error': title = '✗ ত্রুটি'; break;
-            case 'warning': title = '⚠ সতর্কতা'; break;
-            case 'info': title = 'ℹ তথ্য'; break;
-        }
-    }
-    
-    alertDiv.innerHTML = `
-        <div class="alert-content">
-            <div class="alert-title">${title}</div>
-            <div class="alert-message">${message}</div>
-        </div>
-    `;
+    alertDiv.textContent = message;
     
     alertContainer.innerHTML = '';
     alertContainer.appendChild(alertDiv);
     
-    // Auto-hide after duration
+    // Auto-hide after 5 seconds
     setTimeout(() => {
         alertDiv.style.opacity = '0';
         setTimeout(() => alertDiv.remove(), 300);
-    }, duration);
+    }, 5000);
 }
 
 // Toggle password visibility
@@ -65,14 +49,6 @@ function openChatBot() {
 // Logout function
 function logout() {
     if (confirm('আপনি কি লগআউট করতে চান?')) {
-        // Clear all auth related storage
-        localStorage.removeItem('nirapodh_token');
-        localStorage.removeItem('nirapodh_user');
-        sessionStorage.clear();
-        
-        // Set flag to prevent auto-redirect on login page
-        sessionStorage.setItem('justLoggedOut', 'true');
-        
         window.location.href = 'index.html';
     }
 }
@@ -101,27 +77,21 @@ function toBengaliNumber(num) {
 }
 
 // Loading button state
-function setButtonLoading(buttonId, loading = true, textId = 'btnText', loaderId = 'btnLoader') {
+function setButtonLoading(buttonId, loading = true) {
     const btn = document.getElementById(buttonId);
     if (!btn) return;
     
-    const btnText = document.getElementById(textId);
-    const btnLoader = document.getElementById(loaderId);
+    const btnText = btn.querySelector('#btnText');
+    const btnLoader = btn.querySelector('#btnLoader');
     
     if (loading) {
         btn.disabled = true;
         if (btnText) btnText.style.display = 'none';
-        if (btnLoader) {
-            btnLoader.classList.remove('hidden');
-            btnLoader.style.display = 'inline-block';
-        }
+        if (btnLoader) btnLoader.classList.remove('hidden');
     } else {
         btn.disabled = false;
         if (btnText) btnText.style.display = 'inline';
-        if (btnLoader) {
-            btnLoader.classList.add('hidden');
-            btnLoader.style.display = 'none';
-        }
+        if (btnLoader) btnLoader.classList.add('hidden');
     }
 }
 
