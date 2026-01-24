@@ -17,6 +17,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Setup event listeners
     setupEventListeners();
+    
+    // Clear session when tab/window is closed or navigated away
+    window.addEventListener('beforeunload', function(e) {
+        // Clear all session data to force re-login
+        sessionStorage.clear();
+    });
 });
 
 // Load user data from backend

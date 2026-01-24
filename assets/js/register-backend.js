@@ -42,7 +42,7 @@ async function handleRegister(e) {
     console.log('=== Register Form Submitted ===');
     
     // Get form values
-    const nid = document.getElementById('nid').value.trim();
+    const nid = document.getElementById('nid').value.trim().replace(/-/g, ''); // Remove dashes
     const phoneNumber = document.getElementById('phoneNumber').value.trim();
     const dob = document.getElementById('dob').value;
     

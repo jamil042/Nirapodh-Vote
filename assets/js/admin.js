@@ -48,7 +48,20 @@ function createAlertContainer() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Check if admin is logged in
+    const token = sessionStorage.getItem('nirapodh_admin_token');
+    if (!token) {
+        window.location.href = 'admin-login.html';
+        return;
+    }
+    
     initializeDashboard();
+    
+    // Clear session when tab/window is closed or navigated away
+    window.addEventListener('beforeunload', function(e) {
+        // Clear all session data to force re-login
+        sessionStorage.clear();
+    });
 });
 
 function initializeDashboard() {

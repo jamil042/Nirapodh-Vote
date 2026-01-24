@@ -170,7 +170,7 @@ function showAutoFetchSuccessState() {
 // Validate Form
 function validateRegisterForm() {
     const errors = [];
-    const nid = document.getElementById('nid').value.trim();
+    const nid = document.getElementById('nid').value.trim().replace(/-/g, ''); // Remove dashes
     const dob = document.getElementById('dob').value;
 
     if (!nid) {
@@ -199,7 +199,7 @@ function handleRegister(e) {
         return;
     }
 
-    const nid = document.getElementById('nid').value.trim();
+    const nid = document.getElementById('nid').value.trim().replace(/-/g, ''); // Remove dashes
     
     // Check if user already exists
     if (userExists(nid)) {

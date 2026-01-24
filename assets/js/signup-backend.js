@@ -48,7 +48,7 @@ async function handleSignup(e) {
     e.preventDefault();
     
     // Get form values
-    const nid = document.getElementById('nid').value.trim();
+    const nid = document.getElementById('nid').value.trim().replace(/-/g, ''); // Remove dashes
     const name = document.getElementById('name').value.trim();
     const dob = document.getElementById('dob').value;
     const fatherName = document.getElementById('fatherName').value.trim();

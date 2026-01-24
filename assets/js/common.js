@@ -66,12 +66,7 @@ function openChatBot() {
 function logout() {
     if (confirm('আপনি কি লগআউট করতে চান?')) {
         // Clear all auth related storage
-        localStorage.removeItem('nirapodh_token');
-        localStorage.removeItem('nirapodh_user');
         sessionStorage.clear();
-        
-        // Set flag to prevent auto-redirect on login page
-        sessionStorage.setItem('justLoggedOut', 'true');
         
         window.location.href = 'index.html';
     }
@@ -127,8 +122,10 @@ function setButtonLoading(buttonId, loading = true, textId = 'btnText', loaderId
 
 // Validate NID
 function validateNID(nid) {
+    // Remove dashes before validation
+    const cleanNid = nid.replace(/-/g, '');
     const nidPattern = /^[0-9]{10,17}$/;
-    return nidPattern.test(nid);
+    return nidPattern.test(cleanNid);
 }
 
 // Validate password strength

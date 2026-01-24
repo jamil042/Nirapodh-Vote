@@ -3,24 +3,13 @@
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('adminLoginForm');
     
-    // Check if already logged in as admin
-    const token = localStorage.getItem('nirapodh_admin_token');
-    if (token) {
-        verifyAdminAndRedirect();
-    }
+    // Always show login page, don't auto-redirect
+    // This ensures admins must actively log in each time
     
     if (loginForm) {
         loginForm.addEventListener('submit', handleAdminLogin);
     }
 });
-
-async function verifyAdminAndRedirect() {
-    const token = localStorage.getItem('nirapodh_admin_token');
-    if (token) {
-        // Redirect to admin dashboard
-        window.location.href = 'admin-dashboard.html';
-    }
-}
 
 // Handle Admin Login
 async function handleAdminLogin(e) {
@@ -52,8 +41,8 @@ async function handleAdminLogin(e) {
 
         if (result.success) {
             // Save admin token
-            localStorage.setItem('nirapodh_admin_token', result.token);
-            localStorage.setItem('nirapodh_admin_user', JSON.stringify(result.admin));
+            sessionStorage.setItem('nirapodh_admin_token', result.token);
+            sessionStorage.setItem('nirapodh_admin_user', JSON.stringify(result.admin));
 
             hideLoadingState();
             showAlert('লগইন সফল হয়েছে!', 'success');
