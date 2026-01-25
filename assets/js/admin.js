@@ -48,6 +48,13 @@ function createAlertContainer() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Check if admin is logged in
+    const token = sessionStorage.getItem('nirapodh_admin_token');
+    if (!token) {
+        window.location.href = 'admin-login.html';
+        return;
+    }
+    
     initializeDashboard();
 });
 
@@ -77,45 +84,8 @@ function initializeDashboard() {
 }
 
 function populateBallotFormOptions() {
-    const ballotNameSelect = document.getElementById('ballotName');
-    const ballotLocationSelect = document.getElementById('ballotLocation');
-
-    if (!ballotNameSelect || !ballotLocationSelect || !ballotMockData) return;
-
-    const ballotTypeOptions = ballotMockData.ballotTypes || [];
-    const ballotLocationOptions = ballotMockData.ballotLocations || [];
-    
-    // Add custom ballot names
-    const allBallotTypes = [...ballotTypeOptions];
-    customBallotNames.forEach((name, index) => {
-        if (name) {
-            allBallotTypes.push({ value: `custom_ballot_${index}`, label: name });
-        }
-    });
-    
-    // Deduplicate ballot names - keep only unique labels
-    const uniqueBallotTypes = [];
-    const seenLabels = new Set();
-    allBallotTypes.forEach(option => {
-        if (!seenLabels.has(option.label)) {
-            uniqueBallotTypes.push(option);
-            seenLabels.add(option.label);
-        }
-    });
-    
-    // Add custom ballot locations
-    const allBallotLocations = [...ballotLocationOptions];
-    customBallotLocations.forEach((location, index) => {
-        if (location) {
-            allBallotLocations.push({ value: `custom_location_${index}`, label: location });
-        }
-    });
-
-    ballotNameSelect.innerHTML = ['<option value="">নির্বাচন করুন</option>',
-        ...uniqueBallotTypes.map(option => `<option value="${option.value}">${option.label}</option>`) ].join('');
-
-    ballotLocationSelect.innerHTML = ['<option value="">এলাকা নির্বাচন করুন</option>',
-        ...allBallotLocations.map(option => `<option value="${option.value}">${option.label}</option>`) ].join('');
+    // Use the new loadBallotOptions function that fetches from backend
+    loadBallotOptions();
 }
 
 function renderCharts() {
@@ -989,53 +959,122 @@ function addNewBallotOption() {
     const ballotLocation = (newBallotLocationInput?.value || '').trim();
     
     // Validation
-    if (!ballotName && !ballotLocation) {
-        showAlert('অনুগ্রহ করে ব্যালটের নাম বা নির্বাচন এলাকা লিখুন', 'warning');
+    if (!ballotName || !ballotLocation) {
+        showAlert('অনুগ্রহ করে ব্যালটের নাম এবং নির্বাচন এলাকা উভয়ই লিখুন', 'warning');
         return;
     }
     
-    if (ballotName && ballotLocation) {
-        // Check for duplicate combination (same ballot name + same area)
-        for (let i = 0; i < ballotNameCount; i++) {
-            for (let j = 0; j < ballotLocationCount; j++) {
-                if (customBallotNames[i] === ballotName && customBallotLocations[j] === ballotLocation) {
-                    showAlert(`"${ballotName}" এবং "${ballotLocation}" এই সংমিশ্রণ ইতিমধ্যে রয়েছে। অন্য এলাকা নির্বাচন করুন।`, 'error');
-                    return;
-                }
-            }
+    // Call backend API to save ballot
+    const token = sessionStorage.getItem('nirapodh_admin_token');
+    if (!token) {
+        showAlert('অনুমোদন প্রয়োজন। পুনরায় লগইন করুন', 'error');
+        window.location.href = 'admin-login.html';
+        return;
+    }
+    
+    // Show loading
+    const btn = event.target;
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'যোগ হচ্ছে...';
+    
+    fetch('http://localhost:3000/api/admin/ballots', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            name: ballotName,
+            location: ballotLocation
+        })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showAlert(result.message || 'ব্যালট সফলভাবে যোগ হয়েছে!', 'success');
+            newBallotNameInput.value = '';
+            newBallotLocationInput.value = '';
+            
+            // Reload ballot dropdowns
+            loadBallotOptions();
+        } else {
+            showAlert(result.message || 'ব্যালট যোগ করতে ব্যর্থ হয়েছে', 'error');
         }
-    }
-    
-    if (ballotName && ballotNameCount >= 20) {
-        showAlert('সর্বোচ্চ ২০টি ব্যালটের নাম যোগ করা যায়', 'warning');
-        return;
-    }
-    
-    if (ballotLocation && ballotLocationCount >= 20) {
-        showAlert('সর্বোচ্চ ২০টি নির্বাচন এলাকা যোগ করা যায়', 'warning');
-        return;
-    }
-    
-    // Add ballot name
-    if (ballotName) {
-        customBallotNames[ballotNameCount] = ballotName;
-        ballotNameCount++;
-        newBallotNameInput.value = '';
-        showAlert(`"${ballotName}" ব্যালটের নাম যোগ হয়েছে`, 'success');
-    }
-    
-    // Add ballot location
-    if (ballotLocation) {
-        customBallotLocations[ballotLocationCount] = ballotLocation;
-        ballotLocationCount++;
-        newBallotLocationInput.value = '';
-        showAlert(`"${ballotLocation}" নির্বাচন এলাকা যোগ হয়েছে`, 'success');
-    }
-    
-    // Update the dropdowns
-    populateBallotFormOptions();
+    })
+    .catch(error => {
+        console.error('Add ballot error:', error);
+        showAlert('ব্যালট যোগ করতে ব্যর্থ হয়েছে', 'error');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    });
 }
 
+// Load ballot options from backend
+async function loadBallotOptions() {
+    const token = sessionStorage.getItem('nirapodh_admin_token');
+    if (!token) return;
+    
+    try {
+        // Fetch ballot names
+        const namesResponse = await fetch('http://localhost:3000/api/admin/ballot-names', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const namesData = await namesResponse.json();
+        
+        // Fetch ballot locations
+        const locationsResponse = await fetch('http://localhost:3000/api/admin/ballot-locations', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const locationsData = await locationsResponse.json();
+        
+        // Update dropdowns
+        const ballotNameSelect = document.getElementById('ballotName');
+        const ballotLocationSelect = document.getElementById('ballotLocation');
+        
+        if (ballotNameSelect && namesData.success) {
+            ballotNameSelect.innerHTML = '<option value="">নির্বাচন করুন</option>' +
+                namesData.ballotNames.map(name => `<option value="${name}">${name}</option>`).join('');
+        }
+        
+        if (ballotLocationSelect && locationsData.success) {
+            ballotLocationSelect.innerHTML = '<option value="">এলাকা নির্বাচন করুন</option>' +
+                locationsData.ballotLocations.map(location => `<option value="${location}">${location}</option>`).join('');
+        }
+    } catch (error) {
+        console.error('Load ballot options error:', error);
+    }
+}
+
+
+function togglePasswordChange() {
+    const container = document.getElementById('passwordChangeContainer');
+    if (container) {
+        if (container.style.display === 'none' || !container.style.display) {
+            container.style.display = 'block';
+            // Add smooth animation
+            setTimeout(() => {
+                container.classList.add('show');
+            }, 10);
+            // Scroll to the form
+            container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+            container.classList.remove('show');
+            setTimeout(() => {
+                container.style.display = 'none';
+                // Clear form when closing
+                const form = document.getElementById('changePasswordForm');
+                if (form) form.reset();
+            }, 300);
+        }
+    }
+}
 
 function handlePasswordChange(e) {
     e.preventDefault();
@@ -1061,8 +1100,38 @@ function handlePasswordChange(e) {
         const originalText = btn.textContent;
         btn.textContent = 'পরিবর্তন হচ্ছে...';
         
-        setTimeout(() => {
-            showAlert('পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!', 'success');
+        // Call backend API
+        const token = sessionStorage.getItem('nirapodh_admin_token');
+        fetch('http://localhost:3000/api/admin/change-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                currentPassword,
+                newPassword,
+                confirmPassword: confirmNewPassword
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showAlert(result.message || 'পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!', 'success');
+                e.target.reset();
+                // Close the password change form after successful change
+                setTimeout(() => {
+                    togglePasswordChange();
+                }, 1500);
+            } else {
+                showAlert(result.message || 'পাসওয়ার্ড পরিবর্তন করতে ব্যর্থ হয়েছে', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Password change error:', error);
+            showAlert('পাসওয়ার্ড পরিবর্তন করতে ব্যর্থ হয়েছে', 'error');
+        })
+        .finally(() => {
             btn.disabled = false;
             btn.classList.remove('btn-loading');
             btn.textContent = originalText;

@@ -2,10 +2,10 @@
 // Mock Data for Dashboard
 const mockDashboardData = {
     stats: {
-        totalBallots: 12,
-        activeVotes: 3,
+        totalBallots: 0,
+        activeVotes: 0,
         totalVoters: "১,২৫,৪৫০",
-        votesCast: "৮৫,৩২০"
+        votesCast: "০"
     },
     liveStats: [
         { seat: "ঢাকা-১ আসন", votes: "৪৫,২৩৪", percentage: 68 },
@@ -13,7 +13,6 @@ const mockDashboardData = {
         { seat: "সিলেট-৩ আসন", votes: "৭,৮৯৭", percentage: 42 }
     ],
     activities: [
-        { time: "৫ মিনিট আগে", text: 'নতুন ব্যালট "ঢাকা-৫ আসন" তৈরি হয়েছে' },
         { time: "১৫ মিনিট আগে", text: "১২৩ জন নতুন ভোটার নিবন্ধিত হয়েছে" },
         { time: "৩০ মিনিট আগে", text: 'নোটিশ প্রকাশ: "ভোটিং সময় বৃদ্ধি"' }
     ],
@@ -139,7 +138,7 @@ const mockDashboardData = {
     }
 };
 
-// Mock data for ballot form selections
+// Empty ballot mock data - all mock data removed
 const ballotMockData = {
     ballotTypes: [],
     ballotLocations: []

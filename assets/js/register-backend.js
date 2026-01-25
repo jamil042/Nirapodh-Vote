@@ -84,13 +84,14 @@ async function handleRegister(e) {
             sessionStorage.setItem('otp_dob', dob);
             sessionStorage.setItem('otp_expires', response.data.expiresIn);
             
-            console.log('Success! Showing alert and redirecting...');
-            showAlert(response.message, 'success');
+            // Store dev OTP if available (for development testing)
+            if (response.data.devOtp) {
+                sessionStorage.setItem('otp_dev_code', response.data.devOtp);
+            }
             
-            // Redirect to OTP verification page after 1 second
-            setTimeout(() => {
-                window.location.href = 'verify-otp.html';
-            }, 1000);
+            console.log('Success! Redirecting immediately...');
+            // Redirect immediately for better UX
+            window.location.href = 'verify-otp.html';
         } else {
             console.log('API returned error:', response.message);
             showAlert(response.message || 'OTP পাঠাতে ব্যর্থ হয়েছে', 'error');

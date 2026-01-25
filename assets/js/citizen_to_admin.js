@@ -6,6 +6,7 @@
   let socket = null;
   let citizenInfo = null;
   const messageCache = [];
+  let replyingTo = null; // Track message being replied to
 
   // Initialize socket connection
   function initSocket() {
@@ -42,7 +43,7 @@
 
     socket.on('receive_admin_message', (data) => {
       console.log('📩 Received admin message:', data);
-      appendMessage(data.message, 'admin', data.timestamp);
+      appendMessage(data.message, 'admin', data.timestamp, data.replyTo || null, data.id || null);
     });
 
     socket.on('admin_typing', (data) => {
@@ -135,12 +136,16 @@
       return;
     }
 
+    const messageId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
     const messageData = {
+      id: messageId,
       message: message,
       senderNID: citizenInfo.nid,
       senderName: citizenInfo.name,
       timestamp: new Date().toISOString(),
-      type: 'citizen_to_admin'
+      type: 'citizen_to_admin',
+      replyTo: replyingTo ? replyingTo.text : null
     };
 
     // Send via socket
@@ -149,7 +154,10 @@
     console.log('📤 Message sent:', message);
 
     // Append to UI
-    appendMessage(message, 'user', messageData.timestamp);
+    appendMessage(message, 'user', messageData.timestamp, messageData.replyTo, messageId);
+
+    // Clear reply state
+    cancelCitizenReply();
 
     // Clear input
     input.value = '';
@@ -157,7 +165,7 @@
   };
 
   // Append message to chat
-  function appendMessage(text, type, timestamp) {
+  function appendMessage(text, type, timestamp, replyTo = null, messageId = null) {
     const container = document.getElementById('chat-messages-container');
     if (!container) return;
 
@@ -167,9 +175,25 @@
 
     const messageDiv = document.createElement('div');
     messageDiv.className = `chat-message ${type}`;
+    
+    // Generate or use existing message ID
+    const id = messageId || `${timestamp}-${text.substring(0, 20)}`;
+    messageDiv.dataset.messageId = id;
+    messageDiv.dataset.messageText = text;
 
     const bubble = document.createElement('div');
     bubble.className = 'message-bubble';
+    
+    // Add reply indicator if this is a reply
+    if (replyTo) {
+      const replyIndicator = document.createElement('div');
+      replyIndicator.className = 'message-reply-indicator';
+      replyIndicator.innerHTML = `
+        <div class="reply-indicator-text">↩ উত্তর</div>
+        <div class="reply-indicator-message">${escapeHtml(replyTo)}</div>
+      `;
+      bubble.appendChild(replyIndicator);
+    }
 
     const p = document.createElement('p');
     p.textContent = text;
@@ -185,7 +209,7 @@
     bubble.style.cursor = 'pointer';
     bubble.style.userSelect = 'none';
     bubble.addEventListener('dblclick', function() {
-      showCitizenReplyPreview(text);
+      replyToCitizenMessage(id);
     });
     
     messageDiv.appendChild(bubble);
@@ -195,7 +219,7 @@
     container.scrollTop = container.scrollHeight;
 
     // Cache message
-    messageCache.push({ text, type, timestamp });
+    messageCache.push({ text, type, timestamp, replyTo, id });
   }
 
   // Load message history
@@ -218,11 +242,20 @@
       appendMessage(
         msg.message,
         msg.type === 'admin_to_citizen' ? 'admin' : 'user',
-        msg.timestamp
+        msg.timestamp,
+        msg.replyTo || null,
+        msg.id || null
       );
     });
 
     console.log('✅ Loaded', messages.length, 'messages');
+  }
+
+  // Escape HTML
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   // Format time
@@ -238,21 +271,41 @@
     }).join('');
   }
 
-  // Show reply preview
-  window.showCitizenReplyPreview = function(text) {
+  // Reply to message
+  function replyToCitizenMessage(messageId) {
+    const messageEl = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (!messageEl) return;
+
+    const messageText = messageEl.dataset.messageText;
+    if (!messageText) return;
+
+    replyingTo = { id: messageId, text: messageText };
+
     const preview = document.getElementById('citizenReplyPreview');
     const previewText = document.getElementById('citizenReplyPreviewText');
     const input = document.getElementById('chatInput');
     
     if (preview && previewText && input) {
-      previewText.textContent = text.substring(0, 80) + (text.length > 80 ? '...' : '');
+      previewText.textContent = messageText.substring(0, 80) + (messageText.length > 80 ? '...' : '');
       preview.style.display = 'flex';
       input.focus();
+    }
+  }
+  
+  // Show reply preview (legacy support)
+  window.showCitizenReplyPreview = function(text) {
+    // Find message by text (fallback)
+    const messageEl = Array.from(document.querySelectorAll('[data-message-text]')).find(
+      el => el.dataset.messageText === text
+    );
+    if (messageEl && messageEl.dataset.messageId) {
+      replyToCitizenMessage(messageEl.dataset.messageId);
     }
   };
 
   // Cancel reply
   window.cancelCitizenReply = function() {
+    replyingTo = null;
     const preview = document.getElementById('citizenReplyPreview');
     if (preview) {
       preview.style.display = 'none';
