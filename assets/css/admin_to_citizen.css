@@ -406,6 +406,50 @@
 }
 
 /* =========================
+   Reply Indicator Styles
+========================= */
+.message-reply-indicator {
+  background: rgba(34, 197, 94, 0.15);
+  border-left: 3px solid #22c55e;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  font-size: 11px;
+}
+
+/* Reply indicator for admin messages */
+.chat-message.admin .message-reply-indicator {
+  background: rgba(255, 255, 255, 0.25);
+  border-left: 3px solid rgba(255, 255, 255, 0.7);
+}
+
+.reply-indicator-text {
+  font-weight: 700;
+  color: #059669;
+  margin-bottom: 3px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chat-message.admin .reply-indicator-text {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.reply-indicator-message {
+  color: #166534;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.chat-message.admin .reply-indicator-message {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* =========================
    Responsive
 ========================= */
 @media (max-width: 768px) {
