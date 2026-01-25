@@ -81,32 +81,36 @@ async function apiRequest(endpoint, method = 'GET', data = null, requiresAuth = 
 
 // Storage helpers
 function saveAuthToken(token) {
-  localStorage.setItem('nirapodh_token', token);
+  sessionStorage.setItem('nirapodh_token', token);
 }
 
 function getAuthToken() {
-  return localStorage.getItem('nirapodh_token');
+  return sessionStorage.getItem('nirapodh_token');
 }
 
 function removeAuthToken() {
-  localStorage.removeItem('nirapodh_token');
+  sessionStorage.removeItem('nirapodh_token');
 }
 
 function saveUserData(userData) {
-  localStorage.setItem('nirapodh_user', JSON.stringify(userData));
+  // Use sessionStorage to ensure user must login every time
+  sessionStorage.setItem('nirapodh_user', JSON.stringify(userData));
 }
 
 function getUserData() {
-  const data = localStorage.getItem('nirapodh_user');
+  const data = sessionStorage.getItem('nirapodh_user');
   return data ? JSON.parse(data) : null;
 }
 
 function removeUserData() {
-  localStorage.removeItem('nirapodh_user');
+  sessionStorage.removeItem('nirapodh_user');
 }
 
 function logout() {
   removeAuthToken();
   removeUserData();
+  // Also clear from localStorage if exists (backward compatibility)
+  localStorage.removeItem('nirapodh_token');
+  localStorage.removeItem('nirapodh_user');
   window.location.href = '/login.html';
 }

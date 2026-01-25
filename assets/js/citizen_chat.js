@@ -200,9 +200,10 @@
 
     NirapodChat.addSystemMessage('গ্লোবাল চ্যাটে স্বাগতম!');
 
-    // Auto login with user data from localStorage
+    // Auto login with user data from sessionStorage
     try {
-      const userData = JSON.parse(localStorage.getItem('nirapodh_user_data'));
+      // Try nirapodh_user first (standard key), then nirapodh_user_data (legacy)
+      let userData = JSON.parse(sessionStorage.getItem('nirapodh_user') || sessionStorage.getItem('nirapodh_user_data') || 'null');
       if (userData && userData.name && userData.nid) {
         // Send user login with NID for proper tracking
         socket.emit('user_login', {
