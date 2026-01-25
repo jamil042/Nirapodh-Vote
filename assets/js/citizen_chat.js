@@ -1,15 +1,29 @@
+<<<<<<< HEAD
 
 // assets/js/citizen_chat.js - Namespaced, Production-Safe Version
+=======
+// assets/js/citizen_chat_anonymous.js - Auto-login with Green Theme
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
 (function () {
   // ===== Namespace =====
   window.NirapodChat = window.NirapodChat || {};
 
+<<<<<<< HEAD
   // ===== Private state (inside closure) =====
   let socket = null;
   let currentUsername = '';
   const messageIds = new Set(); // Track message IDs to prevent duplicates
 
   // ===== Utility (internal) =====
+=======
+  // ===== Private state =====
+  let socket = null;
+  let mySocketId = null;
+  const messageIds = new Set(); // Prevent duplicate messages
+  let replyingTo = null; // Track message being replied to
+
+  // ===== Utility =====
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
   function formatTime(timestamp) {
     const d = new Date(timestamp);
     const hh = d.getHours().toString().padStart(2, '0');
@@ -41,6 +55,7 @@
     }, 3000);
   }
 
+<<<<<<< HEAD
   // ===== Public UI helpers (namespaced) =====
   NirapodChat.addChatMessage = function (username, message, timestamp, isOwn = false, id = null) {
     const messagesContainer = document.getElementById('globalChatMessages');
@@ -62,20 +77,51 @@
     const messageDiv = document.createElement('div');
     messageDiv.className = `global-message ${isOwn ? 'own-message' : 'other-message'}`;
     messageDiv.dataset.messageId = key;
+=======
+  // ===== Public UI helpers =====
+  NirapodChat.addChatMessage = function (message, timestamp, isOwn = false, id = null, replyTo = null) {
+    const messagesContainer = document.getElementById('globalChatMessages');
+    if (!messagesContainer) return;
+
+    const key = id || `${timestamp}-${message.substring(0, 20)}`;
+    if (messageIds.has(key)) return;
+    messageIds.add(key);
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `global-message ${isOwn ? 'own-message' : 'other-message'}`;
+    messageDiv.dataset.messageId = key;
+    messageDiv.dataset.messageText = message;
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
 
     const bubbleDiv = document.createElement('div');
     bubbleDiv.className = 'message-bubble';
 
+<<<<<<< HEAD
     if (!isOwn) {
       const usernameSpan = document.createElement('div');
       usernameSpan.className = 'message-username';
       usernameSpan.textContent = username;
       bubbleDiv.appendChild(usernameSpan);
+=======
+    // Add reply indicator if this is a reply
+    if (replyTo) {
+      const replyIndicator = document.createElement('div');
+      replyIndicator.className = 'message-reply-indicator';
+      replyIndicator.innerHTML = `
+        <div class="reply-indicator-text">↩ উত্তর</div>
+        <div class="reply-indicator-message">${replyTo}</div>
+      `;
+      bubbleDiv.appendChild(replyIndicator);
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
     }
 
     const textDiv = document.createElement('div');
     textDiv.className = 'message-text';
+<<<<<<< HEAD
     textDiv.textContent = message; // Safe: textContent
+=======
+    textDiv.textContent = message;
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
     bubbleDiv.appendChild(textDiv);
 
     const timeSpan = document.createElement('div');
@@ -84,6 +130,23 @@
     bubbleDiv.appendChild(timeSpan);
 
     messageDiv.appendChild(bubbleDiv);
+<<<<<<< HEAD
+=======
+
+    // Add reply button
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'message-actions';
+    actionsDiv.innerHTML = `
+      <button class="reply-btn" onclick="replyToMessage('${key}')" aria-label="উত্তর দিন">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 14L4 9l5-5"></path>
+          <path d="M20 20v-7a4 4 0 0 0-4-4H4"></path>
+        </svg>
+      </button>
+    `;
+    messageDiv.appendChild(actionsDiv);
+
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
     messagesContainer.appendChild(messageDiv);
 
     scrollToBottom();
@@ -91,10 +154,14 @@
 
   NirapodChat.addSystemMessage = function (message) {
     const messagesContainer = document.getElementById('globalChatMessages');
+<<<<<<< HEAD
     if (!messagesContainer) {
       console.error('❌ globalChatMessages not found in DOM (system)');
       return;
     }
+=======
+    if (!messagesContainer) return;
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
 
     const messageDiv = document.createElement('div');
     messageDiv.className = 'global-message system-message';
@@ -119,6 +186,7 @@
   };
 
   NirapodChat.updateOnlineUsersList = function (users = []) {
+<<<<<<< HEAD
     const usersList = document.getElementById('onlineUsersList');
     const onlineCount = document.getElementById('onlineCount');
     const usersSidebarCount = document.getElementById('usersSidebarCount');
@@ -158,6 +226,14 @@
   // ===== Socket init (namespaced) =====
   NirapodChat.initializeSocket = function () {
     socket = io('http://localhost:5500', {
+=======
+    // Removed online users display
+  };
+
+  // ===== Socket init =====
+  NirapodChat.initializeSocket = function () {
+    socket = io('http://localhost:3000', {
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
@@ -165,7 +241,12 @@
     });
 
     socket.on('connect', () => {
+<<<<<<< HEAD
       console.log('✅ Connected to server: 5500');
+=======
+      console.log('✅ Connected to server');
+      mySocketId = socket.id;
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
       showAlert('সার্ভারের সাথে সংযুক্ত হয়েছে', 'success');
     });
 
@@ -179,6 +260,7 @@
       showAlert('সার্ভারের সাথে সংযোগ করতে সমস্যা হচ্ছে', 'error');
     });
 
+<<<<<<< HEAD
     socket.on('connection_status', (data) => {
       console.log('🔌 Connection status:', data);
     });
@@ -190,12 +272,29 @@
           ? `${data.username} চ্যাটে যোগ দিয়েছেন`
           : `${data.username} চ্যাট ছেড়ে চলে গেছেন`
       );
+=======
+    // Server events
+    socket.on('receive_global_message', (data) => {
+      // Check if this is my own message
+      const isOwn = data.socketId && data.socketId === mySocketId;
+      NirapodChat.addChatMessage(data.message, data.timestamp, isOwn, data.id, data.replyTo);
+    });
+
+    socket.on('message_history', (payload) => {
+      const msgs = payload?.messages || [];
+      msgs.forEach(m => {
+        // Old messages won't have socketId, so they'll be shown as others' messages
+        const isOwn = m.socketId && m.socketId === mySocketId;
+        NirapodChat.addChatMessage(m.message, m.timestamp, isOwn, m.id, m.replyTo);
+      });
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
     });
 
     socket.on('users_online', (data) => {
       NirapodChat.updateOnlineUsersList(data.users || []);
     });
 
+<<<<<<< HEAD
     // নিজের মেসেজও সার্ভার থেকে এলে রেন্ডার হতে দিন — ডিডুপ id দিয়ে হবে
    
 socket.on('receive_global_message', (data) => {
@@ -318,11 +417,29 @@ socket.on('receive_global_message', (data) => {
     messageIds.clear();
 
     showAlert('চ্যাট থেকে বের হয়ে গেছেন', 'info');
+=======
+    socket.on('chat_error', (data) => {
+      showAlert(data?.msg || 'একটি ত্রুটি ঘটেছে', 'error');
+    });
+  };
+
+  // ===== Actions =====
+  NirapodChat.autoJoinChat = function () {
+    if (!socket) NirapodChat.initializeSocket();
+
+    NirapodChat.addSystemMessage('গ্লোবাল চ্যাটে স্বাগতম!');
+
+    // Request message history
+    socket.emit('request_message_history');
+
+    document.getElementById('globalChatInput')?.focus();
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
   };
 
   NirapodChat.sendGlobalMessage = function () {
     const input = document.getElementById('globalChatInput');
     const message = (input?.value || '').trim();
+<<<<<<< HEAD
 
     if (!message) return;
 
@@ -331,17 +448,24 @@ socket.on('receive_global_message', (data) => {
       return;
     }
 
+=======
+    if (!message) return;
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
     if (!socket || !socket.connected) {
       showAlert('সার্ভারের সাথে সংযোগ নেই', 'error');
       return;
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
     if (message.length > 500) {
       showAlert('বার্তা সর্বোচ্চ ৫০০ অক্ষর হতে হবে', 'warning');
       return;
     }
 
     const payload = {
+<<<<<<< HEAD
       from: currentUsername,
       message,
       timestamp: new Date().toISOString()
@@ -354,16 +478,66 @@ socket.on('receive_global_message', (data) => {
     NirapodChat.addChatMessage(currentUsername, message, payload.timestamp, true, null);
 
     // Clear input
+=======
+      message,
+      timestamp: new Date().toISOString(),
+      socketId: mySocketId,
+      replyTo: replyingTo ? replyingTo.text : null
+    };
+
+    socket.emit('global_message', payload);
+
+    // Clear reply state
+    replyingTo = null;
+    const replyPreview = document.getElementById('replyPreview');
+    if (replyPreview) replyPreview.style.display = 'none';
+
+    // Server থেকে broadcast হলে দেখাবে, এখানে দেখাবো না
+
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
     if (input) {
       input.value = '';
       input.focus();
     }
   };
 
+<<<<<<< HEAD
   // ===== Bind DOM events =====
   NirapodChat.bindEvents = function () {
     const chatInput = document.getElementById('globalChatInput');
     const usernameInput = document.getElementById('chatUsername');
+=======
+  // Reply functionality
+  NirapodChat.replyToMessage = function(messageId) {
+    const messageEl = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (!messageEl) return;
+
+    const messageText = messageEl.dataset.messageText;
+    if (!messageText) return;
+
+    replyingTo = { id: messageId, text: messageText };
+
+    const replyPreview = document.getElementById('replyPreview');
+    const replyPreviewText = document.getElementById('replyPreviewText');
+    
+    if (replyPreview && replyPreviewText) {
+      replyPreviewText.textContent = messageText;
+      replyPreview.style.display = 'flex';
+    }
+
+    document.getElementById('globalChatInput')?.focus();
+  };
+
+  NirapodChat.cancelReply = function() {
+    replyingTo = null;
+    const replyPreview = document.getElementById('replyPreview');
+    if (replyPreview) replyPreview.style.display = 'none';
+  };
+
+  // ===== Bind DOM events =====
+  NirapodChat.bindEvents = function () {
+    const chatInput = document.getElementById('globalChatInput');
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
 
     if (chatInput) {
       chatInput.addEventListener('keypress', (e) => {
@@ -372,6 +546,7 @@ socket.on('receive_global_message', (data) => {
           NirapodChat.sendGlobalMessage();
         }
       });
+<<<<<<< HEAD
 
       // (ঐচ্ছিক) ক্লিক বাটন ডাবল-বাইন্ড — onclick না কাজ করলে fallback
       const sendBtn = document.querySelector('.global-chat-input-container .btn.btn-primary');
@@ -408,9 +583,34 @@ socket.on('receive_global_message', (data) => {
   window.joinGlobalChat = () => NirapodChat.joinGlobalChat();
   window.leaveGlobalChat = () => NirapodChat.leaveGlobalChat();
   window.sendGlobalMessage = () => NirapodChat.sendGlobalMessage();
+=======
+      const sendBtn = document.querySelector('.global-chat-input-container .btn.btn-primary');
+      if (sendBtn) sendBtn.addEventListener('click', NirapodChat.sendGlobalMessage);
+    }
+
+    window.addEventListener('beforeunload', () => {
+      if (socket) socket.emit('user_logout', {});
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) scrollToBottom();
+    });
+  };
+
+  // ===== Expose for HTML onclick =====
+  window.sendGlobalMessage = () => NirapodChat.sendGlobalMessage();
+  window.replyToMessage = (id) => NirapodChat.replyToMessage(id);
+  window.cancelReply = () => NirapodChat.cancelReply();
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
 
   // ===== Boot =====
   document.addEventListener('DOMContentLoaded', () => {
     NirapodChat.bindEvents();
+<<<<<<< HEAD
   });
 })();
+=======
+    NirapodChat.autoJoinChat(); // Auto-join on page load
+  });
+})();
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103

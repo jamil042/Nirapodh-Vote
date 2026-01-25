@@ -14,6 +14,10 @@ function initializeDashboard() {
     
     // Check if user is logged in
     const userData = getUserData();
+<<<<<<< HEAD
+=======
+    console.log('Dashboard - User Data:', userData); // Debug log
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
     if (!userData) {
         window.location.href = 'login.html';
         return;
@@ -21,11 +25,30 @@ function initializeDashboard() {
     
     // Display user name
     document.getElementById('userName').textContent = userData.name || 'নাগরিক';
+<<<<<<< HEAD
     document.getElementById('userArea').textContent = userData.area || 'ঢাকা-১০';
+=======
+    document.getElementById('userArea').textContent = userData.votingArea || 'N/A';
+    console.log('Dashboard - Voting Area:', userData.votingArea); // Debug log
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
     
     // Set active section from URL hash or default to voting
     const hash = window.location.hash.substring(1) || 'voting';
     showSection(hash);
+<<<<<<< HEAD
+=======
+    
+    // Add Enter key listener for chat input
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        });
+    }
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
 }
 
 // Setup navigation listeners
@@ -126,6 +149,7 @@ function closeSidebarMobile() {
 }
 
 
+<<<<<<< HEAD
 // Get user data (simulate - in real app, get from server/session)
 function getUserData() {
     // In real application, this would fetch from session/localStorage
@@ -135,10 +159,26 @@ function getUserData() {
         phone: '01712345678',
         area: 'ঢাকা-১০'
     };
+=======
+// Get user data
+function getUserData() {
+    // Try to get from localStorage (set by login)
+    const storedUser = localStorage.getItem('nirapodh_user');
+    if (storedUser) {
+        try {
+            return JSON.parse(storedUser);
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+            return null;
+        }
+    }
+    return null;
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
 }
 
 // Load user data
 function loadUserData() {
+<<<<<<< HEAD
     // Simulate loading ballots for user's area
     console.log('ব্যবহারকারীর তথ্য লোড হচ্ছে...');
     
@@ -146,6 +186,17 @@ function loadUserData() {
     // fetch('/api/ballots?area=' + userData.area)
     //     .then(response => response.json())
     //     .then(data => displayBallots(data));
+=======
+    const userData = getUserData();
+    if (userData) {
+        console.log('ব্যবহারকারীর তথ্য লোড হয়েছে:', userData.name);
+        document.getElementById('userName').textContent = userData.name || 'নাগরিক';
+        if (userData.votingArea) {
+            document.getElementById('userArea').textContent = userData.votingArea;
+        }
+        // You might need to fetch ballot data based on user area from API here
+    }
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
 }
 
 // Update time remaining for active ballots
@@ -571,7 +622,11 @@ const candidateData = {
         name: "মোঃ আবদুল্লাহ",
         party: "জাতীয় নাগরিক পার্টি (এনসিপি)",
         symbol: "assets/images/bodna.jpg",
+<<<<<<< HEAD
         photo: "assets/images/donald_trump.jpg",
+=======
+        photo: "assets/images/Tamim.jpeg",
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
         bio: "মোঃ আবদুল্লাহ একজন অভিজ্ঞ রাজনীতিবিদ যিনি গত ২০ বছর ধরে জনসেবায় নিয়োজিত আছেন। তিনি ঢাকা বিশ্ববিদ্যালয় থেকে রাষ্ট্রবিজ্ঞানে স্নাতকোত্তর ডিগ্রি অর্জন করেছেন।",
         manifesto: [
             "শিক্ষার মান উন্নয়ন ও ডিজিটাল শিক্ষা ব্যবস্থা প্রবর্তন",
@@ -590,7 +645,11 @@ const candidateData = {
         name: "সালমা খাতুন",
         party: "জনকল্যাণ পার্টি",
         symbol: "assets/images/honey-bee.jpg", 
+<<<<<<< HEAD
         photo: "assets/images/salma_khatun.jpg",
+=======
+        photo: "assets/images/Saima_apu.jpeg",
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
         bio: "সালমা খাতুন একজন সমাজকর্মী ও নারী অধিকার নেত্রী। তিনি তৃণমূল পর্যায় থেকে রাজনীতিতে উঠে এসেছেন এবং নারীদের ক্ষমতায়নে কাজ করছেন।",
         manifesto: [
             "নারীদের জন্য নিরাপদ কর্মপরিবেশ নিশ্চিত করা",
@@ -609,7 +668,11 @@ const candidateData = {
         name: "রহিম উদ্দিন",
         party: "স্বাধীন প্রার্থী",
         symbol: "assets/images/ant.jpg", 
+<<<<<<< HEAD
         photo: "assets/images/putin.jpg",
+=======
+        photo: "assets/images/Taz.jpg",
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
         bio: "রহিম উদ্দিন একজন সফল ব্যবসায়ী ও সমাজসেবক। তিনি কোনো রাজনৈতিক দলের সাথে যুক্ত নন এবং স্বতন্ত্রভাবে জনগণের সেবা করতে চান।",
         manifesto: [
             "স্থানীয় অবকাঠামো উন্নয়ন",
@@ -687,6 +750,7 @@ function closeCandidateModal() {
 
 // ============= FOUR STATES OF UI =============
 
+<<<<<<< HEAD
 // Show Alert (Success, Error, Warning, Info)
 function showAlert(message, type = 'info') {
     const alertContainer = document.getElementById('alertContainer');
@@ -715,6 +779,8 @@ function showAlert(message, type = 'info') {
     }, 4000);
 }
 
+=======
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
 // Show Loading State
 function showLoadingState(container, type = 'ballot') {
     if (!container) return;

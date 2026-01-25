@@ -141,6 +141,7 @@ const mockDashboardData = {
 
 // Mock data for ballot form selections
 const ballotMockData = {
+<<<<<<< HEAD
     ballotTypes: [
         { value: "জাতীয় সংসদ নির্বাচন", label: "জাতীয় সংসদ নির্বাচন" },
         { value: "সিটি কর্পোরেশন নির্বাচন", label: "সিটি কর্পোরেশন নির্বাচন" },
@@ -247,6 +248,10 @@ const ballotMockData = {
         { value: "বাগেরহাট-২", label: "বাগেরহাট-২" },
         { value: "বাগেরহাট-৩", label: "বাগেরহাট-৩" }
     ]
+=======
+    ballotTypes: [],
+    ballotLocations: []
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
 };
 
 function loadDashboardData() {
@@ -288,7 +293,17 @@ function loadDashboardData() {
 function loadCandidatesData() {
     const candidatesTableBody = document.getElementById('candidatesTableBody');
     if (candidatesTableBody) {
+<<<<<<< HEAD
         candidatesTableBody.innerHTML = mockDashboardData.candidates.map(candidate => {
+=======
+        // Combine mock candidates with custom candidates
+        const allCandidates = [
+            ...mockDashboardData.candidates,
+            ...customCandidates.filter(c => c) // Filter out null/undefined entries
+        ];
+        
+        candidatesTableBody.innerHTML = allCandidates.map(candidate => {
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
             const statusBadge = candidate.status === 'active' 
                 ? '<span class="badge badge-success">সক্রিয়</span>' 
                 : '<span class="badge badge-danger">নিষ্ক্রিয়</span>';
@@ -363,6 +378,7 @@ function loadComplaintsData() {
                         <span>ভোটার ID: ${complaint.voterId}</span>
                     </div>
                     <div class="form-group">
+<<<<<<< HEAD
                         <label>প্রশাসক মন্তব্য</label>
                         <textarea rows="3" placeholder="আপনার প্রতিক্রিয়া লিখুন..."></textarea>
                     </div>
@@ -373,6 +389,18 @@ function loadComplaintsData() {
                     <div class="complaint-actions">
                         <button class="btn btn-sm btn-primary">সমাধান করুন</button>
                         <button class="btn btn-sm btn-danger">প্রত্যাখ্যান করুন</button>
+=======
+                        <label>প্রশাসক মন্তব্য *</label>
+                        <textarea rows="3" placeholder="আপনার প্রতিক্রিয়া লিখুন..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>প্রমাণপত্র আপলোড করুন</label>
+                        <input type="file" accept=".pdf,.jpg,.png">
+                    </div>
+                    <div class="complaint-actions">
+                        <button class="btn btn-sm btn-primary" onclick="resolveComplaint('${complaint.id}')">সমাধান করুন</button>
+                        <button class="btn btn-sm btn-danger" onclick="rejectComplaint('${complaint.id}')">প্রত্যাখ্যান করুন</button>
+>>>>>>> b8a55524dacf6f417bf815cef424a7eafaa6b103
                     </div>
                 </div>
             `;

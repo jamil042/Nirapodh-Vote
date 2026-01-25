@@ -6,9 +6,15 @@
     <title>নাগরিক ড্যাশবোর্ড - নিরাপদ ভোট</title>
     <link rel="stylesheet" href="assets/css/common.css">
     <link rel="stylesheet" href="assets/css/citizen-dashboard.css">
+    <link rel="stylesheet" href="assets/css/citizen_chat.css">
+    <link rel="stylesheet" href="assets/css/citizen_to_admin.css">
+
 </head>
 </head>
 <body>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
     <!-- Header -->
     <header class="dashboard-header">
         <div class="header-content">
@@ -127,7 +133,7 @@
                             <div class="candidate-card">
                                 <input type="radio" name="vote1" id="candidate1" value="1">
                                 <label for="candidate1" class="candidate-label">
-                                    <img src="assets/images/donald_trump.jpg" alt="প্রার্থী" class="candidate-photo">
+                                    <img src="assets/images/Tamim.jpeg" alt="প্রার্থী" class="candidate-photo">
                                     <div class="candidate-info">
                                         <h4>মোঃ আবদুল্লাহ</h4>
                                         <p class="party-name">জাতীয় নাগরিক পার্টি</p>
@@ -140,7 +146,7 @@
                             <div class="candidate-card">
                                 <input type="radio" name="vote1" id="candidate2" value="2">
                                 <label for="candidate2" class="candidate-label">
-                                    <img src="assets/images/salma_khatun.jpg" alt="প্রার্থী" class="candidate-photo">
+                                    <img src="assets/images/Saima_apu.jpeg" alt="প্রার্থী" class="candidate-photo">
                                     <div class="candidate-info">
                                         <h4>সালমা খাতুন</h4>
                                         <p class="party-name">জনকল্যাণ পার্টি</p>
@@ -153,7 +159,7 @@
                             <div class="candidate-card">
                                 <input type="radio" name="vote1" id="candidate3" value="3">
                                 <label for="candidate3" class="candidate-label">
-                                    <img src="assets/images/putin.jpg" alt="প্রার্থী" class="candidate-photo">
+                                    <img src="assets/images/Taz.jpg" alt="প্রার্থী" class="candidate-photo">
                                     <div class="candidate-info">
                                         <h4>রহিম উদ্দিন</h4>
                                         <p class="party-name">স্বাধীন প্রার্থী</p>
@@ -213,7 +219,7 @@
                         
                         <div class="result-item">
                             <div class="result-info">
-                                <img src="assets/images/donald_trump.jpg" alt="প্রার্থী" class="result-photo">
+                                <img src="assets/images/Tamim.jpeg" alt="প্রার্থী" class="result-photo">
                                 <div>
                                     <h4>মোঃ আবদুল্লাহ</h4>
                                     <p>জাতীয় নাগরিক পার্টি</p>
@@ -230,7 +236,7 @@
 
                         <div class="result-item">
                             <div class="result-info">
-                                <img src="assets/images/salma_khatun.jpg" alt="প্রার্থী" class="result-photo">
+                                <img src="assets/images/Saima_apu.jpeg" alt="প্রার্থী" class="result-photo">
                                 <div>
                                     <h4>সালমা খাতুন</h4>
                                     <p>জনকল্যাণ পার্টি</p>
@@ -247,7 +253,7 @@
 
                         <div class="result-item">
                             <div class="result-info">
-                                <img src="assets/images/putin.jpg" alt="প্রার্থী" class="result-photo">
+                                <img src="assets/images/Taz.jpg" alt="প্রার্থী" class="result-photo">
                                 <div>
                                     <h4>রহিম উদ্দিন</h4>
                                     <p>স্বাধীন প্রার্থী</p>
@@ -279,106 +285,134 @@
                 </div>
             </div>
 
-            <!-- Discussion Section -->
-            <div id="discussion-section" class="content-section">
-                <div class="section-header">
-                    <h2>
-                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
-                            <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/>
+<!-- Discussion Section - Global Chat for Citizens -->
+<div id="discussion-section" class="content-section">
+    <div class="section-header">
+        <h2>
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
+                <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/>
+            </svg>
+            সর্বজনীন আলোচনা
+        </h2>
+        <p class="anonymous-note">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;vertical-align:middle;margin-right:4px;">
+                <path d="M12 2a5 5 0 0 0-5 5 5 5 0 0 0 10 0 5 5 0 0 0-5-5zm0 12 c-3.33 0-10 1.67-10 5v3h20v-3 c0-3.33-6.67-5-10-5z"/>
+            </svg>
+
+            সকল নাগরিকদের সাথে কথা বলুন
+        </p>
+    </div>
+
+    <!-- Global Chat Interface -->
+    <div class="chat-interface">
+        <div class="chat-main-container">
+            <div class="chat-content-area" style="grid-column: 1 / -1;">
+                <div class="chat-header-bar">
+                    <div class="chat-header-left">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                         </svg>
-                        সর্বজনীন আলোচনা
-                    </h2>
-                    <p class="anonymous-note">
-                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;">
-                            <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
-                        </svg>
-                        এই আলোচনা সম্পূর্ণ বেনামী
-                    </p>
-                </div>
-
-                <div class="discussion-container">
-                    <div class="discussion-messages" id="discussionMessages">
-                        <div class="message">
-                            <div class="message-header">
-                                <span class="message-author">বেনামী নাগরিক</span>
-                                <span class="message-time">২ মিনিট আগে</span>
-                            </div>
-                            <p class="message-text">ভোট প্রদান প্রক্রিয়া খুবই সহজ এবং নিরাপদ। ধন্যবাদ!</p>
+                        <div>
+                            <h3 style="margin: 0; font-size: 16px;">গ্লোবাল চ্যাট</h3>
+                            <p class="online-count">
+                                <span class="online-dot"></span>
+                                সকল নাগরিকদের সাথে কথা বলুন
+                            </p>
                         </div>
-
-                        <div class="message">
-                            <div class="message-header">
-                                <span class="message-author">বেনামী নাগরিক</span>
-                                <span class="message-time">৫ মিনিট আগে</span>
-                            </div>
-                            <p class="message-text">প্রার্থীদের তথ্য খুব পরিষ্কার করে দেওয়া হয়েছে। ভালো উদ্যোগ।</p>
-                        </div>
-
-                        <div class="message">
-                            <div class="message-header">
-                                <span class="message-author">বেনামী নাগরিক</span>
-                                <span class="message-time">৮ মিনিট আগে</span>
-                            </div>
-                            <p class="message-text">কখন ফলাফল প্রকাশ হবে?</p>
-                        </div>
-                    </div>
-
-                    <div class="discussion-input">
-                        <input type="text" id="discussionInput" placeholder="আপনার মন্তব্য লিখুন (বেনামী)..." class="input-field">
-                        <button onclick="sendDiscussionMessage()" class="btn btn-primary">পাঠান</button>
                     </div>
                 </div>
-            </div>
 
-            <!-- Chat with Admin Section -->
-            <div id="chat-section" class="content-section">
-                <div class="section-header">
-                    <h2>
-                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
-                            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
-                        </svg>
-                        প্রশাসকের সাথে চ্যাট
-                    </h2>
-                    <p class="private-note">
-                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;">
-                            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
-                        </svg>
-                        এটি একটি ব্যক্তিগত চ্যাট
-                    </p>
+                <!-- Messages Container -->
+                <div class="global-chat-messages" id="globalChatMessages">
+                    <!-- Messages will be appended here -->
                 </div>
 
-                <div class="chat-container">
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="chat-message admin">
-                            <div class="message-bubble">
-                                <p>স্বাগতম! আমি আপনাকে কীভাবে সাহায্য করতে পারি?</p>
-                                <span class="message-time">১০:৩০ AM</span>
-                            </div>
+                <!-- Chat Input -->
+                <div class="global-chat-input-container" style="position: relative;">
+                    <!-- Reply Preview -->
+                    <div id="replyPreview" class="reply-preview" style="display: none; position: absolute; top: -60px; left: 14px; right: 14px;">
+                        <div class="reply-preview-content">
+                            <div class="reply-preview-label">উত্তর দিচ্ছেন</div>
+                            <div class="reply-preview-text" id="replyPreviewText"></div>
                         </div>
-
-                        <div class="chat-message user">
-                            <div class="message-bubble">
-                                <p>ভোট প্রদানের সময় কি?</p>
-                                <span class="message-time">১০:৩২ AM</span>
-                            </div>
-                        </div>
-
-                        <div class="chat-message admin">
-                            <div class="message-bubble">
-                                <p>ভোট প্রদানের সময় সকাল ৮টা থেকে বিকাল ৪টা পর্যন্ত। আপনি এই সময়ের মধ্যে যেকোনো সময় ভোট দিতে পারবেন।</p>
-                                <span class="message-time">১০:৩২ AM</span>
-                            </div>
-                        </div>
+                        <button type="button" onclick="cancelReply()" class="reply-preview-close">×</button>
                     </div>
-
-                    <div class="chat-input">
-                        <input type="text" id="chatInput" placeholder="বার্তা লিখুন..." class="input-field">
-                        <button onclick="sendChatMessage()" class="btn btn-primary">পাঠান</button>
-                    </div>
+                    
+                    <input type="text" id="globalChatInput" class="input-field" placeholder="বার্তা লিখুন..." maxlength="500">
+                    <button type="button" onclick="sendGlobalMessage()" class="btn btn-primary_chat">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                        পাঠান
+                    </button>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
 
-            <!-- Complaints Section -->
+
+<div id="chat-section" class="content-section">
+    <div class="section-header">
+        <h2>প্রশাসকের সাথে চ্যাট</h2>
+        <p class="private-note">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;">
+                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+            </svg>
+            এটি একটি ব্যক্তিগত চ্যাট
+        </p>
+        <button class="logout-btn" onclick="logoutFromAdminChat()" style="display: none; margin-top: 10px;"> প্রস্থান </button>
+    </div>
+
+    <!-- NID Login Form -->
+    <div class="chat-nid-login">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+        </svg>
+        <h3>প্রশাসকের সাথে যোগাযোগ করুন</h3>
+        <p>আপনার নাম এবং এনআইডি নম্বর দিয়ে চ্যাট শুরু করুন</p>
+        
+        <div class="nid-login-form">
+            <div class="nid-input-group">
+                <label>আপনার নাম</label>
+                <input type="text" id="citizenChatName" placeholder="যেমন: মোহাম্মদ করিম">
+            </div>
+            <div class="nid-input-group">
+                <label>এনআইডি নম্বর</label>
+                <input type="text" id="citizenChatNID" placeholder="১০/১৩/১৭ ডিজিট">
+            </div>
+            <button onclick="loginToChatWithNID()" class="chat-btn btn-primary_chat" style="width: 100%;">
+                চ্যাট শুরু করুন
+            </button>
+        </div>
+    </div>
+
+    <!-- Chat Window (Hidden initially) -->
+    <div class="chat-window" style="display: none;">
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <h3 id="chat-header-name">প্রশাসক</h3>
+                <div class="chat-header-nid"></div>
+            </div>
+            <span class="chat-status">অনলাইন</span>
+        </div>
+        
+        <div class="chat-messages" id="chat-messages-container">
+            <!-- Messages will appear here -->
+        </div>
+        
+        <div class="chat-input">
+            <input type="text" id="chatInput" placeholder="বার্তা লিখুন...">
+            <button onclick="sendChatMessage()" class="chat-btn btn-primary_chat">পাঠান</button>
+        </div>
+    </div>
+</div>
+
+             <!-- Complaints Section -->
             <div id="complaints-section" class="content-section">
                 <div class="section-header">
                     <h2>
@@ -553,7 +587,11 @@
         </div>
     </div>
 
+    <script src="assets/js/api-config.js"></script>
     <script src="assets/js/common.js"></script>
     <script src="assets/js/citizen-dashboard.js"></script>
+    <script src="assets/js/citizen_chat.js"></script>
+    <script src="assets/js/citizen_to_admin.js"></script>
+    
 </body>
 </html>
