@@ -12,7 +12,14 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeDashboard() {
     console.log('নাগরিক ড্যাশবোর্ড লোড হয়েছে');
     
-    // Check if user is logged in
+    // Clear any old localStorage auth data (migration from old system)
+    if (localStorage.getItem('nirapodh_user') || localStorage.getItem('nirapodh_token')) {
+        console.log('Clearing old localStorage auth data...');
+        localStorage.removeItem('nirapodh_user');
+        localStorage.removeItem('nirapodh_token');
+    }
+    
+    // Check if user is logged in (from sessionStorage only)
     const userData = getUserData();
     console.log('Dashboard - User Data:', userData); // Debug log
     if (!userData) {
@@ -131,8 +138,9 @@ function closeSidebarMobile() {
 
 // Get user data
 function getUserData() {
-    // Try to get from localStorage (set by login)
-    const storedUser = localStorage.getItem('nirapodh_user');
+    // Use sessionStorage instead of localStorage for security
+    // This ensures user must login every time they open a new tab/window
+    const storedUser = sessionStorage.getItem('nirapodh_user');
     if (storedUser) {
         try {
             return JSON.parse(storedUser);

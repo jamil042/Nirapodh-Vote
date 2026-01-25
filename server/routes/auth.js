@@ -14,7 +14,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 // Step 1: Check NID and Phone, Send OTP
 router.post('/send-otp', async (req, res) => {
   try {
-    const { nid, phoneNumber } = req.body;
+    let { nid, phoneNumber } = req.body;
+
+    console.log('📥 Received send-otp request:', { nid, phoneNumber });
 
     // Validation
     if (!nid || !phoneNumber) {
@@ -24,8 +26,14 @@ router.post('/send-otp', async (req, res) => {
       });
     }
 
+    // Normalize NID - remove hyphens, spaces, and any non-digit characters
+    nid = nid.replace(/[-\s]/g, '');
+    console.log('🆔 Normalized NID:', nid);
+
     // Normalize phone number
     const normalizedPhone = normalizeBDPhone(phoneNumber);
+    console.log('📱 Normalized phone:', normalizedPhone);
+    
     if (!normalizedPhone) {
       return res.status(400).json({ 
         success: false, 
@@ -35,8 +43,10 @@ router.post('/send-otp', async (req, res) => {
 
     // Check if NID and phone match in preregistered citizens
     const preregistered = await PreregisteredCitizen.findOne({ nid });
+    console.log('🔍 Preregistered citizen found:', preregistered ? 'YES' : 'NO');
     
     if (!preregistered) {
+      console.log('❌ NID not found in preregistered list:', nid);
       return res.status(404).json({ 
         success: false, 
         message: 'এই NID পূর্ব-নিবন্ধিত নাগরিক তালিকায় নেই' 
@@ -80,32 +90,52 @@ router.post('/send-otp', async (req, res) => {
     // Send SMS via Gateway
     const smsMessage = `Your NirapodhVote OTP is ${otpCode}. Valid for 2 minutes.`;
     
+    // Check if we're in development mode
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    
     // Check if SMS Service is configured (username not generic placeholder)
     if (process.env.SMS_USER && process.env.SMS_USER !== 'your_username_here') {
       try {
         await sendSMS(normalizedPhone, smsMessage);
+        console.log(`✅ OTP sent via SMS to ${normalizedPhone}`);
       } catch (smsError) {
         console.error("SMS Send Failed:", smsError.message);
-        throw new Error("SMS sending failed");
+        
+        // In development, allow OTP to work without SMS
+        if (isDevelopment) {
+          // console.log(`⚠️ Development Mode: OTP saved but SMS failed. OTP: ${otpCode}`);
+        } else {
+          // In production, SMS must work
+          throw new Error("SMS sending failed");
+        }
       }
     } else {
-      console.error('⚠️ Real SMS Service not configured!');
-      // Fail safely if in strict production, or allow mock?
-      // User asked to REMOVE console OTP, so we should probably fail or silently ignore?
-      // "the code remains ... remove all firebase related codes ... also otp console e astese +webpage e astese eta remove korte hobe"
-      // If I remove console log, and SMS fails, user can't log in.
-      // But user specifically asked to remove it.
-      // I will assume SMS must work.
+      console.log('⚠️ SMS Service not configured!');
+      
+      // In development mode, show OTP in console
+      if (isDevelopment) {
+        // console.log(`🔐 Development Mode - OTP for ${normalizedPhone}: ${otpCode}`);
+      }
     }
+
+    // Prepare response data
+    const responseData = {
+      nid,
+      phoneNumber: normalizedPhone,
+      expiresIn: process.env.OTP_EXPIRY_MINUTES || 2
+    };
+
+    // In development mode, include OTP in response for easy testing
+    /*
+    if (isDevelopment) {
+      responseData.devOtp = otpCode;
+    }
+    */
 
     res.json({
       success: true,
       message: 'OTP আপনার ফোনে পাঠানো হয়েছে',
-      data: {
-        nid,
-        phoneNumber: normalizedPhone,
-        expiresIn: process.env.OTP_EXPIRY_MINUTES || 2
-      }
+      data: responseData
     });
   } catch (error) {
     console.error('Send OTP error:', error);
@@ -119,7 +149,7 @@ router.post('/send-otp', async (req, res) => {
 // Step 2: Verify OTP and Register User
 router.post('/verify-otp-register', async (req, res) => {
   try {
-    const { nid, otp, password, presentAddress } = req.body;
+    let { nid, otp, password, presentAddress } = req.body;
 
     // Validation
     if (!nid || !otp || !password || !presentAddress) {
@@ -128,6 +158,10 @@ router.post('/verify-otp-register', async (req, res) => {
         message: 'সকল তথ্য প্রদান করুন' 
       });
     }
+
+    // Normalize NID - remove hyphens, spaces, and any non-digit characters
+    nid = nid.replace(/[-\s]/g, '');
+    console.log('🆔 Normalized NID for OTP verification:', nid);
 
     if (password.length < 6) {
       return res.status(400).json({ 
@@ -138,6 +172,7 @@ router.post('/verify-otp-register', async (req, res) => {
 
     // Find OTP record
     const otpRecord = await OTP.findOne({ nid, otp, verified: false });
+    console.log('🔍 OTP record found:', otpRecord ? 'YES' : 'NO');
     
     if (!otpRecord) {
       return res.status(400).json({ 

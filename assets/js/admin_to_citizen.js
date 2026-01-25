@@ -6,6 +6,7 @@ let socket = null;
 let currentCitizen = null;
 let citizens = {};
 let unreadCounts = {};
+let replyingTo = null; // Track message being replied to
 
 // Initialize socket connection
 function initAdminSocket() {
@@ -112,9 +113,11 @@ function loadCitizenHistory(nid, messages) {
 
     // Convert server message format to UI format
     const formattedMessages = messages.map(msg => ({
+        id: msg.id || `${msg.timestamp}-${msg.message.substring(0, 20)}`,
         text: msg.message,
         type: msg.type === 'admin_to_citizen' ? 'admin' : 'user',
-        timestamp: msg.timestamp
+        timestamp: msg.timestamp,
+        replyTo: msg.replyTo || null
     }));
 
     citizens[nid].messages = formattedMessages;
@@ -145,9 +148,11 @@ function handleIncomingMessage(data) {
     }
 
     const message = {
+        id: data.id || `${data.timestamp}-${data.message.substring(0, 20)}`,
         text: data.message,
         type: 'user',
-        timestamp: data.timestamp
+        timestamp: data.timestamp,
+        replyTo: data.replyTo || null
     };
 
     citizens[data.senderNID].messages.push(message);
@@ -285,12 +290,28 @@ function appendMessage(message) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `chat-message ${message.type}`;
     
+    // Generate or use existing message ID
+    const messageId = message.id || `${message.timestamp}-${message.text.substring(0, 20)}`;
+    messageDiv.dataset.messageId = messageId;
+    messageDiv.dataset.messageText = message.text;
+    
     const time = formatTime(message.timestamp);
     
     const bubble = document.createElement('div');
     bubble.className = 'message-bubble';
     bubble.style.cursor = 'pointer';
     bubble.style.userSelect = 'none';
+    
+    // Add reply indicator if this is a reply
+    if (message.replyTo) {
+        const replyIndicator = document.createElement('div');
+        replyIndicator.className = 'message-reply-indicator';
+        replyIndicator.innerHTML = `
+            <div class="reply-indicator-text">↩ উত্তর</div>
+            <div class="reply-indicator-message">${escapeHtml(message.replyTo)}</div>
+        `;
+        bubble.appendChild(replyIndicator);
+    }
     
     const p = document.createElement('p');
     p.textContent = message.text;
@@ -304,7 +325,7 @@ function appendMessage(message) {
     
     // Double-click to reply
     bubble.addEventListener('dblclick', function() {
-      showAdminReplyPreview(message.text);
+        replyToAdminMessage(messageId);
     });
     
     messageDiv.appendChild(bubble);
@@ -329,25 +350,34 @@ function sendAdminMessage() {
         return;
     }
 
+    const messageId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
     const message = {
+        id: messageId,
         text: text,
         type: 'admin',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        replyTo: replyingTo ? replyingTo.text : null
     };
 
     currentCitizen.messages.push(message);
     currentCitizen.lastMessage = text;
 
     socket.emit('admin_message', {
+        id: messageId,
         message: text,
         recipientNID: currentCitizen.nid,
-        timestamp: message.timestamp
+        timestamp: message.timestamp,
+        replyTo: message.replyTo
     });
 
     console.log('📤 Message sent to:', currentCitizen.nid);
 
     appendMessage(message);
     renderChatList();
+
+    // Clear reply state
+    cancelAdminReply();
 
     input.value = '';
     input.focus();
@@ -412,14 +442,22 @@ function formatTime(timestamp) {
     }).join('');
 }
 
-// Show reply preview
-function showAdminReplyPreview(text) {
+// Reply to message
+function replyToAdminMessage(messageId) {
+    const messageEl = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (!messageEl) return;
+
+    const messageText = messageEl.dataset.messageText;
+    if (!messageText) return;
+
+    replyingTo = { id: messageId, text: messageText };
+
     const preview = document.getElementById('adminReplyPreview');
     const previewText = document.getElementById('adminReplyPreviewText');
     const input = document.getElementById('messageInput');
     
     if (preview && previewText && input) {
-        previewText.textContent = text.substring(0, 80) + (text.length > 80 ? '...' : '');
+        previewText.textContent = messageText.substring(0, 80) + (messageText.length > 80 ? '...' : '');
         preview.style.display = 'flex';
         input.focus();
     }
@@ -427,6 +465,7 @@ function showAdminReplyPreview(text) {
 
 // Cancel reply
 function cancelAdminReply() {
+    replyingTo = null;
     const preview = document.getElementById('adminReplyPreview');
     if (preview) {
         preview.style.display = 'none';
