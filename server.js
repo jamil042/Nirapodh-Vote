@@ -378,7 +378,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('citizen_message', (data) => {
-    const { message, senderNID, senderName, timestamp } = data;
+    const { message, senderNID, senderName, timestamp, replyTo, id } = data;
     
     if (!message || !senderNID) {
       console.log(`❌ Invalid citizen message from ${socket.id}`);
@@ -388,11 +388,13 @@ io.on('connection', (socket) => {
     const sanitized = sanitizeMessage(message);
     
     const msgObj = {
+      id: id || `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       message: sanitized,
       senderNID,
       senderName,
       timestamp: timestamp || new Date().toISOString(),
-      type: 'citizen_to_admin'
+      type: 'citizen_to_admin',
+      replyTo: replyTo || null
     };
 
     // Store in PERSISTENT chatHistory
@@ -418,7 +420,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('admin_message', (data) => {
-    const { message, recipientNID, timestamp } = data;
+    const { message, recipientNID, timestamp, replyTo } = data;
     
     if (!message || !recipientNID) {
       console.log(`❌ Invalid admin message from ${socket.id}`);
@@ -428,10 +430,12 @@ io.on('connection', (socket) => {
     const sanitized = sanitizeMessage(message);
     
     const msgObj = {
+      id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       message: sanitized,
       recipientNID,
       timestamp: timestamp || new Date().toISOString(),
-      type: 'admin_to_citizen'
+      type: 'admin_to_citizen',
+      replyTo: replyTo || null
     };
 
     // Store in PERSISTENT chatHistory
@@ -445,7 +449,8 @@ io.on('connection', (socket) => {
       history.shift();
     }
 
-    console.log(`👨‍💼 Admin to ${recipientNID}: ${sanitized.substring(0, 50)}${sanitized.length > 50 ? '...' : ''}`);
+    const replyInfo = msgObj.replyTo ? ` (replying to: "${msgObj.replyTo.substring(0, 20)}...")` : '';
+    console.log(`👨‍💼 Admin to ${recipientNID}: ${sanitized.substring(0, 50)}${sanitized.length > 50 ? '...' : ''}${replyInfo}`);
 
     // Send to the citizen
     const citizen = activeCitizens.get(recipientNID);
