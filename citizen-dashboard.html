@@ -94,6 +94,14 @@
                     </span>
                     <span class="nav-text">প্রোফাইল</span>
                 </button>
+                <button class="nav-item" data-section="password">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                        </svg>
+                    </span>
+                    <span class="nav-text">পাসওয়ার্ড পরিবর্তন</span>
+                </button>
             </nav>
         </aside>
 
@@ -489,8 +497,8 @@
                     </h2>
                 </div>
 
-                <div class="profile-container">
-                    <div class="card">
+                <div class="profile-container" style="display: flex; flex-direction: column; height: 100%; width: 100%;">
+                    <div class="card" style="flex: 1; max-width: 100%; width: 100%;">
                         <h3>ব্যক্তিগত তথ্য</h3>
                         <div class="profile-info">
                             <div class="info-row">
@@ -511,8 +519,22 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="card">
+            <!-- Password Change Section -->
+            <div id="password-section" class="content-section">
+                <div class="section-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
+                            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                        </svg>
+                        পাসওয়ার্ড পরিবর্তন
+                    </h2>
+                </div>
+
+                <div class="profile-container" style="display: flex; flex-direction: column; height: 100%; width: 100%;">
+                    <div class="card" style="flex: 1; max-width: 100%; width: 100%;">
                         <h3>পাসওয়ার্ড পরিবর্তন</h3>
                         <form id="passwordForm" onsubmit="changePassword(event)">
                             <div class="form-group">
