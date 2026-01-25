@@ -49,7 +49,9 @@ const io = new Server(server, {
 // ===== CHAT STATE MANAGEMENT =====
 
 // Anonymous chat state - Track by NID to prevent duplicate counting
-const onlineUsers = new Map(); // nid -> { username, sockets: Set, joinedAt }
+const onlineUsers = new Map(); // nid -> { username, sockets: Set, joinedAt, anonymousName }
+const anonymousCounter = new Map(); // nid -> anonymousNumber
+let nextAnonymousNumber = 1;
 let globalMessageHistory = [];
 
 // Dashboard users tracking - Track by NID to prevent duplicate counting
@@ -149,11 +151,16 @@ io.on('connection', (socket) => {
       onlineUsers.get(userNID).sockets.add(socket.id);
       console.log(`🔄 User ${username} opened new tab (total: ${onlineUsers.get(userNID).sockets.size})`);
     } else {
-      // New user
+      // New user - assign anonymous number
+      const anonymousName = `Person-${nextAnonymousNumber}`;
+      anonymousCounter.set(userNID, nextAnonymousNumber);
+      nextAnonymousNumber++;
+      
       onlineUsers.set(userNID, {
         username,
         sockets: new Set([socket.id]),
-        joinedAt: new Date().toISOString()
+        joinedAt: new Date().toISOString(),
+        anonymousName: anonymousName
       });
       
       io.emit('user_joined', { 
@@ -161,10 +168,11 @@ io.on('connection', (socket) => {
         timestamp: new Date().toISOString()
       });
       
-      console.log(`✅ Anonymous user logged in: ${username}`);
+      console.log(`✅ Anonymous user logged in: ${username} as ${anonymousName}`);
     }
 
-    socket.emit('login_success', { username });
+    const anonymousName = onlineUsers.get(userNID)?.anonymousName || 'Person';
+    socket.emit('login_success', { username, anonymousName });
     socket.emit('message_history', { messages: globalMessageHistory });
     
     broadcastOnlineUsers();
@@ -216,12 +224,18 @@ io.on('connection', (socket) => {
       return;
     }
 
+    // Get sender info from NID mapping
+    const userNID = data.senderNID || socketToNID.get(socket.id);
+    const user = userNID ? onlineUsers.get(userNID) : null;
+    const anonymousName = user?.anonymousName || 'Person';
+
     const msgObj = {
       id: data.id || randomUUID(),
       message,
       timestamp: data.timestamp || new Date().toISOString(),
-      socketId: data.socketId || socket.id, // Use client's socketId if provided
-      senderNID: data.senderNID || null, // Store sender's NID for identification
+      socketId: data.socketId || socket.id,
+      senderNID: userNID || data.senderNID,
+      anonymousName: anonymousName,
       replyTo: data.replyTo || null
     };
 
@@ -232,9 +246,8 @@ io.on('connection', (socket) => {
 
     io.emit('receive_global_message', msgObj);
 
-    const nidInfo = msgObj.senderNID ? ` [NID: ${msgObj.senderNID}]` : '';
     const replyInfo = msgObj.replyTo ? ` (replying to: "${msgObj.replyTo.substring(0, 20)}...")` : '';
-    console.log(`💬 Global [${socket.id.slice(0, 8)}]${nidInfo}: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}${replyInfo}`);
+    console.log(`💬 Global [${anonymousName}]: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}${replyInfo}`);
   });
 
   socket.on('user_logout', () => {

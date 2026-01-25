@@ -43,7 +43,7 @@
   }
 
   // ===== Public UI helpers =====
-  NirapodChat.addChatMessage = function (message, timestamp, isOwn = false, id = null, replyTo = null, senderNID = null) {
+  NirapodChat.addChatMessage = function (message, timestamp, isOwn = false, id = null, replyTo = null, senderNID = null, anonymousName = null) {
     const messagesContainer = document.getElementById('globalChatMessages');
     if (!messagesContainer) return;
 
@@ -61,6 +61,14 @@
 
     const bubbleDiv = document.createElement('div');
     bubbleDiv.className = 'message-bubble';
+
+    // Add anonymous name if not own message
+    if (!isMyMessage && anonymousName) {
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'message-anonymous-name';
+      nameDiv.textContent = anonymousName;
+      bubbleDiv.appendChild(nameDiv);
+    }
 
     // Add reply indicator if this is a reply
     if (replyTo) {
@@ -157,11 +165,12 @@
         messageId: data.id,
         message: data.message.substring(0, 20),
         senderNID: data.senderNID,
+        anonymousName: data.anonymousName,
         myNID: myNID,
         isMatch: data.senderNID === myNID
       });
       const isOwn = data.socketId && data.socketId === mySocketId;
-      NirapodChat.addChatMessage(data.message, data.timestamp, isOwn, data.id, data.replyTo, data.senderNID);
+      NirapodChat.addChatMessage(data.message, data.timestamp, isOwn, data.id, data.replyTo, data.senderNID, data.anonymousName);
     });
 
     socket.on('message_history', (payload) => {
@@ -169,7 +178,7 @@
       msgs.forEach(m => {
         // Use NID to identify own messages (works after refresh)
         const isOwn = false; // Let NID comparison handle it
-        NirapodChat.addChatMessage(m.message, m.timestamp, isOwn, m.id, m.replyTo, m.senderNID);
+        NirapodChat.addChatMessage(m.message, m.timestamp, isOwn, m.id, m.replyTo, m.senderNID, m.anonymousName);
       });
     });
 
