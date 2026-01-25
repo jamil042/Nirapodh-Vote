@@ -6,27 +6,9 @@
   // ===== Private state =====
   let socket = null;
   let mySocketId = null;
+  let myNID = null; // Current user's NID
   const messageIds = new Set(); // Prevent duplicate messages
   let replyingTo = null; // Track message being replied to
-  
-  // Track own messages in localStorage
-  function getMyMessageIds() {
-    try {
-      const stored = localStorage.getItem('nirapodh_my_messages');
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    } catch {
-      return new Set();
-    }
-  }
-  
-  function addMyMessageId(id) {
-    const myMessages = getMyMessageIds();
-    myMessages.add(id);
-    // Keep only last 100 messages
-    const arr = Array.from(myMessages);
-    if (arr.length > 100) arr.shift();
-    localStorage.setItem('nirapodh_my_messages', JSON.stringify(arr));
-  }
 
   // ===== Utility =====
   function formatTime(timestamp) {
@@ -61,7 +43,7 @@
   }
 
   // ===== Public UI helpers =====
-  NirapodChat.addChatMessage = function (message, timestamp, isOwn = false, id = null, replyTo = null) {
+  NirapodChat.addChatMessage = function (message, timestamp, isOwn = false, id = null, replyTo = null, senderNID = null) {
     const messagesContainer = document.getElementById('globalChatMessages');
     if (!messagesContainer) return;
 
@@ -69,12 +51,11 @@
     if (messageIds.has(key)) return;
     messageIds.add(key);
     
-    // Check if this is my message from localStorage
-    const myMessages = getMyMessageIds();
-    const isMyMessage = isOwn || myMessages.has(key);
+    // Check if this is my message by comparing NID
+    const isMyMessage = isOwn || (senderNID && myNID && senderNID === myNID);
 
     const messageDiv = document.createElement('div');
-    messageDiv.className = `global-message ${isMyMessage ? 'own-message' : 'other-message'}`;
+    messageDiv.className = `global-message ${isMyMessage ? 'own-message' : ''}`;
     messageDiv.dataset.messageId = key;
     messageDiv.dataset.messageText = message;
 
@@ -171,17 +152,24 @@
 
     // Server events
     socket.on('receive_global_message', (data) => {
-      // Check if this is my own message
+      // Check if this is my own message by socketId (for real-time) or NID (for history)
+      console.log('📨 Received message:', {
+        messageId: data.id,
+        message: data.message.substring(0, 20),
+        senderNID: data.senderNID,
+        myNID: myNID,
+        isMatch: data.senderNID === myNID
+      });
       const isOwn = data.socketId && data.socketId === mySocketId;
-      NirapodChat.addChatMessage(data.message, data.timestamp, isOwn, data.id, data.replyTo);
+      NirapodChat.addChatMessage(data.message, data.timestamp, isOwn, data.id, data.replyTo, data.senderNID);
     });
 
     socket.on('message_history', (payload) => {
       const msgs = payload?.messages || [];
       msgs.forEach(m => {
-        // Old messages won't have socketId, so they'll be shown as others' messages
-        const isOwn = m.socketId && m.socketId === mySocketId;
-        NirapodChat.addChatMessage(m.message, m.timestamp, isOwn, m.id, m.replyTo);
+        // Use NID to identify own messages (works after refresh)
+        const isOwn = false; // Let NID comparison handle it
+        NirapodChat.addChatMessage(m.message, m.timestamp, isOwn, m.id, m.replyTo, m.senderNID);
       });
     });
 
@@ -205,6 +193,8 @@
       // Try nirapodh_user first (standard key), then nirapodh_user_data (legacy)
       let userData = JSON.parse(sessionStorage.getItem('nirapodh_user') || sessionStorage.getItem('nirapodh_user_data') || 'null');
       if (userData && userData.name && userData.nid) {
+        // Store current user's NID
+        myNID = userData.nid;
         // Send user login with NID for proper tracking
         socket.emit('user_login', {
           username: userData.name,
@@ -241,11 +231,9 @@
       message,
       timestamp: new Date().toISOString(),
       socketId: mySocketId,
+      senderNID: myNID, // Include sender's NID
       replyTo: replyingTo ? replyingTo.text : null
     };
-    
-    // Store this message ID as mine
-    addMyMessageId(messageId);
 
     socket.emit('global_message', payload);
 

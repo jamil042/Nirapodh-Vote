@@ -220,7 +220,8 @@ io.on('connection', (socket) => {
       id: data.id || randomUUID(),
       message,
       timestamp: data.timestamp || new Date().toISOString(),
-      socketId: socket.id,
+      socketId: data.socketId || socket.id, // Use client's socketId if provided
+      senderNID: data.senderNID || null, // Store sender's NID for identification
       replyTo: data.replyTo || null
     };
 
@@ -231,8 +232,9 @@ io.on('connection', (socket) => {
 
     io.emit('receive_global_message', msgObj);
 
+    const nidInfo = msgObj.senderNID ? ` [NID: ${msgObj.senderNID}]` : '';
     const replyInfo = msgObj.replyTo ? ` (replying to: "${msgObj.replyTo.substring(0, 20)}...")` : '';
-    console.log(`💬 Global [${socket.id.slice(0, 8)}]: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}${replyInfo}`);
+    console.log(`💬 Global [${socket.id.slice(0, 8)}]${nidInfo}: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}${replyInfo}`);
   });
 
   socket.on('user_logout', () => {
