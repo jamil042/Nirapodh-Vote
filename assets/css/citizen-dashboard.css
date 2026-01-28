@@ -649,6 +649,30 @@
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.complaint-item:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-green);
+    transform: translateY(-2px);
+}
+
+.complaint-id {
+    font-weight: 600;
+    color: var(--primary-green);
+    margin-right: 10px;
+}
+
+.complaint-type {
+    display: inline-block;
+    background: var(--light-green);
+    color: var(--dark-green);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    margin-bottom: 10px;
 }
 
 .complaint-header {
@@ -665,6 +689,7 @@
     border-radius: 15px;
     font-size: 0.85rem;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .complaint-status.pending {
@@ -675,6 +700,26 @@
 .complaint-status.replied {
     background: var(--success-green);
     color: white;
+}
+
+.complaint-status.resolved {
+    background: #4caf50;
+    color: white;
+}
+
+.complaint-status.rejected {
+    background: var(--danger-red);
+    color: white;
+}
+
+.admin-reply-indicator {
+    display: flex;
+    align-items: center;
+    color: var(--primary-green);
+    font-size: 0.9rem;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
 }
 
 .complaint-date {

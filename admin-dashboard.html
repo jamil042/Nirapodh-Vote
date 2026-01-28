@@ -449,14 +449,72 @@
                 <div class="section-header">
                     <h2>অভিযোগ ব্যবস্থাপনা</h2>
                     <p>নাগরিকদের অভিযোগ দেখুন ও সমাধান করুন</p>
+                    <p style="color: #4caf50; font-size: 13px; margin-top: 5px;">
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                        স্বয়ংক্রিয় আপডেট চালু আছে (প্রতি ১৫ সেকেন্ডে)
+                    </p>
+                </div>
+
+                <div class="stats-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ff9800, #f57c00); color: white;">
+                        <div class="stat-value" id="totalComplaints">0</div>
+                        <div class="stat-label">মোট অভিযোগ</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ffc107, #ff9800); color: white;">
+                        <div class="stat-value" id="processingComplaints">0</div>
+                        <div class="stat-label">প্রক্রিয়াধীন</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #2196f3, #1976d2); color: white;">
+                        <div class="stat-value" id="answeredComplaints">0</div>
+                        <div class="stat-label">উত্তর প্রদান</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #4caf50, #388e3c); color: white;">
+                        <div class="stat-value" id="resolvedComplaints">0</div>
+                        <div class="stat-label">সমাধানকৃত</div>
+                    </div>
                 </div>
 
                 <div class="card">
+                    <div class="filters-bar" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                        <select id="statusFilter" class="input-field" style="flex: 1; min-width: 150px;" onchange="filterComplaints()">
+                            <option value="">সকল স্ট্যাটাস</option>
+                            <option value="প্রক্রিয়াধীন">প্রক্রিয়াধীন</option>
+                            <option value="উত্তর প্রদান">উত্তর প্রদান</option>
+                            <option value="সমাধানকৃত">সমাধানকৃত</option>
+                            <option value="প্রত্যাখ্যাত">প্রত্যাখ্যাত</option>
+                        </select>
+                        <select id="priorityFilter" class="input-field" style="flex: 1; min-width: 150px;" onchange="filterComplaints()">
+                            <option value="">সকল প্রায়োরিটি</option>
+                            <option value="সাধারণ">সাধারণ</option>
+                            <option value="জরুরি">জরুরি</option>
+                            <option value="অত্যন্ত জরুরি">অত্যন্ত জরুরি</option>
+                        </select>
+                        <input type="text" id="searchFilter" class="input-field" placeholder="খুঁজুন..." style="flex: 1; min-width: 200px;" oninput="filterComplaints()">
+                        <button class="btn btn-primary" onclick="loadAllComplaints()">রিফ্রেশ</button>
+                    </div>
+
                     <div class="complaints-list" id="complaints-list-container">
-                        <!-- Complaints will be loaded here dynamically -->
+                        <div style="text-align: center; padding: 40px; color: #666;">
+                            <p>লোড হচ্ছে...</p>
+                        </div>
                     </div>
                 </div>
             </section>
+
+            <!-- Admin Complaint Response Modal -->
+            <div id="adminComplaintModal" class="modal" style="display: none;">
+                <div class="modal-content" style="max-width: 800px;">
+                    <div class="modal-header">
+                        <h2>অভিযোগের বিস্তারিত ও প্রতিক্রিয়া</h2>
+                        <span class="close-modal" onclick="closeAdminComplaintModal()">&times;</span>
+                    </div>
+                    <div class="modal-body" id="adminComplaintModalBody">
+                        <!-- Content will be loaded dynamically -->
+                    </div>
+                </div>
+            </div>
 
     <section id="chat-section" class="content-section">
         <div class="section-header">  
@@ -639,9 +697,11 @@
         </div>
     </div>
 
+    <script src="assets/js/api-config.js"></script>
     <script src="assets/js/common.js"></script>
     <script src="assets/js/admin-mock-data.js"></script>
     <script src="assets/js/admin.js"></script>
     <script src="assets/js/admin_to_citizen.js"></script>
+    <script src="assets/js/admin-complaints.js"></script>
 </body>
 </html>

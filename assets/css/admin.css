@@ -1629,3 +1629,51 @@ background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 1
     font-size: 1rem;
     font-weight: 500;
 }
+
+/* ===== ADMIN COMPLAINT MANAGEMENT STYLES ===== */
+.admin-complaint-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #006633 !important;
+    transform: translateY(-2px);
+}
+
+.badge.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge.status-replied {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.badge.status-resolved {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge.status-rejected {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.badge.priority-normal {
+    background: #e7f3ff;
+    color: #004085;
+}
+
+.badge.priority-urgent {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge.priority-critical {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.attachment-link:hover {
+    background: #e8f5e9 !important;
+    border-color: #4caf50 !important;
+    transform: translateY(-2px);
+}

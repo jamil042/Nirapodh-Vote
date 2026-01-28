@@ -11,6 +11,7 @@ const { randomUUID } = require('crypto');
 const authRoutes = require('./server/routes/auth');
 const voteRoutes = require('./server/routes/vote');
 const adminRoutes = require('./server/routes/admin');
+const complaintRoutes = require('./server/routes/complaint');
 
 const app = express();
 const server = http.createServer(app);
@@ -27,11 +28,13 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static files
 app.use(express.static(__dirname));
+app.use('/uploads', express.static('uploads')); // Serve uploaded files
 
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/vote', voteRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/complaint', complaintRoutes);
 
 // Socket.IO setup for chat
 const io = new Server(server, {
