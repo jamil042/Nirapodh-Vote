@@ -1325,6 +1325,162 @@ function resolveComplaint(complaintId) {
     }, 1500);
 }
 
+// ===== ADMIN MANAGEMENT FUNCTIONS =====
+
+// Load admin profile and check if superadmin
+async function loadAdminProfile() {
+    try {
+        const adminData = sessionStorage.getItem('nirapodh_admin_user');
+        if (!adminData) return;
+        
+        const admin = JSON.parse(adminData);
+        
+        // Display admin info
+        const adminInfoContainer = document.getElementById('admin-info-container');
+        if (adminInfoContainer) {
+            adminInfoContainer.innerHTML = `
+                <div class="info-item">
+                    <span class="info-label">ইউজারনেম:</span>
+                    <span class="info-value">${admin.username || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">পদবি:</span>
+                    <span class="info-value">${admin.role === 'superadmin' ? 'সুপার অ্যাডমিন' : 'অ্যাডমিন'}</span>
+                </div>
+            `;
+        }
+        
+        // Show create admin section only for superadmin
+        if (admin.role === 'superadmin') {
+            const createAdminCard = document.getElementById('createAdminCard');
+            const adminListCard = document.getElementById('adminListCard');
+            
+            if (createAdminCard) createAdminCard.style.display = 'block';
+            if (adminListCard) adminListCard.style.display = 'block';
+            
+            // Load admin list
+            loadAdminList();
+            
+            // Add event listener to create admin form
+            const createAdminForm = document.getElementById('createAdminForm');
+            if (createAdminForm) {
+                createAdminForm.addEventListener('submit', handleCreateAdmin);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading admin profile:', error);
+    }
+}
+
+// Create new admin (superadmin only)
+async function handleCreateAdmin(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('newAdminUsername').value.trim();
+    const email = document.getElementById('newAdminEmail').value.trim();
+    const initialPassword = document.getElementById('newAdminPassword').value;
+    
+    if (!username || !email || !initialPassword) {
+        showAlert('সকল তথ্য প্রদান করুন', 'error');
+        return;
+    }
+    
+    if (initialPassword.length < 6) {
+        showAlert('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে', 'error');
+        return;
+    }
+    
+    const btn = document.getElementById('createAdminBtn');
+    btn.disabled = true;
+    btn.textContent = 'তৈরি হচ্ছে...';
+    
+    try {
+        const token = sessionStorage.getItem('nirapodh_admin_token');
+        const url = `${API_CONFIG.API_URL}/admin/create-admin`;
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ username, email, initialPassword })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert('নতুন প্রশাসক সফলভাবে তৈরি হয়েছে এবং ইমেইল পাঠানো হয়েছে', 'success');
+            document.getElementById('createAdminForm').reset();
+            loadAdminList(); // Reload admin list
+        } else {
+            showAlert(data.message || 'প্রশাসক তৈরি করতে ব্যর্থ হয়েছে', 'error');
+        }
+    } catch (error) {
+        console.error('Create admin error:', error);
+        showAlert('সার্ভার ত্রুটি হয়েছে', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'প্রশাসক তৈরি করুন';
+    }
+}
+
+// Load admin list (superadmin only)
+async function loadAdminList() {
+    try {
+        const token = sessionStorage.getItem('nirapodh_admin_token');
+        const url = `${API_CONFIG.API_URL}/admin/admins`;
+        
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const adminListContainer = document.getElementById('adminListContainer');
+            if (!adminListContainer) return;
+            
+            if (data.admins.length === 0) {
+                adminListContainer.innerHTML = '<p class="text-muted">কোন প্রশাসক পাওয়া যায়নি</p>';
+                return;
+            }
+            
+            adminListContainer.innerHTML = data.admins.map(admin => `
+                <div class="admin-list-item">
+                    <div class="admin-info">
+                        <div class="admin-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                            </svg>
+                        </div>
+                        <div class="admin-details">
+                            <strong>${admin.username}</strong>
+                            <small>${admin.email}</small>
+                            <span class="badge ${admin.role === 'superadmin' ? 'badge-success' : 'badge-primary'}">
+                                ${admin.role === 'superadmin' ? 'সুপার অ্যাডমিন' : 'অ্যাডমিন'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="admin-date">
+                        <small>তৈরি: ${new Date(admin.createdAt).toLocaleDateString('bn-BD')}</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        console.error('Error loading admin list:', error);
+    }
+}
+
+function logout() {
+    sessionStorage.removeItem('nirapodh_admin_token');
+    sessionStorage.removeItem('nirapodh_admin_user');
+    window.location.href = 'admin-login.html';
+}
+
 function rejectComplaint(complaintId) {
     const btn = event?.target;
     if (!btn) return;

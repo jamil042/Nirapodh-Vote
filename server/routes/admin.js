@@ -6,6 +6,7 @@ const Admin = require('../models/Admin');
 const User = require('../models/User');
 const Vote = require('../models/Vote');
 const Ballot = require('../models/Ballot');
+const { sendAdminCredentials } = require('../services/emailService');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
@@ -53,7 +54,8 @@ router.post('/login', async (req, res) => {
       admin: {
         id: admin._id,
         username: admin.username,
-        role: admin.role
+        role: admin.role,
+        isFirstLogin: admin.isFirstLogin
       }
     });
   } catch (error) {
@@ -322,6 +324,141 @@ router.delete('/ballots/:id', authenticateAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'ব্যালট মুছে ফেলতে ব্যর্থ হয়েছে'
+    });
+  }
+});
+
+// Middleware to verify superadmin
+const authenticateSuperAdmin = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ success: false, message: 'অনুমোদন প্রয়োজন' });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const admin = await Admin.findById(decoded.id);
+    
+    if (!admin) {
+      return res.status(403).json({ success: false, message: 'অ্যাক্সেস অস্বীকৃত' });
+    }
+
+    if (admin.role !== 'superadmin') {
+      return res.status(403).json({ success: false, message: 'শুধুমাত্র সুপার অ্যাডমিন এই কাজ করতে পারবেন' });
+    }
+
+    req.admin = admin;
+    next();
+  } catch (error) {
+    res.status(401).json({ success: false, message: 'অবৈধ টোকেন' });
+  }
+};
+
+// Create new admin (superadmin only)
+router.post('/create-admin', authenticateSuperAdmin, async (req, res) => {
+  try {
+    const { username, email, initialPassword } = req.body;
+
+    // Validation
+    if (!username || !email || !initialPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'সকল তথ্য প্রদান করুন'
+      });
+    }
+
+    // Check if admin already exists
+    const existingAdmin = await Admin.findOne({ $or: [{ username }, { email }] });
+    if (existingAdmin) {
+      return res.status(400).json({
+        success: false,
+        message: 'এই ইউজারনেম অথবা ইমেইল দিয়ে ইতিমধ্যে একজন প্রশাসক আছেন'
+      });
+    }
+
+    // Create new admin
+    const newAdmin = new Admin({
+      username,
+      email,
+      password: initialPassword,
+      role: 'admin',
+      isFirstLogin: true
+    });
+
+    await newAdmin.save();
+
+    // Send credentials via email
+    const emailResult = await sendAdminCredentials(email, username, initialPassword);
+
+    res.json({
+      success: true,
+      message: 'নতুন প্রশাসক সফলভাবে তৈরি হয়েছে এবং ইমেইল পাঠানো হয়েছে',
+      emailSent: emailResult.success,
+      admin: {
+        id: newAdmin._id,
+        username: newAdmin.username,
+        email: newAdmin.email,
+        role: newAdmin.role
+      }
+    });
+
+  } catch (error) {
+    console.error('Create admin error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'প্রশাসক তৈরি করতে ব্যর্থ হয়েছে',
+      error: error.message
+    });
+  }
+});
+
+// Update password (first login or regular update)
+router.post('/update-password', authenticateAdmin, async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে'
+      });
+    }
+
+    // Update password
+    req.admin.password = newPassword;
+    req.admin.isFirstLogin = false;
+    await req.admin.save();
+
+    res.json({
+      success: true,
+      message: 'পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে'
+    });
+
+  } catch (error) {
+    console.error('Update password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'পাসওয়ার্ড পরিবর্তন করতে ব্যর্থ হয়েছে',
+      error: error.message
+    });
+  }
+});
+
+// Get all admins (superadmin only)
+router.get('/admins', authenticateSuperAdmin, async (req, res) => {
+  try {
+    const admins = await Admin.find().select('-password').sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      admins
+    });
+
+  } catch (error) {
+    console.error('Get admins error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'প্রশাসক তালিকা লোড করতে ব্যর্থ হয়েছে'
     });
   }
 });

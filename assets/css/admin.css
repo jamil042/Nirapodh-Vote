@@ -1677,3 +1677,129 @@ background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 1
     border-color: #4caf50 !important;
     transform: translateY(-2px);
 }
+
+/* ===== ADMIN MANAGEMENT STYLES ===== */
+.create-admin-card,
+.admin-list-card {
+    margin-top: 20px;
+}
+
+.create-admin-form .form-group {
+    margin-bottom: 20px;
+}
+
+.create-admin-form label {
+    display: block;
+    margin-bottom: 8px;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.create-admin-form .form-control {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.create-admin-form .form-control:focus {
+    outline: none;
+    border-color: #1e7e34;
+    box-shadow: 0 0 0 3px rgba(30, 126, 52, 0.1);
+}
+
+.create-admin-form .form-hint {
+    display: block;
+    margin-top: 5px;
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.admin-list-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.admin-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    background: #f9f9f9;
+    transition: all 0.3s ease;
+}
+
+.admin-list-item:hover {
+    background: #f0f0f0;
+    border-color: #1e7e34;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.admin-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.admin-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1e7e34 0%, #28a745 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.admin-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.admin-details strong {
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.admin-details small {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.badge-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge-primary {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.admin-date small {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.text-muted {
+    color: #6c757d;
+    text-align: center;
+    padding: 20px;
+}
