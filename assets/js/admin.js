@@ -207,6 +207,20 @@ function renderCharts() {
 }
 
 function showSection(sectionId) {
+    // Check if trying to access chat section
+    if (sectionId === 'chat') {
+        const adminData = sessionStorage.getItem('nirapodh_admin_user');
+        if (adminData) {
+            const admin = JSON.parse(adminData);
+            if (admin.role !== 'superadmin') {
+                showAlert('শুধুমাত্র সুপার অ্যাডমিন নাগরিক চ্যাট অ্যাক্সেস করতে পারবেন', 'error');
+                return;
+            }
+        } else {
+            return;
+        }
+    }
+    
     const sections = document.querySelectorAll('.content-section');
     sections.forEach(section => {
         section.classList.remove('active');
@@ -1354,9 +1368,11 @@ async function loadAdminProfile() {
         if (admin.role === 'superadmin') {
             const createAdminCard = document.getElementById('createAdminCard');
             const adminListCard = document.getElementById('adminListCard');
+            const chatMenuItem = document.getElementById('chat-menu-item');
             
             if (createAdminCard) createAdminCard.style.display = 'block';
             if (adminListCard) adminListCard.style.display = 'block';
+            if (chatMenuItem) chatMenuItem.style.display = 'flex';
             
             // Load admin list
             loadAdminList();
