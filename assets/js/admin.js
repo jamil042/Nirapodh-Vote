@@ -10,9 +10,7 @@ let ballotLocationCount = 0;
 let customCandidates = new Array(50);
 let customCandidateCount = 0;
 
-// Custom Notices Array (100 items max)
-let customNotices = new Array(100);
-let customNoticeCount = 0;
+// Notice management moved to admin-notices.js
 
 // ===== TOAST NOTIFICATION SYSTEM =====
 function showAlert(title, type = 'info', duration = 3000) {
@@ -66,15 +64,37 @@ function initializeDashboard() {
     renderCharts(); // Render charts
     populateBallotFormOptions(); // Load ballot form options from mock data
     loadPublishedNotices(); // Load published notices
+    loadExistingBallots(); // Load existing ballots for superadmin
+    checkAdminRole(); // Check if superadmin and show admin creation section
+    
+    // Mark card for superadmin styling and show/hide hints
+    const adminData = sessionStorage.getItem('nirapodh_admin_user');
+    if (adminData) {
+        const admin = JSON.parse(adminData);
+        const ballotFormCard = document.getElementById('ballotFormCard');
+        if (ballotFormCard) {
+            if (admin.role === 'superadmin') {
+                ballotFormCard.setAttribute('data-superadmin', 'true');
+            } else {
+                // Hide the superadmin hint for normal admins
+                const hint = ballotFormCard.querySelector('p');
+                if (hint && hint.textContent.includes('সুপার অ্যাডমিন')) {
+                    hint.style.display = 'none';
+                }
+            }
+        }
+    }
 
     const ballotForm = document.getElementById('ballotForm');
     if (ballotForm) {
         ballotForm.addEventListener('submit', handleBallotSubmit);
     }
     
-    const noticeForm = document.getElementById('noticeForm');
-    if (noticeForm) {
-        noticeForm.addEventListener('submit', handleNoticeSubmit);
+    // Notice form handler moved to admin-notices.js
+    
+    const createAdminForm = document.getElementById('createAdminForm');
+    if (createAdminForm) {
+        createAdminForm.addEventListener('submit', handleCreateAdmin);
     }
     
     const changePasswordForm = document.getElementById('changePasswordForm');
@@ -89,12 +109,15 @@ function populateBallotFormOptions() {
 }
 
 function renderCharts() {
-    if (!mockDashboardData.charts) return;
-
-    // Turnout Chart (Line Chart)
+    // Charts will be populated with real data from backend
+    // For now, display placeholder charts
     const turnoutCtx = document.getElementById('turnoutChart');
     if (turnoutCtx && typeof Chart !== 'undefined') {
-        const turnoutData = mockDashboardData.charts.turnout;
+        // Sample data for turnout chart
+        const turnoutData = {
+            labels: ['সকাল ৮টা', '১০টা', '১২টা', '২টা', '৪টা'],
+            percentage: [15, 35, 55, 70, 85]
+        };
         
         new Chart(turnoutCtx, {
             type: 'line',
@@ -166,7 +189,11 @@ function renderCharts() {
     // Results Chart (Doughnut Chart)
     const resultCtx = document.getElementById('resultChart');
     if (resultCtx && typeof Chart !== 'undefined') {
-        const resultData = mockDashboardData.charts.results;
+        // Sample data for results chart
+        const resultData = {
+            labels: ['প্রার্থী ক', 'প্রার্থী খ', 'প্রার্থী গ'],
+            data: [45, 35, 20]
+        };
         
         new Chart(resultCtx, {
             type: 'doughnut',
@@ -236,7 +263,16 @@ function showSection(sectionId) {
         selectedSection.classList.add('active');
     }
     
-    event.target.closest('.nav-item').classList.add('active');
+    // Find and activate the clicked nav item
+    const clickedNavItem = document.querySelector(`.nav-item[onclick*="${sectionId}"]`);
+    if (clickedNavItem) {
+        clickedNavItem.classList.add('active');
+    }
+    
+    // Load candidates when switching to candidates section
+    if (sectionId === 'candidates' && typeof loadCandidates === 'function') {
+        loadCandidates();
+    }
 }
 
 function addCandidate() {
@@ -302,9 +338,6 @@ function addCandidate() {
         </div>
 
         <div style="display: flex; gap: 10px;">
-            <button type="button" class="btn btn-success btn-sm" onclick="submitCandidate(${candidateCount})">
-                প্রার্থী যোগ করুন
-            </button>
             <button type="button" class="btn btn-danger btn-sm" onclick="removeCandidate(${candidateCount})">
                 এই প্রার্থী সরান
             </button>
@@ -314,96 +347,43 @@ function addCandidate() {
     candidatesList.appendChild(candidateCard);
 }
 
-function submitCandidate(id) {
-    const candidateCard = document.getElementById(`candidate-${id}`);
-    
-    // Get form values
-    const name = candidateCard.querySelector('.candidate-name').value.trim();
-    const party = candidateCard.querySelector('.candidate-party').value.trim();
-    const area = candidateCard.querySelector('.candidate-area').value.trim();
-    const bio = candidateCard.querySelector('.candidate-bio').value.trim();
-    const status = candidateCard.querySelector('.candidate-status').value;
-    
-    // Validation
-    if (!name || !party || !area) {
-        showAlert('অনুগ্রহ করে প্রার্থীর নাম, দল এবং এলাকা পূরণ করুন', 'error');
-        return;
-    }
-    
-    if (customCandidateCount >= 50) {
-        showAlert('সর্বোচ্চ ৫০ জন প্রার্থী যোগ করা যায়', 'warning');
-        return;
-    }
-    
-    // Get image files
-    const imageInput = candidateCard.querySelector('.candidate-image');
-    const symbolInput = candidateCard.querySelector('.candidate-symbol');
-    
-    // Create FormData to read file
-    const reader1 = imageInput.files[0] ? new FileReader() : null;
-    const reader2 = symbolInput.files[0] ? new FileReader() : null;
-    
-    let imageData = 'assets/images/default-avatar.png';
-    let symbolData = '<img src="assets/images/powerful-symbol-unity-anti-corruption-day_968957-12635.avif" alt="Party Symbol" width="20" height="20">';
-    
-    // Read candidate image if exists
-    if (reader1) {
-        reader1.onload = function(e) {
-            imageData = e.target.result;
-            
-            // Read symbol image if exists
-            if (reader2) {
-                reader2.onload = function(e2) {
-                    symbolData = `<img src="${e2.target.result}" alt="Party Symbol" width="20" height="20">`;
-                    saveCandidateToArray(id, name, party, area, bio, status, imageData, symbolData);
-                };
-                reader2.readAsDataURL(symbolInput.files[0]);
-            } else {
-                saveCandidateToArray(id, name, party, area, bio, status, imageData, symbolData);
-            }
-        };
-        reader1.readAsDataURL(imageInput.files[0]);
-    } else if (reader2) {
-        reader2.onload = function(e) {
-            symbolData = `<img src="${e.target.result}" alt="Party Symbol" width="20" height="20">`;
-            saveCandidateToArray(id, name, party, area, bio, status, imageData, symbolData);
-        };
-        reader2.readAsDataURL(symbolInput.files[0]);
-    } else {
-        saveCandidateToArray(id, name, party, area, bio, status, imageData, symbolData);
-    }
-}
-
-function saveCandidateToArray(id, name, party, area, bio, status, imageData, symbolData) {
-    const candidate = {
-        id: customCandidateCount + 1000, // Offset to distinguish from mock data
-        name: name,
-        party: party,
-        area: area,
-        bio: bio,
-        status: status,
-        image: imageData,
-        symbolSvg: symbolData,
-        phone: '',
-        email: ''
-    };
-    
-    customCandidates[customCandidateCount] = candidate;
-    customCandidateCount++;
-    
-    showAlert(`"${name}" প্রার্থী সফলভাবে যোগ হয়েছে এবং প্রার্থী তালিকায় প্রদর্শিত হচ্ছে`, 'success');
-    
-    // Remove the form after submission
-    removeCandidate(id);
-    
-    // Reload the candidates table
-    loadCandidatesData();
-}
-
 function removeCandidate(id) {
     const candidateCard = document.getElementById(`candidate-${id}`);
     if (candidateCard) {
         candidateCard.remove();
+    }
+}
+
+// Delete candidate from database
+async function deleteCandidateFromDB(candidateId) {
+    if (!confirm('আপনি কি এই প্রার্থী মুছে ফেলতে চান?')) {
+        return;
+    }
+    
+    const token = sessionStorage.getItem('nirapodh_admin_token');
+    if (!token) {
+        showAlert('অনুমোদন প্রয়োজন। পুনরায় লগইন করুন', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_CONFIG.API_URL}/admin/candidates/${candidateId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert(result.message || 'প্রার্থী সফলভাবে মুছে ফেলা হয়েছে', 'success');
+            loadCandidatesData();
+        } else {
+            showAlert(result.message || 'প্রার্থী মুছে ফেলতে ব্যর্থ হয়েছে', 'error');
+        }
+    } catch (error) {
+        console.error('Delete candidate error:', error);
+        showAlert('প্রার্থী মুছে ফেলতে ব্যর্থ হয়েছে', 'error');
     }
 }
 
@@ -418,6 +398,45 @@ function handleBallotSubmit(e) {
         return;
     }
     
+    // Collect all candidate data from the form
+    const candidateCards = document.querySelectorAll('#candidatesList .card');
+    const candidates = [];
+    
+    candidateCards.forEach(card => {
+        const name = card.querySelector('.candidate-name')?.value?.trim();
+        const party = card.querySelector('.candidate-party')?.value?.trim();
+        const area = card.querySelector('.candidate-area')?.value?.trim();
+        const bio = card.querySelector('.candidate-bio')?.value?.trim();
+        const manifesto = card.querySelector('.candidate-manifesto')?.value?.trim();
+        const socialWork = card.querySelector('.candidate-social')?.value?.trim();
+        const partyHistory = card.querySelector('.candidate-history')?.value?.trim();
+        const status = card.querySelector('.candidate-status')?.value || 'active';
+        
+        // Get image files
+        const imageInput = card.querySelector('.candidate-image');
+        const symbolInput = card.querySelector('.candidate-symbol');
+        
+        if (name && party && area) {
+            candidates.push({
+                name,
+                party,
+                area,
+                bio,
+                manifesto,
+                socialWork,
+                partyHistory,
+                status,
+                imageFile: imageInput?.files[0],
+                symbolFile: symbolInput?.files[0]
+            });
+        }
+    });
+    
+    if (candidates.length === 0) {
+        showAlert('অন্তত একজন প্রার্থী যোগ করুন', 'error');
+        return;
+    }
+    
     const btn = e.target.querySelector('button[type="submit"]');
     if (btn) {
         btn.disabled = true;
@@ -425,17 +444,108 @@ function handleBallotSubmit(e) {
         const originalText = btn.textContent;
         btn.textContent = 'তৈরি হচ্ছে...';
         
-        setTimeout(() => {
-            showAlert('ব্যালট সফলভাবে তৈরি হয়েছে!', 'success');
-            btn.disabled = false;
-            btn.classList.remove('btn-loading');
-            btn.textContent = originalText;
+        // Process images and save candidates
+        processCandidatesAndSave(ballotName, ballotLocation, candidates, btn, originalText);
+    }
+}
+
+// Process candidate images and save to DB
+async function processCandidatesAndSave(ballotName, area, candidates, btn, originalText) {
+    const processedCandidates = [];
+    
+    // Process each candidate's images
+    for (const candidate of candidates) {
+        const processed = {
+            name: candidate.name,
+            party: candidate.party,
+            area: candidate.area,
+            bio: candidate.bio,
+            manifesto: candidate.manifesto,
+            socialWork: candidate.socialWork,
+            partyHistory: candidate.partyHistory,
+            status: candidate.status,
+            image: 'assets/images/default-avatar.png',
+            symbol: ''
+        };
+        
+        // Read image file if exists
+        if (candidate.imageFile) {
+            try {
+                processed.image = await readFileAsDataURL(candidate.imageFile);
+            } catch (err) {
+                console.error('Error reading image:', err);
+            }
+        }
+        
+        // Read symbol file if exists
+        if (candidate.symbolFile) {
+            try {
+                processed.symbol = await readFileAsDataURL(candidate.symbolFile);
+            } catch (err) {
+                console.error('Error reading symbol:', err);
+            }
+        }
+        
+        processedCandidates.push(processed);
+    }
+    
+    // Save to database
+    const token = sessionStorage.getItem('nirapodh_admin_token');
+    if (!token) {
+        showAlert('অনুমোদন প্রয়োজন। পুনরায় লগইন করুন', 'error');
+        btn.disabled = false;
+        btn.classList.remove('btn-loading');
+        btn.textContent = originalText;
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_CONFIG.API_URL}/admin/candidates`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                ballotName,
+                area,
+                candidates: processedCandidates
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert(result.message || 'ব্যালট সফলভাবে তৈরি হয়েছে!', 'success');
             
-            e.target.reset();
+            // Reset form
+            document.getElementById('ballotForm').reset();
             candidateCount = 0;
             document.getElementById('candidatesList').innerHTML = '';
-        }, 1500);
+            
+            // Reload candidates table
+            loadCandidatesData();
+        } else {
+            showAlert(result.message || 'ব্যালট তৈরি করতে ব্যর্থ হয়েছে', 'error');
+        }
+    } catch (error) {
+        console.error('Save candidates error:', error);
+        showAlert('ব্যালট তৈরি করতে ব্যর্থ হয়েছে', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.classList.remove('btn-loading');
+        btn.textContent = originalText;
     }
+}
+
+// Helper function to read file as DataURL
+function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(e);
+        reader.readAsDataURL(file);
+    });
 }
 
 function previewBallot() {
@@ -455,63 +565,9 @@ function toggleNoticeContent(type) {
     }
 }
 
-function handleNoticeSubmit(e) {
-    e.preventDefault();
-    
-    const title = document.getElementById('noticeTitle').value.trim();
-    const type = document.getElementById('noticeType').value;
-    const contentType = document.querySelector('input[name="contentType"]:checked').value;
-    const message = document.getElementById('noticeMessage').value.trim();
-    const pdfFile = document.getElementById('noticePdf').files[0];
-    
-    // Validation
-    if (!title || !type) {
-        showAlert('শিরোনাম এবং নোটিশ ধরন পূরণ করুন', 'error');
-        return;
-    }
-    
-    if (contentType === 'text' && !message) {
-        showAlert('বার্তা পূরণ করুন', 'error');
-        return;
-    }
-    
-    if (contentType === 'pdf' && !pdfFile) {
-        showAlert('PDF ফাইল আপলোড করুন', 'error');
-        return;
-    }
-    
-    if (customNoticeCount >= 100) {
-        showAlert('সর্বোচ্চ ১০০ নোটিশ প্রকাশ করা যায়', 'warning');
-        return;
-    }
-    
-    const btn = e.target.querySelector('button[type="submit"]');
-    if (btn) {
-        btn.disabled = true;
-        btn.classList.add('btn-loading');
-        const originalText = btn.textContent;
-        btn.textContent = 'প্রকাশিত হচ্ছে...';
-        
-        // Handle PDF file if exists
-        if (contentType === 'pdf' && pdfFile) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                saveNoticeToArray(title, type, contentType, message, e.target.result);
-                resetNoticeForm(btn, originalText);
-                loadPublishedNotices();
-            };
-            reader.readAsDataURL(pdfFile);
-        } else {
-            setTimeout(() => {
-                saveNoticeToArray(title, type, contentType, message, null);
-                resetNoticeForm(btn, originalText);
-                loadPublishedNotices();
-            }, 1500);
-        }
-    }
-}
+// Notice functions moved to admin-notices.js
 
-function saveNoticeToArray(title, type, contentType, message, pdfData) {
+function oldSaveNoticeToArray_REMOVED(title, type, contentType, message, pdfData) {
     const now = new Date();
     const dateStr = now.toLocaleDateString('bn-BD', { 
         year: 'numeric', 
@@ -549,214 +605,7 @@ function resetNoticeForm(btn, originalText) {
     }, 500);
 }
 
-function loadPublishedNotices() {
-    const noticeList = document.querySelector('.notice-list');
-    let html = '';
-    
-    // Add custom notices first (newest first)
-    for (let i = customNoticeCount - 1; i >= 0; i--) {
-        const notice = customNotices[i];
-        if (notice) {
-            html += renderNoticeItem(notice, true);
-        }
-    }
-    
-    // Mock notice data (if any)
-    const mockNotices = [
-        {
-            id: 1,
-            title: 'ভোটিং সময়সূচী পরিবর্তন',
-            type: 'urgent',
-            message: 'আগামীকাল ভোটিং সময় ৮টা থেকে ৬টা পর্যন্ত বর্ধিত করা হয়েছে...',
-            date: '৩ ডিসেম্বর ২০২৫, ১০:৩০ AM'
-        }
-    ];
-    
-    // Add mock notices if no custom notices
-    if (customNoticeCount === 0) {
-        mockNotices.forEach(notice => {
-            html += renderNoticeItem(notice, false);
-        });
-    }
-    
-    noticeList.innerHTML = html || '<p style="text-align: center; color: #999;">কোন নোটিশ প্রকাশিত হয়নি</p>';
-}
-
-function renderNoticeItem(notice, isCustom) {
-    const badgeClass = `badge-${notice.type}`;
-    const typeText = getNoticeTypeText(notice.type);
-    const preview = notice.message ? notice.message.substring(0, 100) + '...' : 'PDF ফাইল';
-    
-    let html = `
-        <div class="notice-item">
-            <div class="notice-header">
-                <h4>${notice.title}</h4>
-                <span class="badge ${badgeClass}">${typeText}</span>
-            </div>
-            <p class="notice-date">প্রকাশিত: ${notice.date}</p>
-            <p class="notice-preview">${preview}</p>
-            <div class="notice-actions">
-    `;
-    
-    if (isCustom) {
-        html += `
-                <button class="btn btn-sm btn-info" onclick="viewNoticeDetails(${notice.id})">বিস্তারিত</button>
-                <button class="btn btn-sm btn-secondary" onclick="editNotice(${notice.id})">সম্পাদনা</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteNotice(${notice.id})">মুছে ফেলুন</button>
-        `;
-    } else {
-        html += `
-                <button class="btn btn-sm btn-info" onclick="viewNoticeDetails(${notice.id})">বিস্তারিত</button>
-                <button class="btn btn-sm btn-secondary" disabled>সম্পাদনা</button>
-                <button class="btn btn-sm btn-danger" disabled>মুছে ফেলুন</button>
-        `;
-    }
-    
-    html += `
-            </div>
-        </div>
-    `;
-    
-    return html;
-}
-
-function getNoticeTypeText(type) {
-    const types = {
-        'general': 'সাধারণ',
-        'urgent': 'জরুরী',
-        'schedule': 'সময়সূচী',
-        'result': 'ফলাফল'
-    };
-    return types[type] || type;
-}
-
-function viewNoticeDetails(noticeId) {
-    let notice = null;
-    
-    if (noticeId >= 1000) {
-        const customIndex = customNotices.findIndex(n => n && n.id === noticeId);
-        if (customIndex !== -1) {
-            notice = customNotices[customIndex];
-        }
-    }
-    
-    if (!notice) {
-        showAlert('নোটিশ খুঁজে পাওয়া যায়নি', 'error');
-        return;
-    }
-    
-    const modal = document.getElementById('candidateModal');
-    const modalBody = document.getElementById('candidateModalBody');
-    const modalHeader = document.querySelector('#candidateModal .modal-header h2');
-    
-    modalHeader.textContent = 'নোটিশ বিস্তারিত';
-    
-    let contentHtml = '';
-    if (notice.contentType === 'pdf' && notice.pdfData) {
-        contentHtml = `<iframe src="${notice.pdfData}" width="100%" height="600"></iframe>`;
-    } else {
-        contentHtml = `<p style="white-space: pre-wrap; line-height: 1.6;">${notice.message}</p>`;
-    }
-    
-    modalBody.innerHTML = `
-        <div class="notice-detail">
-            <h3>${notice.title}</h3>
-            <p style="color: #666; font-size: 0.9em;">প্রকাশিত: ${notice.date}</p>
-            <p style="margin-top: 10px;"><strong>ধরন:</strong> ${getNoticeTypeText(notice.type)}</p>
-            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
-                ${contentHtml}
-            </div>
-        </div>
-    `;
-    
-    modal.style.display = "block";
-}
-
-function editNotice(noticeId) {
-    const customIndex = customNotices.findIndex(n => n && n.id === noticeId);
-    if (customIndex === -1) {
-        showAlert('নোটিশ খুঁজে পাওয়া যায়নি', 'error');
-        return;
-    }
-    
-    const notice = customNotices[customIndex];
-    
-    const modal = document.getElementById('candidateModal');
-    const modalBody = document.getElementById('candidateModalBody');
-    const modalHeader = document.querySelector('#candidateModal .modal-header h2');
-    
-    modalHeader.textContent = 'নোটিশ সম্পাদনা';
-    
-    modalBody.innerHTML = `
-        <form id="editNoticeForm" class="candidate-edit-form">
-            <div class="form-group">
-                <label for="editNoticeTitle">নোটিশ শিরোনাম *</label>
-                <input type="text" id="editNoticeTitle" value="${notice.title}" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="editNoticeType">নোটিশ ধরন *</label>
-                <select id="editNoticeType" required>
-                    <option value="general" ${notice.type === 'general' ? 'selected' : ''}>সাধারণ</option>
-                    <option value="urgent" ${notice.type === 'urgent' ? 'selected' : ''}>জরুরী</option>
-                    <option value="schedule" ${notice.type === 'schedule' ? 'selected' : ''}>সময়সূচী</option>
-                    <option value="result" ${notice.type === 'result' ? 'selected' : ''}>ফলাফল</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="editNoticeMessage">বার্তা *</label>
-                <textarea id="editNoticeMessage" rows="6" required>${notice.message || ''}</textarea>
-            </div>
-            
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary" data-notice-id="${noticeId}" data-notice-index="${customIndex}">আপডেট করুন</button>
-                <button type="button" class="btn btn-secondary" onclick="closeCandidateModal()">বাতিল করুন</button>
-            </div>
-        </form>
-    `;
-    
-    const editForm = document.getElementById('editNoticeForm');
-    editForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const btn = e.target.querySelector('button[type="submit"]');
-        const noticeIndex = parseInt(btn.dataset.noticeIndex);
-        
-        btn.disabled = true;
-        btn.classList.add('btn-loading');
-        const originalText = btn.textContent;
-        btn.textContent = 'আপডেট হচ্ছে...';
-        
-        setTimeout(() => {
-            customNotices[noticeIndex].title = document.getElementById('editNoticeTitle').value;
-            customNotices[noticeIndex].type = document.getElementById('editNoticeType').value;
-            customNotices[noticeIndex].message = document.getElementById('editNoticeMessage').value;
-            
-            showAlert('নোটিশ সফলভাবে আপডেট হয়েছে', 'success');
-            closeCandidateModal();
-            loadPublishedNotices();
-            
-            btn.disabled = false;
-            btn.classList.remove('btn-loading');
-            btn.textContent = originalText;
-        }, 1500);
-    });
-    
-    modal.style.display = "block";
-}
-
-function deleteNotice(noticeId) {
-    if (confirm('আপনি কি এই নোটিশ মুছে ফেলতে চান?')) {
-        const customIndex = customNotices.findIndex(n => n && n.id === noticeId);
-        if (customIndex !== -1) {
-            customNotices[customIndex] = null;
-            customNoticeCount--;
-            showAlert('নোটিশ সফলভাবে মুছে ফেলা হয়েছে', 'success');
-            loadPublishedNotices();
-        }
-    }
-}
+// Notice functions removed - moved to admin-notices.js
 
 function calculateResults() {
     const btn = event?.target || null;
@@ -820,150 +669,8 @@ function publishResults() {
     }
 }
 
-function editCandidate(id) {
-    // Check if it's a custom candidate (ID >= 1000)
-    let candidate = null;
-    let isCustom = id >= 1000;
-    let customIndex = -1;
-    
-    if (isCustom) {
-        customIndex = customCandidates.findIndex(c => c && c.id === id);
-        if (customIndex !== -1) {
-            candidate = customCandidates[customIndex];
-        }
-    } else {
-        candidate = mockDashboardData.candidates.find(c => c.id === id);
-    }
-    
-    if (!candidate) {
-        showAlert('প্রার্থীর তথ্য পাওয়া যায়নি', 'error');
-        return;
-    }
-
-    const modal = document.getElementById('candidateModal');
-    const modalBody = document.getElementById('candidateModalBody');
-    const modalHeader = document.querySelector('#candidateModal .modal-header h2');
-
-    modalHeader.textContent = 'প্রার্থী সম্পাদনা';
-
-    modalBody.innerHTML = `
-        <form id="editCandidateForm" class="candidate-edit-form">
-            <div class="form-group">
-                <label for="editCandidateName">নাম *</label>
-                <input type="text" id="editCandidateName" value="${candidate.name}" required>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="editCandidateParty">দল *</label>
-                    <input type="text" id="editCandidateParty" value="${candidate.party}" required>
-                </div>
-                <div class="form-group">
-                    <label for="editCandidateArea">এলাকা *</label>
-                    <input type="text" id="editCandidateArea" value="${candidate.area}" required>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="editCandidatePhone">ফোন নম্বর</label>
-                    <input type="tel" id="editCandidatePhone" value="${candidate.phone || ''}">
-                </div>
-                <div class="form-group">
-                    <label for="editCandidateEmail">ইমেইল</label>
-                    <input type="email" id="editCandidateEmail" value="${candidate.email || ''}">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="editCandidateStatus">অবস্থা *</label>
-                <select id="editCandidateStatus" required>
-                    <option value="active" ${candidate.status === 'active' ? 'selected' : ''}>সক্রিয়</option>
-                    <option value="inactive" ${candidate.status === 'inactive' ? 'selected' : ''}>নিষ্ক্রিয়</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="editCandidateBio">জীবনী</label>
-                <textarea id="editCandidateBio" rows="4" placeholder="প্রার্থীর জীবনী লিখুন...">${candidate.bio || ''}</textarea>
-            </div>
-
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary" data-candidate-id="${id}" data-is-custom="${isCustom}" data-custom-index="${customIndex}">পরিবর্তন সংরক্ষণ করুন</button>
-                <button type="button" class="btn btn-secondary" onclick="closeCandidateModal()">বাতিল করুন</button>
-            </div>
-        </form>
-    `;
-
-    // Add form submit handler
-    const editForm = document.getElementById('editCandidateForm');
-    editForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const btn = e.target.querySelector('button[type="submit"]');
-        if (btn) {
-            btn.disabled = true;
-            btn.classList.add('btn-loading');
-            const originalText = btn.textContent;
-            btn.textContent = 'সংরক্ষণ হচ্ছে...';
-            
-            const candidateId = parseInt(btn.dataset.candidateId);
-            const isCustomCandidate = btn.dataset.isCustom === 'true';
-            const customIdx = parseInt(btn.dataset.customIndex);
-            
-            setTimeout(() => {
-                // Get the candidate reference
-                let candidateToUpdate = null;
-                if (isCustomCandidate && customIdx !== -1) {
-                    candidateToUpdate = customCandidates[customIdx];
-                } else if (!isCustomCandidate) {
-                    candidateToUpdate = mockDashboardData.candidates.find(c => c.id === candidateId);
-                }
-                
-                if (candidateToUpdate) {
-                    // Update candidate data
-                    candidateToUpdate.name = document.getElementById('editCandidateName').value;
-                    candidateToUpdate.party = document.getElementById('editCandidateParty').value;
-                    candidateToUpdate.area = document.getElementById('editCandidateArea').value;
-                    candidateToUpdate.phone = document.getElementById('editCandidatePhone').value;
-                    candidateToUpdate.email = document.getElementById('editCandidateEmail').value;
-                    candidateToUpdate.status = document.getElementById('editCandidateStatus').value;
-                    candidateToUpdate.bio = document.getElementById('editCandidateBio').value;
-
-                    // Reload candidates table
-                    loadCandidatesData();
-                    
-                    showAlert('প্রার্থীর তথ্য সফলভাবে আপডেট হয়েছে', 'success');
-                    closeCandidateModal();
-                }
-                
-                btn.disabled = false;
-                btn.classList.remove('btn-loading');
-                btn.textContent = originalText;
-            }, 1500);
-        }
-    });
-
-    modal.style.display = "block";
-}
-
-function deleteCandidate(id) {
-    if (confirm('আপনি কি এই প্রার্থী মুছে ফেলতে চান?')) {
-        // Check if it's a custom candidate (ID >= 1000)
-        if (id >= 1000) {
-            const customIndex = customCandidates.findIndex(c => c && c.id === id);
-            if (customIndex !== -1) {
-                customCandidates[customIndex] = null;
-                customCandidateCount--;
-                showAlert('প্রার্থী সফলভাবে মুছে ফেলা হয়েছে', 'success');
-                loadCandidatesData();
-            }
-        } else {
-            // Mock candidate - just show message
-            showAlert('প্রার্থী সফলভাবে মুছে ফেলা হয়েছে', 'success');
-        }
-    }
-}
+// editCandidate and deleteCandidate moved to admin-candidates.js
+// Old mock versions removed
 
 function addNewBallotOption() {
     const newBallotNameInput = document.getElementById('newBallotName');
@@ -992,7 +699,7 @@ function addNewBallotOption() {
     btn.disabled = true;
     btn.textContent = 'যোগ হচ্ছে...';
     
-    fetch('http://localhost:3000/api/admin/ballots', {
+    fetch(`${API_CONFIG.API_URL}/admin/ballots`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -1003,8 +710,12 @@ function addNewBallotOption() {
             location: ballotLocation
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Ballot add response status:', response.status);
+        return response.json();
+    })
     .then(result => {
+        console.log('Ballot add result:', result);
         if (result.success) {
             showAlert(result.message || 'ব্যালট সফলভাবে যোগ হয়েছে!', 'success');
             newBallotNameInput.value = '';
@@ -1018,7 +729,7 @@ function addNewBallotOption() {
     })
     .catch(error => {
         console.error('Add ballot error:', error);
-        showAlert('ব্যালট যোগ করতে ব্যর্থ হয়েছে', 'error');
+        showAlert('সার্ভার ত্রুটি হয়েছে', 'error');
     })
     .finally(() => {
         btn.disabled = false;
@@ -1029,41 +740,220 @@ function addNewBallotOption() {
 // Load ballot options from backend
 async function loadBallotOptions() {
     const token = sessionStorage.getItem('nirapodh_admin_token');
-    if (!token) return;
+    if (!token) {
+        console.log('❌ No token found for loading ballot options');
+        return;
+    }
     
     try {
-        // Fetch ballot names
-        const namesResponse = await fetch('http://localhost:3000/api/admin/ballot-names', {
+        // Fetch all ballots to build a map
+        const ballotsResponse = await fetch(`${API_CONFIG.API_URL}/admin/ballots`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
-        const namesData = await namesResponse.json();
+        const ballotsData = await ballotsResponse.json();
         
-        // Fetch ballot locations
-        const locationsResponse = await fetch('http://localhost:3000/api/admin/ballot-locations', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        const locationsData = await locationsResponse.json();
+        console.log('✅ Ballots loaded:', ballotsData);
         
-        // Update dropdowns
+        // Store ballots in global variable for context menu access
+        window.allBallots = ballotsData.ballots || [];
+        
+        // Get unique ballot names
+        const ballotNames = [...new Set(window.allBallots.map(b => b.name))].sort();
+        
+        console.log('✅ Ballot names:', ballotNames);
+        
+        // Update ballot names dropdown
         const ballotNameSelect = document.getElementById('ballotName');
         const ballotLocationSelect = document.getElementById('ballotLocation');
         
-        if (ballotNameSelect && namesData.success) {
+        if (ballotNameSelect && ballotNames.length > 0) {
             ballotNameSelect.innerHTML = '<option value="">নির্বাচন করুন</option>' +
-                namesData.ballotNames.map(name => `<option value="${name}">${name}</option>`).join('');
+                ballotNames.map(name => `<option value="${name}">${name}</option>`).join('');
+            
+            // Remove old event listeners
+            const oldListener = ballotNameSelect.onchange;
+            ballotNameSelect.onchange = null;
+            ballotNameSelect.removeEventListener('change', handleBallotNameChange);
+            ballotNameSelect.removeEventListener('contextmenu', handleBallotNameContextMenu);
+            
+            // Add event listeners
+            ballotNameSelect.addEventListener('change', handleBallotNameChange);
+            ballotNameSelect.addEventListener('contextmenu', handleBallotNameContextMenu);
         }
         
-        if (ballotLocationSelect && locationsData.success) {
-            ballotLocationSelect.innerHTML = '<option value="">এলাকা নির্বাচন করুন</option>' +
-                locationsData.ballotLocations.map(location => `<option value="${location}">${location}</option>`).join('');
+        // Initially empty the dropdown
+        if (ballotLocationSelect) {
+            ballotLocationSelect.innerHTML = '<option value="">প্রথমে ব্যালটের নাম নির্বাচন করুন</option>';
+            ballotLocationSelect.disabled = true;
+            
+            // Add context menu to location dropdown
+            ballotLocationSelect.removeEventListener('contextmenu', handleBallotLocationContextMenu);
+            ballotLocationSelect.addEventListener('contextmenu', handleBallotLocationContextMenu);
         }
     } catch (error) {
         console.error('Load ballot options error:', error);
     }
+}
+
+// Handle ballot name change to filter locations
+function handleBallotNameChange(e) {
+    const selectedBallotName = e.target.value;
+    const ballotLocationSelect = document.getElementById('ballotLocation');
+    
+    if (!ballotLocationSelect) return;
+    
+    // Reset location dropdown
+    ballotLocationSelect.innerHTML = '<option value="">লোড হচ্ছে...</option>';
+    ballotLocationSelect.disabled = true;
+    
+    if (!selectedBallotName) {
+        ballotLocationSelect.innerHTML = '<option value="">প্রথমে ব্যালটের নাম নির্বাচন করুন</option>';
+        ballotLocationSelect.disabled = true;
+        return;
+    }
+    
+    // Filter locations from the stored ballots data
+    if (!window.allBallots) {
+        ballotLocationSelect.innerHTML = '<option value="">ডেটা লোড হয়নি</option>';
+        return;
+    }
+    
+    const filteredLocations = window.allBallots
+        .filter(ballot => ballot.name === selectedBallotName)
+        .map(ballot => ballot.location)
+        .sort();
+    
+    if (filteredLocations.length > 0) {
+        ballotLocationSelect.innerHTML = '<option value="">এলাকা নির্বাচন করুন</option>' +
+            filteredLocations.map(location => `<option value="${location}">${location}</option>`).join('');
+        ballotLocationSelect.disabled = false;
+    } else {
+        ballotLocationSelect.innerHTML = '<option value="">এই ব্যালটের জন্য কোনো এলাকা নেই</option>';
+        ballotLocationSelect.disabled = true;
+        showAlert('এই ব্যালটের জন্য এখনো কোনো এলাকা যোগ করা হয়নি', 'info');
+    }
+}
+
+// Handle context menu for ballot name dropdown
+function handleBallotNameContextMenu(e) {
+    e.preventDefault();
+    
+    const adminData = sessionStorage.getItem('nirapodh_admin_user');
+    if (!adminData) return;
+    
+    const admin = JSON.parse(adminData);
+    if (admin.role !== 'superadmin') {
+        showAlert('শুধুমাত্র সুপার অ্যাডমিন ব্যালট মুছতে পারবেন', 'error');
+        return;
+    }
+    
+    const ballotNameSelect = document.getElementById('ballotName');
+    const selectedBallotName = ballotNameSelect.value;
+    
+    if (!selectedBallotName) {
+        showAlert('প্রথমে একটি ব্যালট নির্বাচন করুন', 'warning');
+        return;
+    }
+    
+    // Check if this ballot has any areas
+    const areasForBallot = window.allBallots.filter(b => b.name === selectedBallotName);
+    
+    if (areasForBallot.length > 0) {
+        showAlert(`প্রথমে "${selectedBallotName}" এর সকল এলাকা মুছে ফেলুন, তারপর ব্যালট মুছতে পারবেন`, 'warning');
+        return;
+    }
+    
+    // No areas left, this shouldn't happen but handle it
+    showAlert('এই ব্যালটের কোনো এলাকা নেই', 'info');
+}
+
+// Handle context menu for ballot location dropdown
+function handleBallotLocationContextMenu(e) {
+    e.preventDefault();
+    
+    const adminData = sessionStorage.getItem('nirapodh_admin_user');
+    if (!adminData) return;
+    
+    const admin = JSON.parse(adminData);
+    if (admin.role !== 'superadmin') {
+        showAlert('শুধুমাত্র সুপার অ্যাডমিন এলাকা মুছতে পারবেন', 'error');
+        return;
+    }
+    
+    const ballotNameSelect = document.getElementById('ballotName');
+    const ballotLocationSelect = document.getElementById('ballotLocation');
+    
+    const selectedBallotName = ballotNameSelect.value;
+    const selectedLocation = ballotLocationSelect.value;
+    
+    if (!selectedBallotName || !selectedLocation) {
+        showAlert('প্রথমে ব্যালট ও এলাকা নির্বাচন করুন', 'warning');
+        return;
+    }
+    
+    // Find the ballot ID for this name and location combination
+    const ballotToDelete = window.allBallots.find(
+        b => b.name === selectedBallotName && b.location === selectedLocation
+    );
+    
+    if (!ballotToDelete) {
+        showAlert('ব্যালট পাওয়া যায়নি', 'error');
+        return;
+    }
+    
+    // Show confirmation dialog
+    const areasCount = window.allBallots.filter(b => b.name === selectedBallotName).length;
+    let confirmMsg = `আপনি কি নিশ্চিত যে "${selectedBallotName} - ${selectedLocation}" মুছে ফেলতে চান?\n\nসতর্কতা: এটি সকল অ্যাডমিনের জন্য মুছে যাবে।`;
+    
+    if (areasCount === 1) {
+        confirmMsg += `\n\nএটি "${selectedBallotName}" এর শেষ এলাকা। এটি মুছলে ব্যালটটিও সম্পূর্ণভাবে মুছে যাবে।`;
+    }
+    
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+    
+    // Delete the ballot
+    deleteBallotById(ballotToDelete._id, selectedBallotName, selectedLocation);
+}
+
+// Delete ballot by ID
+async function deleteBallotById(ballotId, ballotName, ballotLocation) {
+    const token = sessionStorage.getItem('nirapodh_admin_token');
+    if (!token) {
+        showAlert('অনুমোদন প্রয়োজন। পুনরায় লগইন করুন', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_CONFIG.API_URL}/admin/ballots/${ballotId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert(result.message || 'ব্যালট সফলভাবে মুছে ফেলা হয়েছে', 'success');
+            // Reload ballot options
+            loadBallotOptions();
+        } else {
+            showAlert(result.message || 'ব্যালট মুছে ফেলতে ব্যর্থ হয়েছে', 'error');
+        }
+    } catch (error) {
+        console.error('Delete ballot error:', error);
+        showAlert('ব্যালট মুছে ফেলতে ব্যর্থ হয়েছে', 'error');
+    }
+}
+
+// Load existing ballots for superadmin (simplified - no longer shows separate card)
+async function loadExistingBallots() {
+    // This function is now simplified since we use context menu instead
+    // Just reload the ballot options to keep data fresh
+    return loadBallotOptions();
 }
 
 
@@ -1116,7 +1006,7 @@ function handlePasswordChange(e) {
         
         // Call backend API
         const token = sessionStorage.getItem('nirapodh_admin_token');
-        fetch('http://localhost:3000/api/admin/change-password', {
+        fetch(`${API_CONFIG.API_URL}/admin/change-password`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1191,101 +1081,8 @@ const candidateData = {
     }
 };
 
-function viewCandidateDetails(candidateId) {
-    const modal = document.getElementById('candidateModal');
-    const modalBody = document.getElementById('candidateModalBody');
-    const modalHeader = document.querySelector('#candidateModal .modal-header h2');
-    
-    // Check if it's a custom candidate (ID >= 1000)
-    let candidate = null;
-    if (candidateId >= 1000) {
-        const customIndex = customCandidates.findIndex(c => c && c.id === candidateId);
-        if (customIndex !== -1) {
-            candidate = customCandidates[customIndex];
-        }
-    } else {
-        candidate = mockDashboardData.candidates.find(c => c.id === candidateId);
-    }
-
-    if (!candidate) {
-        showAlert("প্রার্থীর তথ্য পাওয়া যায়নি", 'error');
-        return;
-    }
-
-    modalHeader.textContent = 'প্রার্থীর বিবরণ';
-    
-    // Build manifesto HTML if exists
-    let manifestoHtml = '';
-    if (candidate.manifesto && Array.isArray(candidate.manifesto)) {
-        manifestoHtml = '<ul class="detail-list">';
-        candidate.manifesto.forEach(item => {
-            manifestoHtml += `<li>${item}</li>`;
-        });
-        manifestoHtml += '</ul>';
-    }
-
-    // Build social activities HTML if exists
-    let socialHtml = '';
-    if (candidate.socialActivities && Array.isArray(candidate.socialActivities)) {
-        socialHtml = '<ul class="detail-list">';
-        candidate.socialActivities.forEach(item => {
-            socialHtml += `<li>${item}</li>`;
-        });
-        socialHtml += '</ul>';
-    }
-
-    // Handle different image sources (mock has photo, custom has image)
-    const imageSrc = candidate.photo || candidate.image || 'assets/images/default-avatar.png';
-    const symbolDisplay = candidate.symbol ? `<img src="${candidate.symbol}" alt="প্রতীক" class="party-symbol-small">` : (candidate.symbolSvg || '');
-
-    let detailsHtml = `
-        <div class="candidate-profile-header">
-            <img src="${imageSrc}" alt="${candidate.name}" class="candidate-profile-img" onerror="this.src='assets/images/default-avatar.png'">
-            <div class="candidate-profile-info">
-                <h3>${candidate.name}</h3>
-                <div class="candidate-party-info">
-                    ${symbolDisplay}
-                    <strong>${candidate.party}</strong>
-                </div>
-            </div>
-        </div>
-
-        <div class="detail-section">
-            <h4>জীবনী</h4>
-            <p>${candidate.bio || 'তথ্য উপলব্ধ নেই'}</p>
-        </div>
-    `;
-
-    if (manifestoHtml) {
-        detailsHtml += `
-            <div class="detail-section">
-                <h4>নির্বাচনী ইশতেহার</h4>
-                ${manifestoHtml}
-            </div>
-        `;
-    }
-
-    if (socialHtml) {
-        detailsHtml += `
-            <div class="detail-section">
-                <h4>সামাজিক কর্মকাণ্ড</h4>
-                ${socialHtml}
-            </div>
-        `;
-    }
-
-    if (candidate.partyHistory) {
-        detailsHtml += `
-            <div class="detail-section">
-                <h4>দলীয় ইতিহাস</h4>
-                <p>${candidate.partyHistory}</p>
-            </div>
-        `;
-    }
-
-    modalBody.innerHTML = detailsHtml;
-    modal.style.display = "block";
-}
+// viewCandidateDetails moved to admin-candidates.js
+// Old mock version completely removed
 
 function closeCandidateModal() {
     const modal = document.getElementById('candidateModal');
@@ -1478,6 +1275,128 @@ async function loadAdminList() {
                             <span class="badge ${admin.role === 'superadmin' ? 'badge-success' : 'badge-primary'}">
                                 ${admin.role === 'superadmin' ? 'সুপার অ্যাডমিন' : 'অ্যাডমিন'}
                             </span>
+                        </div>
+                    </div>
+                    <div class="admin-date">
+                        <small>তৈরি: ${new Date(admin.createdAt).toLocaleDateString('bn-BD')}</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        console.error('Error loading admin list:', error);
+    }
+}
+
+// ===== ADMIN MANAGEMENT FUNCTIONS =====
+
+// Show/hide create admin section based on user role
+async function checkAdminRole() {
+    try {
+        const adminData = JSON.parse(sessionStorage.getItem('nirapodh_admin_user') || '{}');
+        
+        if (adminData.role === 'superadmin') {
+            // Show create admin card for superadmin
+            const createAdminCard = document.getElementById('createAdminCard');
+            const adminListCard = document.getElementById('adminListCard');
+            
+            if (createAdminCard) createAdminCard.style.display = 'block';
+            if (adminListCard) adminListCard.style.display = 'block';
+            
+            // Load admin list
+            await loadAdminList();
+        }
+    } catch (error) {
+        console.error('Error checking admin role:', error);
+    }
+}
+
+// Handle create admin form submission
+async function handleCreateAdmin(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('newAdminUsername').value.trim();
+    const email = document.getElementById('newAdminEmail').value.trim();
+    const password = document.getElementById('newAdminPassword').value;
+    
+    if (!username || !email || !password) {
+        showAlert('সকল তথ্য প্রদান করুন', 'error');
+        return;
+    }
+    
+    const submitBtn = document.getElementById('createAdminBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'তৈরি হচ্ছে...';
+    
+    try {
+        const token = sessionStorage.getItem('nirapodh_admin_token');
+        const url = `${API_CONFIG.API_URL}/admin/create-admin`;
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                username,
+                email,
+                initialPassword: password
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert('নতুন প্রশাসক সফলভাবে তৈরি হয়েছে এবং ইমেইল পাঠানো হয়েছে', 'success', 4000);
+            
+            // Reset form
+            document.getElementById('createAdminForm').reset();
+            
+            // Reload admin list
+            await loadAdminList();
+        } else {
+            showAlert(data.message || 'প্রশাসক তৈরি করতে ব্যর্থ হয়েছে', 'error');
+        }
+    } catch (error) {
+        console.error('Error creating admin:', error);
+        showAlert('সার্ভার ত্রুটি হয়েছে', 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'প্রশাসক তৈরি করুন';
+    }
+}
+
+// Load admin list (superadmin only)
+async function loadAdminList() {
+    try {
+        const token = sessionStorage.getItem('nirapodh_admin_token');
+        const url = `${API_CONFIG.API_URL}/admin/admins`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.admins) {
+            const container = document.getElementById('adminListContainer');
+            if (!container) return;
+            
+            container.innerHTML = data.admins.map(admin => `
+                <div class="admin-item">
+                    <div class="admin-info">
+                        <div class="admin-name">
+                            <strong>${admin.username}</strong>
+                            <span class="badge ${admin.role === 'superadmin' ? 'badge-success' : 'badge-primary'}">
+                                ${admin.role === 'superadmin' ? 'সুপার অ্যাডমিন' : 'অ্যাডমিন'}
+                            </span>
+                        </div>
+                        <div class="admin-email">
+                            <small>${admin.email || 'ইমেইল নেই'}</small>
                         </div>
                     </div>
                     <div class="admin-date">

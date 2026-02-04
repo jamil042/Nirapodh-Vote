@@ -210,7 +210,13 @@
                     </div>
                 </div>
 
-                <div class="card">
+
+
+                <div class="card" id="ballotFormCard">
+                    <h3>ব্যালট তৈরি করুন</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">
+                        <strong>সুপার অ্যাডমিন:</strong> ড্রপডাউনে রাইট-ক্লিক করে ব্যালট/এলাকা মুছতে পারবেন
+                    </p>
                     <form id="ballotForm" class="ballot-form">
                         <div class="form-row">
                             <div class="form-group">
@@ -300,10 +306,12 @@
                             <label for="noticeType">নোটিশ ধরন *</label>
                             <select id="noticeType" required>
                                 <option value="">নির্বাচন করুন</option>
-                                <option value="general">সাধারণ</option>
-                                <option value="urgent">জরুরী</option>
-                                <option value="schedule">সময়সূচী</option>
-                                <option value="result">ফলাফল</option>
+                                <option value="সাধারণ">সাধারণ</option>
+                                <option value="জরুরি">জরুরি</option>
+                                <option value="নির্বাচন সংক্রান্ত">নির্বাচন সংক্রান্ত</option>
+                                <option value="প্রার্থী তালিকা">প্রার্থী তালিকা</option>
+                                <option value="ফলাফল">ফলাফল</option>
+                                <option value="সতর্কতা">সতর্কতা</option>
                             </select>
                         </div>
 
@@ -744,7 +752,9 @@
 
     <script src="assets/js/api-config.js"></script>
     <script src="assets/js/common.js"></script>
-    <script src="assets/js/admin-mock-data.js"></script>
+    <script src="assets/js/admin-backend-data.js"></script>
+    <script src="assets/js/admin-candidates.js"></script>
+    <script src="assets/js/admin-notices.js"></script>
     <script src="assets/js/admin.js"></script>
     <script src="assets/js/admin_to_citizen.js"></script>
     <script src="assets/js/admin-complaints.js"></script>

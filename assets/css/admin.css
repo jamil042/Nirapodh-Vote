@@ -49,6 +49,37 @@
     transform: translateX(0);
 }
 
+/* ===== BALLOT DROPDOWN CONTEXT MENU HINT ===== */
+#ballotName, #ballotLocation {
+    cursor: context-menu;
+}
+
+#ballotName:not([value=""]):hover,
+#ballotLocation:not(:disabled):hover {
+    box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.2);
+}
+
+/* Tooltip for superadmin on dropdowns */
+.form-group:has(#ballotName)::after,
+.form-group:has(#ballotLocation)::after {
+    content: '';
+    display: none;
+}
+
+[data-superadmin="true"] .form-group:has(#ballotName) label::after {
+    content: ' (রাইট-ক্লিক করে মুছতে পারবেন - শেষ এলাকা মুছলে)';
+    font-size: 0.8em;
+    color: #f44336;
+    font-weight: normal;
+}
+
+[data-superadmin="true"] .form-group:has(#ballotLocation) label::after {
+    content: ' (রাইট-ক্লিক করে মুছতে পারবেন)';
+    font-size: 0.8em;
+    color: #f44336;
+    font-weight: normal;
+}
+
 .alert-content {
     display: flex;
     justify-content: space-between;
@@ -1802,4 +1833,160 @@ background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 1
     color: #6c757d;
     text-align: center;
     padding: 20px;
+}
+
+/* ===== MODAL STYLES ===== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-container {
+    background: white;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--primary-green);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background: #f5f5f5;
+    color: #333;
+}
+
+.modal-body {
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* ===== INFO GRID STYLES ===== */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+.info-item {
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 3px solid var(--primary-green);
+}
+
+.info-item strong {
+    display: block;
+    color: var(--primary-green);
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+}
+
+.info-item span,
+.info-item p {
+    color: #333;
+    font-size: 1rem;
+}
+
+/* ===== BUTTON ICON VARIANTS ===== */
+.btn-icon.btn-edit {
+    color: #007bff;
+}
+
+.btn-icon.btn-edit:hover {
+    background: #e7f3ff;
+    color: #0056b3;
+}
+
+.btn-icon.btn-delete {
+    color: #dc3545;
+}
+
+.btn-icon.btn-delete:hover {
+    background: #ffe6e6;
+    color: #a02030;
+}
+
+/* ===== STATUS BADGES ===== */
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-inactive {
+    background: #f8d7da;
+    color: #721c24;
 }
