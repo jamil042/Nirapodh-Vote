@@ -658,26 +658,28 @@ router.put('/candidates/:id', authenticateAdmin, async (req, res) => {
       });
     }
 
-    // Check if voting has started for this candidate's ballot
+    // Check if voting is currently ongoing for this candidate's ballot
     const ballot = await Ballot.findOne({ 
       name: candidate.ballotName, 
       location: candidate.area 
     });
 
-    // If ballot exists and has startDate, check if voting has started
-    if (ballot && ballot.startDate) {
+    // If ballot exists with dates, check if voting is ongoing
+    if (ballot && ballot.startDate && ballot.endDate) {
       const now = new Date();
       const startDate = new Date(ballot.startDate);
+      const endDate = new Date(ballot.endDate);
       
-      if (now >= startDate) {
-        console.log('❌ Edit blocked - Voting started:', {
+      if (now >= startDate && now <= endDate) {
+        console.log('❌ Edit blocked - Voting ongoing:', {
           candidateName: candidate.name,
           startDate: ballot.startDate,
+          endDate: ballot.endDate,
           now: now.toISOString()
         });
         return res.status(403).json({
           success: false,
-          message: 'ভোট শুরু হয়ে গেছে। এখন প্রার্থীর তথ্য সম্পাদনা করা যাবে না।'
+          message: 'ভোট চলছে। এখন প্রার্থীর তথ্য সম্পাদনা করা যাবে না।'
         });
       }
     }
@@ -726,26 +728,28 @@ router.delete('/candidates/:id', authenticateAdmin, async (req, res) => {
       });
     }
 
-    // Check if voting has started for this candidate's ballot
+    // Check if voting is currently ongoing for this candidate's ballot
     const ballot = await Ballot.findOne({ 
       name: candidate.ballotName, 
       location: candidate.area 
     });
 
-    // If ballot exists and has startDate, check if voting has started
-    if (ballot && ballot.startDate) {
+    // If ballot exists with dates, check if voting is ongoing
+    if (ballot && ballot.startDate && ballot.endDate) {
       const now = new Date();
       const startDate = new Date(ballot.startDate);
+      const endDate = new Date(ballot.endDate);
       
-      if (now >= startDate) {
-        console.log('❌ Delete blocked - Voting started:', {
+      if (now >= startDate && now <= endDate) {
+        console.log('❌ Delete blocked - Voting ongoing:', {
           candidateName: candidate.name,
           startDate: ballot.startDate,
+          endDate: ballot.endDate,
           now: now.toISOString()
         });
         return res.status(403).json({
           success: false,
-          message: 'ভোট শুরু হয়ে গেছে। এখন প্রার্থী মুছা যাবে না।'
+          message: 'ভোট চলছে। এখন প্রার্থী মুছা যাবে না।'
         });
       }
     }

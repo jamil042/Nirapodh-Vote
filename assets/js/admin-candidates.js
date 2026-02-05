@@ -32,13 +32,15 @@ setInterval(() => {
     }
 }, 10000); // Check every 10 seconds
 
-// Update candidate action buttons based on voting start time
+// Update candidate action buttons based on voting status
 function updateCandidateButtons() {
     const now = new Date();
     
     currentCandidatesData.forEach(candidate => {
-        if (candidate.ballot && candidate.ballot.startDate) {
-            const votingStarted = new Date(candidate.ballot.startDate) <= now;
+        if (candidate.ballot && candidate.ballot.startDate && candidate.ballot.endDate) {
+            const startDate = new Date(candidate.ballot.startDate);
+            const endDate = new Date(candidate.ballot.endDate);
+            const votingOngoing = now >= startDate && now <= endDate;
             
             // Find buttons by checking all edit/delete buttons in the table
             const allRows = document.querySelectorAll('#candidatesTableBody tr');
@@ -49,22 +51,38 @@ function updateCandidateButtons() {
                 
                 // Check if this row is for our candidate by checking if button has candidate ID
                 if (editBtn && editBtn.getAttribute('onclick').includes(candidate._id)) {
-                    if (votingStarted && !editBtn.disabled) {
+                    if (votingOngoing && !editBtn.disabled) {
+                        // Disable during voting
                         editBtn.disabled = true;
                         editBtn.style.opacity = '0.5';
                         editBtn.style.cursor = 'not-allowed';
-                        editBtn.setAttribute('title', 'ভোট শুরু হয়ে গেছে। সম্পাদনা করা যাবে না।');
+                        editBtn.setAttribute('title', 'ভোট চলছে। সম্পাদনা করা যাবে না।');
                         editBtn.removeAttribute('onclick');
+                    } else if (!votingOngoing && editBtn.disabled) {
+                        // Re-enable after voting ends
+                        editBtn.disabled = false;
+                        editBtn.style.opacity = '1';
+                        editBtn.style.cursor = 'pointer';
+                        editBtn.setAttribute('title', 'সম্পাদনা করুন');
+                        editBtn.setAttribute('onclick', `editCandidate('${candidate._id}')`);
                     }
                 }
                 
                 if (deleteBtn && deleteBtn.getAttribute('onclick').includes(candidate._id)) {
-                    if (votingStarted && !deleteBtn.disabled) {
+                    if (votingOngoing && !deleteBtn.disabled) {
+                        // Disable during voting
                         deleteBtn.disabled = true;
                         deleteBtn.style.opacity = '0.5';
                         deleteBtn.style.cursor = 'not-allowed';
-                        deleteBtn.setAttribute('title', 'ভোট শুরু হয়ে গেছে। মুছা যাবে না।');
+                        deleteBtn.setAttribute('title', 'ভোট চলছে। মুছা যাবে না।');
                         deleteBtn.removeAttribute('onclick');
+                    } else if (!votingOngoing && deleteBtn.disabled) {
+                        // Re-enable after voting ends
+                        deleteBtn.disabled = false;
+                        deleteBtn.style.opacity = '1';
+                        deleteBtn.style.cursor = 'pointer';
+                        deleteBtn.setAttribute('title', 'মুছে ফেলুন');
+                        deleteBtn.setAttribute('onclick', `deleteCandidate('${candidate._id}')`);
                     }
                 }
             });
@@ -118,28 +136,28 @@ function renderCandidatesTable(candidates) {
     }
 
     tbody.innerHTML = candidates.map(candidate => {
-        // Check if voting has started
+        // Check if voting is currently ongoing
         const now = new Date();
-        let votingStarted = false;
+        let votingOngoing = false;
         
-        if (candidate.ballot && candidate.ballot.startDate) {
+        if (candidate.ballot && candidate.ballot.startDate && candidate.ballot.endDate) {
             const startDate = new Date(candidate.ballot.startDate);
-            votingStarted = startDate <= now;
+            const endDate = new Date(candidate.ballot.endDate);
+            votingOngoing = now >= startDate && now <= endDate;
             
             // Debug log
             console.log('Candidate:', candidate.name, {
                 startDate: startDate.toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' }),
+                endDate: endDate.toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' }),
                 now: now.toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' }),
-                votingStarted,
-                startDateISO: startDate.toISOString(),
-                nowISO: now.toISOString()
+                votingOngoing
             });
         }
         
-        const editDisabled = votingStarted ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
-        const deleteDisabled = votingStarted ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
-        const editTitle = votingStarted ? 'ভোট শুরু হয়ে গেছে। সম্পাদনা করা যাবে না।' : 'সম্পাদনা করুন';
-        const deleteTitle = votingStarted ? 'ভোট শুরু হয়ে গেছে। মুছা যাবে না।' : 'মুছে ফেলুন';
+        const editDisabled = votingOngoing ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
+        const deleteDisabled = votingOngoing ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
+        const editTitle = votingOngoing ? 'ভোট চলছে। সম্পাদনা করা যাবে না।' : 'সম্পাদনা করুন';
+        const deleteTitle = votingOngoing ? 'ভোট চলছে। মুছা যাবে না।' : 'মুছে ফেলুন';
         
         return `
         <tr>
@@ -171,13 +189,13 @@ function renderCandidatesTable(candidates) {
                             <circle cx="12" cy="12" r="3"></circle>
                         </svg>
                     </button>
-                    <button class="btn-icon btn-edit" ${editDisabled} onclick="${votingStarted ? '' : `editCandidate('${candidate._id}')`}" title="${editTitle}">
+                    <button class="btn-icon btn-edit" ${editDisabled} onclick="${votingOngoing ? '' : `editCandidate('${candidate._id}')`}" title="${editTitle}">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                         </svg>
                     </button>
-                    <button class="btn-icon btn-delete" ${deleteDisabled} onclick="${votingStarted ? '' : `deleteCandidate('${candidate._id}')`}" title="${deleteTitle}">
+                    <button class="btn-icon btn-delete" ${deleteDisabled} onclick="${votingOngoing ? '' : `deleteCandidate('${candidate._id}')`}" title="${deleteTitle}">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="3 6 5 6 21 6"></polyline>
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
