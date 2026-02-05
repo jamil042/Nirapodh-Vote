@@ -273,6 +273,11 @@ function showSection(sectionId) {
     if (sectionId === 'candidates' && typeof loadCandidates === 'function') {
         loadCandidates();
     }
+
+    // Initialize admin-to-admin chat when switching to admin-chat section
+    if (sectionId === 'admin-chat' && typeof initAdminToAdminChat === 'function') {
+        initAdminToAdminChat();
+    }
 }
 
 function addCandidate() {

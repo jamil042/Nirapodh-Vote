@@ -621,4 +621,39 @@ router.delete('/candidates/:id', authenticateAdmin, async (req, res) => {
   }
 });
 
+// ===================================
+// ADMIN TO ADMIN CHAT ROUTES
+// ===================================
+
+// Get all admins (for admin-to-admin chat list)
+router.get('/all-admins', authenticateAdmin, async (req, res) => {
+  try {
+    const admins = await Admin.find({}, 'username email role fullName createdAt')
+      .sort({ role: -1, username: 1 }); // Superadmin first, then by username
+
+    // Exclude current admin from the list
+    const otherAdmins = admins.filter(admin => 
+      admin._id.toString() !== req.admin._id.toString()
+    );
+
+    res.json({
+      success: true,
+      admins: otherAdmins.map(admin => ({
+        id: admin._id,
+        username: admin.username,
+        email: admin.email,
+        role: admin.role,
+        fullName: admin.fullName || admin.username,
+        createdAt: admin.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error('Get all admins error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'অ্যাডমিন তালিকা লোড করতে ব্যর্থ হয়েছে'
+    });
+  }
+});
+
 module.exports = router;

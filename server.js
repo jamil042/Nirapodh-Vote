@@ -69,6 +69,10 @@ const registeredCitizens = new Map(); // nid -> { name, registeredAt } (PERMANEN
 let adminSocket = null;
 const chatHistory = new Map(); // nid -> messages[] (PERSISTENT STORAGE)
 
+// Admin-to-Admin chat state
+const adminChats = new Map(); // Store admin-to-admin chat history: Map<chatKey, messages[]>
+const connectedAdmins = new Map(); // Store connected admin sockets: Map<adminId, {socketId, name, role}>
+
 const MAX_HISTORY = 100;
 const MAX_MESSAGE_LENGTH = 500;
 
@@ -555,6 +559,120 @@ io.on('connection', (socket) => {
     broadcastActiveCitizens();
   });
 
+  // ===== ADMIN TO ADMIN CHAT EVENTS =====
+
+  socket.on('admin_admin_join', (data) => {
+    const { adminId, adminName, role } = data;
+    
+    if (!adminId || !adminName) {
+      socket.emit('admin_admin_error', { message: 'Invalid admin data' });
+      return;
+    }
+
+    // Store admin connection
+    connectedAdmins.set(adminId, {
+      socketId: socket.id,
+      name: adminName,
+      role: role,
+      joinedAt: new Date().toISOString()
+    });
+
+    console.log(`👨‍💼 Admin ${adminName} (${role}) joined admin-to-admin chat`);
+
+    // Notify other admins
+    socket.broadcast.emit('admin_online', {
+      adminId,
+      adminName,
+      role,
+      timestamp: new Date().toISOString()
+    });
+
+    // Send list of online admins to the joining admin
+    const onlineAdmins = Array.from(connectedAdmins.entries())
+      .filter(([id]) => id !== adminId)
+      .map(([id, data]) => ({
+        adminId: id,
+        adminName: data.name,
+        role: data.role,
+        online: true
+      }));
+
+    socket.emit('online_admins_list', { admins: onlineAdmins });
+  });
+
+  socket.on('admin_to_admin_message', (data) => {
+    const { message, senderId, senderName, recipientId, timestamp, replyTo, id } = data;
+    
+    if (!message || !senderId || !recipientId) {
+      console.log(`❌ Invalid admin-to-admin message`);
+      return;
+    }
+
+    const sanitized = sanitizeMessage(message);
+    
+    const msgObj = {
+      id: id || `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      message: sanitized,
+      senderId,
+      senderName,
+      recipientId,
+      timestamp: timestamp || new Date().toISOString(),
+      type: 'admin_to_admin',
+      replyTo: replyTo || null
+    };
+
+    // Store in chat history for both sender and recipient
+    const chatKey = [senderId, recipientId].sort().join('_'); // Create unique key for conversation
+    if (!adminChats.has(chatKey)) {
+      adminChats.set(chatKey, []);
+    }
+    const history = adminChats.get(chatKey);
+    history.push(msgObj);
+    
+    if (history.length > MAX_HISTORY) {
+      history.shift();
+    }
+
+    console.log(`💬 Admin ${senderName} to Admin ${recipientId}: ${sanitized.substring(0, 50)}${sanitized.length > 50 ? '...' : ''}`);
+
+    // Send to recipient admin if connected
+    const recipient = connectedAdmins.get(recipientId);
+    if (recipient) {
+      io.to(recipient.socketId).emit('receive_admin_message', msgObj);
+      console.log(`📤 Forwarded message to recipient admin`);
+    } else {
+      console.log(`⚠️ Recipient admin not connected`);
+    }
+
+    // Send confirmation back to sender
+    socket.emit('admin_message_sent', msgObj);
+  });
+
+  socket.on('request_admin_admin_chat_history', (data) => {
+    const { senderId, recipientId } = data;
+    const chatKey = [senderId, recipientId].sort().join('_');
+    const history = adminChats.get(chatKey) || [];
+    
+    console.log(`📜 Admin requested chat history with admin ${recipientId}: ${history.length} messages`);
+    
+    socket.emit('admin_admin_chat_history', {
+      recipientId: recipientId,
+      messages: history
+    });
+  });
+
+  socket.on('admin_admin_typing', (data) => {
+    const { senderId, recipientId, typing } = data;
+    
+    const recipient = connectedAdmins.get(recipientId);
+    if (recipient) {
+      io.to(recipient.socketId).emit('admin_typing_status', {
+        adminId: senderId,
+        typing: typing
+      });
+    }
+  });
+
   // ===== DISCONNECT HANDLER =====
   socket.on('disconnect', (reason) => {
     // Get NID mapping for this socket
@@ -603,6 +721,21 @@ io.on('connection', (socket) => {
     if (adminSocket === socket.id) {
       adminSocket = null;
       console.log(`👨‍💼 Admin disconnected: ${socket.id} (${reason})`);
+    }
+
+    // Handle admin-to-admin chat disconnect
+    for (const [adminId, adminData] of connectedAdmins.entries()) {
+      if (adminData.socketId === socket.id) {
+        connectedAdmins.delete(adminId);
+        console.log(`👨‍💼 Admin ${adminData.name} disconnected from admin chat (${reason})`);
+        
+        // Notify other admins
+        socket.broadcast.emit('admin_offline', {
+          adminId,
+          timestamp: new Date().toISOString()
+        });
+        break;
+      }
     }
 
     // Handle citizen disconnect
