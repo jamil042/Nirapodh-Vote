@@ -1,8 +1,9 @@
 // Script to remove all existing candidates from database
 const mongoose = require('mongoose');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/nirapodh-vote';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 async function clearCandidates() {
   try {
