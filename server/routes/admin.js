@@ -6,6 +6,9 @@ const Admin = require('../models/Admin');
 const User = require('../models/User');
 const Vote = require('../models/Vote');
 const Ballot = require('../models/Ballot');
+const Candidate = require('../models/Candidate');
+const { sendAdminCredentials } = require('../services/emailService');
+const { authenticateAdmin, authenticateSuperAdmin } = require('../utils/helpers');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
@@ -53,7 +56,8 @@ router.post('/login', async (req, res) => {
       admin: {
         id: admin._id,
         username: admin.username,
-        role: admin.role
+        role: admin.role,
+        isFirstLogin: admin.isFirstLogin
       }
     });
   } catch (error) {
@@ -64,25 +68,6 @@ router.post('/login', async (req, res) => {
     });
   }
 });
-
-// Middleware to verify admin token
-const authenticateAdmin = async (req, res, next) => {
-  try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ success: false, message: 'অনুমোদন প্রয়োজন' });
-    }
-
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.admin = await Admin.findById(decoded.id);
-    if (!req.admin) {
-      return res.status(403).json({ success: false, message: 'অ্যাক্সেস অস্বীকৃত' });
-    }
-    next();
-  } catch (error) {
-    res.status(401).json({ success: false, message: 'অবৈধ টোকেন' });
-  }
-};
 
 // Get Dashboard Statistics
 router.get('/statistics', authenticateAdmin, async (req, res) => {
@@ -263,10 +248,17 @@ router.get('/ballot-names', authenticateAdmin, async (req, res) => {
   }
 });
 
-// Get all unique ballot locations
+// Get all unique ballot locations (optionally filtered by ballot name)
 router.get('/ballot-locations', authenticateAdmin, async (req, res) => {
   try {
-    const ballotLocations = await Ballot.distinct('location');
+    const { ballotName } = req.query;
+    
+    let query = {};
+    if (ballotName) {
+      query.name = ballotName;
+    }
+    
+    const ballotLocations = await Ballot.distinct('location', query);
     
     res.json({
       success: true,
@@ -301,8 +293,8 @@ router.get('/ballots', authenticateAdmin, async (req, res) => {
   }
 });
 
-// Delete ballot
-router.delete('/ballots/:id', authenticateAdmin, async (req, res) => {
+// Delete ballot (superadmin only)
+router.delete('/ballots/:id', authenticateSuperAdmin, async (req, res) => {
   try {
     const ballot = await Ballot.findByIdAndDelete(req.params.id);
     
@@ -315,13 +307,316 @@ router.delete('/ballots/:id', authenticateAdmin, async (req, res) => {
 
     res.json({
       success: true,
-      message: 'ব্যালট সফলভাবে মুছে ফেলা হয়েছে'
+      message: 'ব্যালট সফলভাবে মুছে ফেলা হয়েছে এবং সকল অ্যাডমিনের জন্য সরানো হয়েছে'
     });
   } catch (error) {
     console.error('Delete ballot error:', error);
     res.status(500).json({
       success: false,
       message: 'ব্যালট মুছে ফেলতে ব্যর্থ হয়েছে'
+    });
+  }
+});
+
+// Create new admin (superadmin only)
+router.post('/create-admin', authenticateSuperAdmin, async (req, res) => {
+  try {
+    const { username, email, initialPassword } = req.body;
+
+    // Validation
+    if (!username || !email || !initialPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'সকল তথ্য প্রদান করুন'
+      });
+    }
+
+    // Check if admin already exists
+    const existingAdmin = await Admin.findOne({ $or: [{ username }, { email }] });
+    if (existingAdmin) {
+      return res.status(400).json({
+        success: false,
+        message: 'এই ইউজারনেম অথবা ইমেইল দিয়ে ইতিমধ্যে একজন প্রশাসক আছেন'
+      });
+    }
+
+    // Create new admin
+    const newAdmin = new Admin({
+      username,
+      email,
+      password: initialPassword,
+      role: 'admin',
+      isFirstLogin: true
+    });
+
+    await newAdmin.save();
+
+    // Send credentials via email
+    const emailResult = await sendAdminCredentials(email, username, initialPassword);
+
+    res.json({
+      success: true,
+      message: 'নতুন প্রশাসক সফলভাবে তৈরি হয়েছে এবং ইমেইল পাঠানো হয়েছে',
+      emailSent: emailResult.success,
+      admin: {
+        id: newAdmin._id,
+        username: newAdmin.username,
+        email: newAdmin.email,
+        role: newAdmin.role
+      }
+    });
+
+  } catch (error) {
+    console.error('Create admin error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'প্রশাসক তৈরি করতে ব্যর্থ হয়েছে',
+      error: error.message
+    });
+  }
+});
+
+// Update password (first login or regular update)
+router.post('/update-password', authenticateAdmin, async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে'
+      });
+    }
+
+    // Update password
+    req.admin.password = newPassword;
+    req.admin.isFirstLogin = false;
+    await req.admin.save();
+
+    res.json({
+      success: true,
+      message: 'পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে'
+    });
+
+  } catch (error) {
+    console.error('Update password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'পাসওয়ার্ড পরিবর্তন করতে ব্যর্থ হয়েছে',
+      error: error.message
+    });
+  }
+});
+
+// Get all admins (superadmin only)
+router.get('/admins', authenticateSuperAdmin, async (req, res) => {
+  try {
+    const admins = await Admin.find().select('-password').sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      admins
+    });
+
+  } catch (error) {
+    console.error('Get admins error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'প্রশাসক তালিকা লোড করতে ব্যর্থ হয়েছে'
+    });
+  }
+});
+
+// ===== CANDIDATE MANAGEMENT ROUTES =====
+
+// Create/Save candidates (when ballot form is submitted)
+router.post('/candidates', authenticateAdmin, async (req, res) => {
+  try {
+    const { ballotName, area, candidates } = req.body;
+
+    if (!ballotName || !area || !candidates || !Array.isArray(candidates)) {
+      return res.status(400).json({
+        success: false,
+        message: 'ব্যালটের নাম, এলাকা এবং প্রার্থী তথ্য প্রদান করুন'
+      });
+    }
+
+    // Save all candidates
+    const savedCandidates = [];
+    for (const candidateData of candidates) {
+      const candidate = new Candidate({
+        name: candidateData.name,
+        party: candidateData.party,
+        ballotName: ballotName,
+        area: area,
+        image: candidateData.image || 'assets/images/default-avatar.png',
+        symbol: candidateData.symbol || '',
+        bio: candidateData.bio || '',
+        manifesto: candidateData.manifesto || '',
+        socialWork: candidateData.socialWork || '',
+        partyHistory: candidateData.partyHistory || '',
+        status: candidateData.status || 'active',
+        createdBy: req.admin._id
+      });
+
+      await candidate.save();
+      savedCandidates.push(candidate);
+    }
+
+    res.json({
+      success: true,
+      message: `${savedCandidates.length}টি প্রার্থী সফলভাবে যোগ হয়েছে`,
+      candidates: savedCandidates
+    });
+  } catch (error) {
+    console.error('Create candidates error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'প্রার্থী যোগ করতে ব্যর্থ হয়েছে'
+    });
+  }
+});
+
+// Get all candidates
+router.get('/candidates', authenticateAdmin, async (req, res) => {
+  try {
+    const { ballotName, area } = req.query;
+    
+    let query = {};
+    if (ballotName) query.ballotName = ballotName;
+    if (area) query.area = area;
+
+    const candidates = await Candidate.find(query)
+      .populate('createdBy', 'username')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      candidates
+    });
+  } catch (error) {
+    console.error('Get candidates error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'প্রার্থী তালিকা লোড করতে ব্যর্থ হয়েছে'
+    });
+  }
+});
+
+// Get single candidate by ID
+router.get('/candidates/:id', authenticateAdmin, async (req, res) => {
+  try {
+    const candidate = await Candidate.findById(req.params.id)
+      .populate('createdBy', 'username');
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: 'প্রার্থী পাওয়া যায়নি'
+      });
+    }
+
+    res.json({
+      success: true,
+      candidate
+    });
+  } catch (error) {
+    console.error('Get candidate error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'প্রার্থী তথ্য লোড করতে ব্যর্থ হয়েছে'
+    });
+  }
+});
+
+// Update candidate
+router.put('/candidates/:id', authenticateAdmin, async (req, res) => {
+  try {
+    const candidate = await Candidate.findById(req.params.id);
+    
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: 'প্রার্থী পাওয়া যায়নি'
+      });
+    }
+
+    // Check if voting has started for this candidate's ballot
+    const ballot = await Ballot.findOne({ 
+      name: candidate.ballotName, 
+      location: candidate.area 
+    });
+
+    if (ballot && ballot.hasVotingStarted()) {
+      return res.status(403).json({
+        success: false,
+        message: 'ভোট শুরু হয়ে গেছে। এখন প্রার্থীর তথ্য সম্পাদনা করা যাবে না।'
+      });
+    }
+
+    // Check if user is superadmin or creator
+    if (req.admin.role !== 'superadmin' && candidate.createdBy.toString() !== req.admin._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'আপনার এই প্রার্থীর তথ্য সম্পাদনার অনুমতি নেই'
+      });
+    }
+
+    // Update candidate fields
+    const updateFields = ['name', 'party', 'image', 'symbol', 'bio', 'manifesto', 'socialWork', 'partyHistory', 'status'];
+    updateFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        candidate[field] = req.body[field];
+      }
+    });
+
+    await candidate.save();
+
+    res.json({
+      success: true,
+      message: 'প্রার্থীর তথ্য সফলভাবে আপডেট হয়েছে',
+      candidate
+    });
+  } catch (error) {
+    console.error('Update candidate error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'প্রার্থীর তথ্য আপডেট করতে ব্যর্থ হয়েছে'
+    });
+  }
+});
+
+// Delete candidate (for superadmin or creator)
+router.delete('/candidates/:id', authenticateAdmin, async (req, res) => {
+  try {
+    const candidate = await Candidate.findById(req.params.id);
+    
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: 'প্রার্থী পাওয়া যায়নি'
+      });
+    }
+
+    // Check if user is superadmin or creator
+    if (req.admin.role !== 'superadmin' && candidate.createdBy.toString() !== req.admin._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'আপনার এই প্রার্থী মুছার অনুমতি নেই'
+      });
+    }
+
+    await Candidate.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: 'প্রার্থী সফলভাবে মুছে ফেলা হয়েছে'
+    });
+  } catch (error) {
+    console.error('Delete candidate error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'প্রার্থী মুছে ফেলতে ব্যর্থ হয়েছে'
     });
   }
 });

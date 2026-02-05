@@ -379,4 +379,85 @@ router.get('/download/:filename', (req, res) => {
   }
 });
 
+// Resolve complaint (Admin)
+router.put('/:complaintId/resolve', async (req, res) => {
+  try {
+    const { complaintId } = req.params;
+    const { adminResponse } = req.body;
+
+    if (!adminResponse) {
+      return res.status(400).json({
+        success: false,
+        message: 'প্রশাসক মন্তব্য প্রদান করুন'
+      });
+    }
+
+    const complaint = await Complaint.findById(complaintId);
+    if (!complaint) {
+      return res.status(404).json({
+        success: false,
+        message: 'অভিযোগ খুঁজে পাওয়া যায়নি'
+      });
+    }
+
+    complaint.status = 'resolved';
+    complaint.adminResponse = adminResponse;
+    complaint.resolvedAt = new Date();
+    await complaint.save();
+
+    res.json({
+      success: true,
+      message: 'অভিযোগ সফলভাবে সমাধান করা হয়েছে',
+      complaint
+    });
+
+  } catch (error) {
+    console.error('Resolve complaint error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'অভিযোগ সমাধান করতে সমস্যা হয়েছে'
+    });
+  }
+});
+
+// Reject complaint (Admin)
+router.put('/:complaintId/reject', async (req, res) => {
+  try {
+    const { complaintId } = req.params;
+    const { adminResponse } = req.body;
+
+    if (!adminResponse) {
+      return res.status(400).json({
+        success: false,
+        message: 'প্রশাসক মন্তব্য প্রদান করুন'
+      });
+    }
+
+    const complaint = await Complaint.findById(complaintId);
+    if (!complaint) {
+      return res.status(404).json({
+        success: false,
+        message: 'অভিযোগ খুঁজে পাওয়া যায়নি'
+      });
+    }
+
+    complaint.status = 'rejected';
+    complaint.adminResponse = adminResponse;
+    await complaint.save();
+
+    res.json({
+      success: true,
+      message: 'অভিযোগ প্রত্যাখ্যান করা হয়েছে',
+      complaint
+    });
+
+  } catch (error) {
+    console.error('Reject complaint error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'অভিযোগ প্রত্যাখ্যান করতে সমস্যা হয়েছে'
+    });
+  }
+});
+
 module.exports = router;

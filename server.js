@@ -12,6 +12,7 @@ const authRoutes = require('./server/routes/auth');
 const voteRoutes = require('./server/routes/vote');
 const adminRoutes = require('./server/routes/admin');
 const complaintRoutes = require('./server/routes/complaint');
+const noticeRoutes = require('./server/routes/notice');
 
 const app = express();
 const server = http.createServer(app);
@@ -22,9 +23,9 @@ app.use(cors({
   credentials: true
 }));
 
-// Body parser middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Body parser middleware with increased limit for large candidate bios
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Serve static files
 app.use(express.static(__dirname));
@@ -35,6 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/vote', voteRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/complaint', complaintRoutes);
+app.use('/api/notice', noticeRoutes);
 
 // Socket.IO setup for chat
 const io = new Server(server, {
