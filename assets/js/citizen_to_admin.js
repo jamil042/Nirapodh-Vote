@@ -67,7 +67,7 @@
     });
   }
 
-  // Login with NID
+  // Login with NID (fallback for manual login if auto-login fails)
   window.loginToChatWithNID = function() {
     const name = document.getElementById('citizenChatName')?.value?.trim();
     const nidRaw = document.getElementById('citizenChatNID')?.value?.trim();
@@ -99,7 +99,7 @@
       socket.emit('citizen_join', citizenInfo);
     }
 
-    console.log('🔄 Attempting login as:', name, 'NID:', nid);
+    console.log('🔄 Manual login as:', name, 'NID:', nid);
   };
 
   // Show chat window
@@ -367,18 +367,8 @@
       });
     }
 
-    // ✅ Auto-login if info exists
-    const savedInfo = localStorage.getItem('citizenChatInfo');
-    if (savedInfo) {
-      try {
-        citizenInfo = JSON.parse(savedInfo);
-        console.log('✅ Auto-login:', citizenInfo.name);
-        initSocket();
-      } catch (e) {
-        console.error('❌ Failed to parse saved info:', e);
-        localStorage.removeItem('citizenChatInfo');
-      }
-    }
+    // ✅ Auto-login using dashboard session data
+    autoLoginFromDashboard();
 
     console.log('✅ Citizen Chat Ready');
   });
@@ -396,4 +386,57 @@
     
     location.reload();
   };
+
+  // ✅ Auto-login from dashboard session
+  function autoLoginFromDashboard() {
+    // Check if getUserData function exists (from api-config.js)
+    if (typeof getUserData === 'function') {
+      const userData = getUserData();
+      
+      if (userData && userData.name && userData.nid) {
+        console.log('✅ Found dashboard session, auto-login as:', userData.name);
+        
+        citizenInfo = {
+          name: userData.name,
+          nid: userData.nid,
+          timestamp: new Date().toISOString()
+        };
+        
+        // Save to localStorage for persistence
+        localStorage.setItem('citizenChatInfo', JSON.stringify(citizenInfo));
+        
+        // Initialize socket and auto-login
+        initSocket();
+        return;
+      }
+    }
+    
+    // Fallback: Check localStorage for existing chat info
+    const savedInfo = localStorage.getItem('citizenChatInfo');
+    if (savedInfo) {
+      try {
+        citizenInfo = JSON.parse(savedInfo);
+        console.log('✅ Auto-login from saved info:', citizenInfo.name);
+        initSocket();
+      } catch (e) {
+        console.error('❌ Failed to parse saved info:', e);
+        localStorage.removeItem('citizenChatInfo');
+        showLoginForm();
+      }
+    } else {
+      console.warn('⚠️ No user data found, showing login form');
+      showLoginForm();
+    }
+  }
+
+  // Show login form if auto-login fails
+  function showLoginForm() {
+    const loginForm = document.querySelector('.chat-nid-login');
+    const chatWindow = document.querySelector('.chat-window');
+    const logoutBtn = document.querySelector('.logout-btn');
+
+    if (loginForm) loginForm.style.display = 'block';
+    if (chatWindow) chatWindow.style.display = 'none';
+    if (logoutBtn) logoutBtn.style.display = 'none';
+  }
 })();
