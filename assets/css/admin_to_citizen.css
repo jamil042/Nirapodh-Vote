@@ -17,7 +17,7 @@
     display: grid;
     grid-template-columns: 350px 1fr;
     gap: 20px;
-    height: 700px;
+    height: 550px;
 }
 
 /* =========================
@@ -294,19 +294,23 @@
     display: flex;
     gap: 12px;
     padding: 20px;
-    border-top: 2px solid var(--green-border);
+    border-top: 1px solid #e5e7eb;
 }
 
 .chat-input input {
     flex: 1;
     padding: 12px 18px;
-    border: 2px solid var(--green-border);
+    border: 2px solid #e5e7eb;
     border-radius: 25px;
+    background: #f8fafc;
+    transition: all 0.2s;
 }
 
 .chat-input input:focus {
     outline: none;
-    border-color: var(--green-main);
+    border-color: #3b82f6;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
 .chat-input button {
