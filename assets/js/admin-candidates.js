@@ -1,6 +1,9 @@
 // Admin Candidates Management
 console.log('📋 Admin candidates script loaded');
 
+// Store candidates data globally for real-time updates
+let currentCandidatesData = [];
+
 // Fallback functions if common.js doesn't have them
 if (typeof showSuccessMessage === 'undefined') {
     window.showSuccessMessage = function(message) {
@@ -22,6 +25,53 @@ if (typeof showErrorMessage === 'undefined') {
     };
 }
 
+// Check voting status every 10 seconds and update buttons
+setInterval(() => {
+    if (currentCandidatesData.length > 0) {
+        updateCandidateButtons();
+    }
+}, 10000); // Check every 10 seconds
+
+// Update candidate action buttons based on voting start time
+function updateCandidateButtons() {
+    const now = new Date();
+    
+    currentCandidatesData.forEach(candidate => {
+        if (candidate.ballot && candidate.ballot.startDate) {
+            const votingStarted = new Date(candidate.ballot.startDate) <= now;
+            
+            // Find buttons by checking all edit/delete buttons in the table
+            const allRows = document.querySelectorAll('#candidatesTableBody tr');
+            allRows.forEach(row => {
+                // Find buttons in this row
+                const editBtn = row.querySelector('button[onclick*="editCandidate"]');
+                const deleteBtn = row.querySelector('button[onclick*="deleteCandidate"]');
+                
+                // Check if this row is for our candidate by checking if button has candidate ID
+                if (editBtn && editBtn.getAttribute('onclick').includes(candidate._id)) {
+                    if (votingStarted && !editBtn.disabled) {
+                        editBtn.disabled = true;
+                        editBtn.style.opacity = '0.5';
+                        editBtn.style.cursor = 'not-allowed';
+                        editBtn.setAttribute('title', 'ভোট শুরু হয়ে গেছে। সম্পাদনা করা যাবে না।');
+                        editBtn.removeAttribute('onclick');
+                    }
+                }
+                
+                if (deleteBtn && deleteBtn.getAttribute('onclick').includes(candidate._id)) {
+                    if (votingStarted && !deleteBtn.disabled) {
+                        deleteBtn.disabled = true;
+                        deleteBtn.style.opacity = '0.5';
+                        deleteBtn.style.cursor = 'not-allowed';
+                        deleteBtn.setAttribute('title', 'ভোট শুরু হয়ে গেছে। মুছা যাবে না।');
+                        deleteBtn.removeAttribute('onclick');
+                    }
+                }
+            });
+        }
+    });
+}
+
 // Load all candidates for the table
 async function loadCandidates() {
     try {
@@ -40,6 +90,7 @@ async function loadCandidates() {
         const data = await response.json();
         
         if (data.success) {
+            currentCandidatesData = data.candidates; // Store for real-time updates
             renderCandidatesTable(data.candidates);
         } else {
             showErrorMessage(data.message || 'প্রার্থী তালিকা লোড করতে ব্যর্থ হয়েছে');
@@ -62,10 +113,35 @@ function renderCandidatesTable(candidates) {
                 </td>
             </tr>
         `;
+        currentCandidatesData = []; // Clear stored data
         return;
     }
 
-    tbody.innerHTML = candidates.map(candidate => `
+    tbody.innerHTML = candidates.map(candidate => {
+        // Check if voting has started
+        const now = new Date();
+        let votingStarted = false;
+        
+        if (candidate.ballot && candidate.ballot.startDate) {
+            const startDate = new Date(candidate.ballot.startDate);
+            votingStarted = startDate <= now;
+            
+            // Debug log
+            console.log('Candidate:', candidate.name, {
+                startDate: startDate.toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' }),
+                now: now.toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' }),
+                votingStarted,
+                startDateISO: startDate.toISOString(),
+                nowISO: now.toISOString()
+            });
+        }
+        
+        const editDisabled = votingStarted ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
+        const deleteDisabled = votingStarted ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
+        const editTitle = votingStarted ? 'ভোট শুরু হয়ে গেছে। সম্পাদনা করা যাবে না।' : 'সম্পাদনা করুন';
+        const deleteTitle = votingStarted ? 'ভোট শুরু হয়ে গেছে। মুছা যাবে না।' : 'মুছে ফেলুন';
+        
+        return `
         <tr>
             <td>
                 <img src="${candidate.image || 'assets/images/default-avatar.png'}" 
@@ -95,13 +171,13 @@ function renderCandidatesTable(candidates) {
                             <circle cx="12" cy="12" r="3"></circle>
                         </svg>
                     </button>
-                    <button class="btn-icon btn-edit" onclick="editCandidate('${candidate._id}')" title="সম্পাদনা করুন">
+                    <button class="btn-icon btn-edit" ${editDisabled} onclick="${votingStarted ? '' : `editCandidate('${candidate._id}')`}" title="${editTitle}">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                         </svg>
                     </button>
-                    <button class="btn-icon btn-delete" onclick="deleteCandidate('${candidate._id}')" title="মুছে ফেলুন">
+                    <button class="btn-icon btn-delete" ${deleteDisabled} onclick="${votingStarted ? '' : `deleteCandidate('${candidate._id}')`}" title="${deleteTitle}">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="3 6 5 6 21 6"></polyline>
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -110,7 +186,8 @@ function renderCandidatesTable(candidates) {
                 </div>
             </td>
         </tr>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // View candidate details in modal

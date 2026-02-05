@@ -392,9 +392,17 @@ function handleBallotSubmit(e) {
     
     const ballotName = document.getElementById('ballotName').value;
     const ballotLocation = document.getElementById('ballotLocation').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
     
-    if (!ballotName || !ballotLocation) {
+    if (!ballotName || !ballotLocation || !startDate || !endDate) {
         showAlert('সকল প্রয়োজনীয় তথ্য পূরণ করুন', 'error');
+        return;
+    }
+    
+    // Validate dates
+    if (new Date(startDate) >= new Date(endDate)) {
+        showAlert('শেষ তারিখ অবশ্যই শুরুর তারিখের পরে হতে হবে', 'error');
         return;
     }
     
@@ -445,12 +453,12 @@ function handleBallotSubmit(e) {
         btn.textContent = 'তৈরি হচ্ছে...';
         
         // Process images and save candidates
-        processCandidatesAndSave(ballotName, ballotLocation, candidates, btn, originalText);
+        processCandidatesAndSave(ballotName, ballotLocation, startDate, endDate, candidates, btn, originalText);
     }
 }
 
 // Process candidate images and save to DB
-async function processCandidatesAndSave(ballotName, area, candidates, btn, originalText) {
+async function processCandidatesAndSave(ballotName, area, startDate, endDate, candidates, btn, originalText) {
     const processedCandidates = [];
     
     // Process each candidate's images
@@ -509,6 +517,8 @@ async function processCandidatesAndSave(ballotName, area, candidates, btn, origi
             body: JSON.stringify({
                 ballotName,
                 area,
+                startDate,
+                endDate,
                 candidates: processedCandidates
             })
         });
@@ -735,6 +745,164 @@ function addNewBallotOption() {
         btn.disabled = false;
         btn.textContent = originalText;
     });
+}
+
+// Load all ballots in table
+async function loadAllBallots() {
+    const token = sessionStorage.getItem('nirapodh_admin_token');
+    if (!token) return;
+
+    try {
+        const response = await fetch(`${API_CONFIG.API_URL}/admin/ballots`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            renderBallotsTable(result.ballots);
+        }
+    } catch (error) {
+        console.error('Load ballots error:', error);
+    }
+}
+
+// Render ballots table
+function renderBallotsTable(ballots) {
+    const tbody = document.getElementById('ballotsTableBody');
+    
+    if (!ballots || ballots.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">কোনো ব্যালট পাওয়া যায়নি</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = ballots.map(ballot => {
+        const now = new Date();
+        const startDate = ballot.startDate ? new Date(ballot.startDate) : null;
+        const endDate = ballot.endDate ? new Date(ballot.endDate) : null;
+        
+        let status = 'অসম্পূর্ণ';
+        let statusClass = 'status-inactive';
+        
+        if (startDate && endDate) {
+            if (now < startDate) {
+                status = 'আসন্ন';
+                statusClass = 'status-pending';
+            } else if (now >= startDate && now <= endDate) {
+                status = 'চলমান';
+                statusClass = 'status-active';
+            } else {
+                status = 'সমাপ্ত';
+                statusClass = 'status-inactive';
+            }
+        }
+        
+        const canEdit = !startDate || now < startDate;
+        
+        return `
+            <tr>
+                <td>${ballot.name}</td>
+                <td>${ballot.location}</td>
+                <td>${startDate ? new Date(startDate).toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' }) : 'সেট করা হয়নি'}</td>
+                <td>${endDate ? new Date(endDate).toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' }) : 'সেট করা হয়নি'}</td>
+                <td><span class="status-badge ${statusClass}">${status}</span></td>
+                <td>
+                    <button class="btn-icon ${canEdit ? 'btn-edit' : ''}" 
+                            ${canEdit ? '' : 'disabled style="opacity: 0.5; cursor: not-allowed;"'}
+                            onclick="${canEdit ? `setBallotDates('${ballot._id}', '${ballot.name}', '${ballot.location}')` : ''}" 
+                            title="${canEdit ? 'তারিখ সেট করুন' : 'ভোট শুরু হয়ে গেছে'}">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Set ballot dates modal
+function setBallotDates(ballotId, ballotName, ballotLocation) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5); display: flex;
+        align-items: center; justify-content: center; z-index: 1000;
+    `;
+    
+    modal.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px;">
+            <h3 style="margin-bottom: 20px;">ব্যালটের তারিখ সেট করুন</h3>
+            <p style="color: #666; margin-bottom: 20px;"><strong>${ballotName}</strong> - ${ballotLocation}</p>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">শুরুর তারিখ ও সময় *</label>
+                <input type="datetime-local" id="modalStartDate" class="input-field" style="width: 100%;">
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px;">শেষ তারিখ ও সময় *</label>
+                <input type="datetime-local" id="modalEndDate" class="input-field" style="width: 100%;">
+            </div>
+            
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button onclick="this.closest('div').parentElement.parentElement.remove()" class="btn btn-secondary">বাতিল</button>
+                <button onclick="saveBallotDates('${ballotId}')" class="btn btn-primary">সংরক্ষণ করুন</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+// Save ballot dates
+async function saveBallotDates(ballotId) {
+    const startDate = document.getElementById('modalStartDate').value;
+    const endDate = document.getElementById('modalEndDate').value;
+    
+    if (!startDate || !endDate) {
+        showAlert('দয়া করে উভয় তারিখ প্রদান করুন', 'warning');
+        return;
+    }
+    
+    if (new Date(startDate) >= new Date(endDate)) {
+        showAlert('শেষ তারিখ অবশ্যই শুরুর তারিখের পরে হতে হবে', 'warning');
+        return;
+    }
+    
+    const token = sessionStorage.getItem('nirapodh_admin_token');
+    if (!token) {
+        showAlert('অনুমোদন প্রয়োজন। পুনরায় লগইন করুন', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_CONFIG.API_URL}/admin/ballots/${ballotId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ startDate, endDate })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert(result.message || 'তারিখ সফলভাবে আপডেট হয়েছে', 'success');
+            document.querySelector('div[style*="position: fixed"]')?.remove();
+            loadAllBallots();
+        } else {
+            showAlert(result.message || 'তারিখ আপডেট করতে ব্যর্থ হয়েছে', 'error');
+        }
+    } catch (error) {
+        console.error('Update ballot dates error:', error);
+        showAlert('সার্ভার ত্রুটি হয়েছে', 'error');
+    }
 }
 
 // Load ballot options from backend
