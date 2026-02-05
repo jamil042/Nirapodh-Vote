@@ -14,11 +14,11 @@ const ballotSchema = new mongoose.Schema({
   },
   startDate: {
     type: Date,
-    required: true
+    required: false
   },
   endDate: {
     type: Date,
-    required: true
+    required: false
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -32,11 +32,13 @@ const ballotSchema = new mongoose.Schema({
 
 // Method to check if voting has started
 ballotSchema.methods.hasVotingStarted = function() {
+  if (!this.startDate) return false;
   return new Date() >= this.startDate;
 };
 
 // Method to check if voting is ongoing
 ballotSchema.methods.isVotingActive = function() {
+  if (!this.startDate || !this.endDate) return false;
   const now = new Date();
   return now >= this.startDate && now <= this.endDate;
 };

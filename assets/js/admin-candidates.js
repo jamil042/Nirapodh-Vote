@@ -1,6 +1,9 @@
 // Admin Candidates Management
 console.log('📋 Admin candidates script loaded');
 
+// Store candidates data globally for real-time updates
+let currentCandidatesData = [];
+
 // Fallback functions if common.js doesn't have them
 if (typeof showSuccessMessage === 'undefined') {
     window.showSuccessMessage = function(message) {
@@ -22,6 +25,71 @@ if (typeof showErrorMessage === 'undefined') {
     };
 }
 
+// Check voting status every 10 seconds and update buttons
+setInterval(() => {
+    if (currentCandidatesData.length > 0) {
+        updateCandidateButtons();
+    }
+}, 10000); // Check every 10 seconds
+
+// Update candidate action buttons based on voting status
+function updateCandidateButtons() {
+    const now = new Date();
+    
+    currentCandidatesData.forEach(candidate => {
+        if (candidate.ballot && candidate.ballot.startDate && candidate.ballot.endDate) {
+            const startDate = new Date(candidate.ballot.startDate);
+            const endDate = new Date(candidate.ballot.endDate);
+            const votingOngoing = now >= startDate && now <= endDate;
+            
+            // Find buttons by checking all edit/delete buttons in the table
+            const allRows = document.querySelectorAll('#candidatesTableBody tr');
+            allRows.forEach(row => {
+                // Find buttons in this row
+                const editBtn = row.querySelector('button[onclick*="editCandidate"]');
+                const deleteBtn = row.querySelector('button[onclick*="deleteCandidate"]');
+                
+                // Check if this row is for our candidate by checking if button has candidate ID
+                if (editBtn && editBtn.getAttribute('onclick').includes(candidate._id)) {
+                    if (votingOngoing && !editBtn.disabled) {
+                        // Disable during voting
+                        editBtn.disabled = true;
+                        editBtn.style.opacity = '0.5';
+                        editBtn.style.cursor = 'not-allowed';
+                        editBtn.setAttribute('title', 'ভোট চলছে। সম্পাদনা করা যাবে না।');
+                        editBtn.removeAttribute('onclick');
+                    } else if (!votingOngoing && editBtn.disabled) {
+                        // Re-enable after voting ends
+                        editBtn.disabled = false;
+                        editBtn.style.opacity = '1';
+                        editBtn.style.cursor = 'pointer';
+                        editBtn.setAttribute('title', 'সম্পাদনা করুন');
+                        editBtn.setAttribute('onclick', `editCandidate('${candidate._id}')`);
+                    }
+                }
+                
+                if (deleteBtn && deleteBtn.getAttribute('onclick').includes(candidate._id)) {
+                    if (votingOngoing && !deleteBtn.disabled) {
+                        // Disable during voting
+                        deleteBtn.disabled = true;
+                        deleteBtn.style.opacity = '0.5';
+                        deleteBtn.style.cursor = 'not-allowed';
+                        deleteBtn.setAttribute('title', 'ভোট চলছে। মুছা যাবে না।');
+                        deleteBtn.removeAttribute('onclick');
+                    } else if (!votingOngoing && deleteBtn.disabled) {
+                        // Re-enable after voting ends
+                        deleteBtn.disabled = false;
+                        deleteBtn.style.opacity = '1';
+                        deleteBtn.style.cursor = 'pointer';
+                        deleteBtn.setAttribute('title', 'মুছে ফেলুন');
+                        deleteBtn.setAttribute('onclick', `deleteCandidate('${candidate._id}')`);
+                    }
+                }
+            });
+        }
+    });
+}
+
 // Load all candidates for the table
 async function loadCandidates() {
     try {
@@ -40,6 +108,7 @@ async function loadCandidates() {
         const data = await response.json();
         
         if (data.success) {
+            currentCandidatesData = data.candidates; // Store for real-time updates
             renderCandidatesTable(data.candidates);
         } else {
             showErrorMessage(data.message || 'প্রার্থী তালিকা লোড করতে ব্যর্থ হয়েছে');
@@ -62,10 +131,35 @@ function renderCandidatesTable(candidates) {
                 </td>
             </tr>
         `;
+        currentCandidatesData = []; // Clear stored data
         return;
     }
 
-    tbody.innerHTML = candidates.map(candidate => `
+    tbody.innerHTML = candidates.map(candidate => {
+        // Check if voting is currently ongoing
+        const now = new Date();
+        let votingOngoing = false;
+        
+        if (candidate.ballot && candidate.ballot.startDate && candidate.ballot.endDate) {
+            const startDate = new Date(candidate.ballot.startDate);
+            const endDate = new Date(candidate.ballot.endDate);
+            votingOngoing = now >= startDate && now <= endDate;
+            
+            // Debug log
+            console.log('Candidate:', candidate.name, {
+                startDate: startDate.toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' }),
+                endDate: endDate.toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' }),
+                now: now.toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' }),
+                votingOngoing
+            });
+        }
+        
+        const editDisabled = votingOngoing ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
+        const deleteDisabled = votingOngoing ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
+        const editTitle = votingOngoing ? 'ভোট চলছে। সম্পাদনা করা যাবে না।' : 'সম্পাদনা করুন';
+        const deleteTitle = votingOngoing ? 'ভোট চলছে। মুছা যাবে না।' : 'মুছে ফেলুন';
+        
+        return `
         <tr>
             <td>
                 <img src="${candidate.image || 'assets/images/default-avatar.png'}" 
@@ -95,13 +189,13 @@ function renderCandidatesTable(candidates) {
                             <circle cx="12" cy="12" r="3"></circle>
                         </svg>
                     </button>
-                    <button class="btn-icon btn-edit" onclick="editCandidate('${candidate._id}')" title="সম্পাদনা করুন">
+                    <button class="btn-icon btn-edit" ${editDisabled} onclick="${votingOngoing ? '' : `editCandidate('${candidate._id}')`}" title="${editTitle}">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                         </svg>
                     </button>
-                    <button class="btn-icon btn-delete" onclick="deleteCandidate('${candidate._id}')" title="মুছে ফেলুন">
+                    <button class="btn-icon btn-delete" ${deleteDisabled} onclick="${votingOngoing ? '' : `deleteCandidate('${candidate._id}')`}" title="${deleteTitle}">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="3 6 5 6 21 6"></polyline>
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -110,7 +204,8 @@ function renderCandidatesTable(candidates) {
                 </div>
             </td>
         </tr>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // View candidate details in modal

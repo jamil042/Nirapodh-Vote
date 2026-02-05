@@ -186,12 +186,20 @@ router.post('/create-initial-admin', async (req, res) => {
 // Create new ballot name/location
 router.post('/ballots', authenticateAdmin, async (req, res) => {
   try {
-    const { name, location } = req.body;
+    const { name, location, startDate, endDate } = req.body;
 
     if (!name || !location) {
       return res.status(400).json({
         success: false,
         message: 'ব্যালটের নাম এবং এলাকা প্রদান করুন'
+      });
+    }
+    
+    // Validate dates if provided
+    if (startDate && endDate && new Date(startDate) >= new Date(endDate)) {
+      return res.status(400).json({
+        success: false,
+        message: 'শেষ তারিখ অবশ্যই শুরুর তারিখের পরে হতে হবে'
       });
     }
 
@@ -207,6 +215,8 @@ router.post('/ballots', authenticateAdmin, async (req, res) => {
     const ballot = new Ballot({
       name: name.trim(),
       location: location.trim(),
+      ...(startDate && { startDate: new Date(startDate) }),
+      ...(endDate && { endDate: new Date(endDate) }),
       createdBy: req.admin._id
     });
 
@@ -289,6 +299,62 @@ router.get('/ballots', authenticateAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'ব্যালট লোড করতে ব্যর্থ হয়েছে'
+    });
+  }
+});
+
+// Update ballot dates
+router.put('/ballots/:id', authenticateAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.body;
+    
+    const ballot = await Ballot.findById(req.params.id);
+    
+    if (!ballot) {
+      return res.status(404).json({
+        success: false,
+        message: 'ব্যালট পাওয়া যায়নি'
+      });
+    }
+
+    // Validate dates if both provided
+    if (startDate && endDate && new Date(startDate) >= new Date(endDate)) {
+      return res.status(400).json({
+        success: false,
+        message: 'শেষ তারিখ অবশ্যই শুরুর তারিখের পরে হতে হবে'
+      });
+    }
+
+    // Check if voting has already started
+    if (ballot.startDate && new Date() >= ballot.startDate) {
+      return res.status(403).json({
+        success: false,
+        message: 'ভোট ইতিমধ্যে শুরু হয়ে গেছে। তারিখ পরিবর্তন করা যাবে না।'
+      });
+    }
+
+    // Update dates
+    if (startDate !== undefined) ballot.startDate = startDate ? new Date(startDate) : null;
+    if (endDate !== undefined) ballot.endDate = endDate ? new Date(endDate) : null;
+
+    await ballot.save();
+
+    res.json({
+      success: true,
+      message: 'ব্যালটের তারিখ সফলভাবে আপডেট হয়েছে',
+      ballot: {
+        id: ballot._id,
+        name: ballot.name,
+        location: ballot.location,
+        startDate: ballot.startDate,
+        endDate: ballot.endDate
+      }
+    });
+  } catch (error) {
+    console.error('Update ballot error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'ব্যালট আপডেট করতে ব্যর্থ হয়েছে'
     });
   }
 });
@@ -432,13 +498,47 @@ router.get('/admins', authenticateSuperAdmin, async (req, res) => {
 // Create/Save candidates (when ballot form is submitted)
 router.post('/candidates', authenticateAdmin, async (req, res) => {
   try {
-    const { ballotName, area, candidates } = req.body;
+    const { ballotName, area, startDate, endDate, candidates } = req.body;
 
     if (!ballotName || !area || !candidates || !Array.isArray(candidates)) {
       return res.status(400).json({
         success: false,
         message: 'ব্যালটের নাম, এলাকা এবং প্রার্থী তথ্য প্রদান করুন'
       });
+    }
+
+    // Find or update ballot with dates
+    if (startDate && endDate) {
+      let ballot = await Ballot.findOne({ name: ballotName, location: area });
+      
+      if (ballot) {
+        // Update existing ballot with dates
+        ballot.startDate = new Date(startDate);
+        ballot.endDate = new Date(endDate);
+        await ballot.save();
+        console.log('✅ Ballot dates updated:', {
+          name: ballotName,
+          location: area,
+          startDate: ballot.startDate,
+          endDate: ballot.endDate
+        });
+      } else {
+        // Create new ballot with dates
+        ballot = new Ballot({
+          name: ballotName,
+          location: area,
+          startDate: new Date(startDate),
+          endDate: new Date(endDate),
+          createdBy: req.admin._id
+        });
+        await ballot.save();
+        console.log('✅ Ballot created with dates:', {
+          name: ballotName,
+          location: area,
+          startDate: ballot.startDate,
+          endDate: ballot.endDate
+        });
+      }
     }
 
     // Save all candidates
@@ -490,9 +590,26 @@ router.get('/candidates', authenticateAdmin, async (req, res) => {
       .populate('createdBy', 'username')
       .sort({ createdAt: -1 });
 
+    // Add ballot information to each candidate
+    const candidatesWithBallot = await Promise.all(candidates.map(async (candidate) => {
+      const ballot = await Ballot.findOne({
+        name: candidate.ballotName,
+        location: candidate.area
+      });
+      
+      const candidateObj = candidate.toObject();
+      candidateObj.ballot = ballot ? {
+        _id: ballot._id,
+        startDate: ballot.startDate,
+        endDate: ballot.endDate
+      } : null;
+      
+      return candidateObj;
+    }));
+
     res.json({
       success: true,
-      candidates
+      candidates: candidatesWithBallot
     });
   } catch (error) {
     console.error('Get candidates error:', error);
@@ -541,17 +658,30 @@ router.put('/candidates/:id', authenticateAdmin, async (req, res) => {
       });
     }
 
-    // Check if voting has started for this candidate's ballot
+    // Check if voting is currently ongoing for this candidate's ballot
     const ballot = await Ballot.findOne({ 
       name: candidate.ballotName, 
       location: candidate.area 
     });
 
-    if (ballot && ballot.hasVotingStarted()) {
-      return res.status(403).json({
-        success: false,
-        message: 'ভোট শুরু হয়ে গেছে। এখন প্রার্থীর তথ্য সম্পাদনা করা যাবে না।'
-      });
+    // If ballot exists with dates, check if voting is ongoing
+    if (ballot && ballot.startDate && ballot.endDate) {
+      const now = new Date();
+      const startDate = new Date(ballot.startDate);
+      const endDate = new Date(ballot.endDate);
+      
+      if (now >= startDate && now <= endDate) {
+        console.log('❌ Edit blocked - Voting ongoing:', {
+          candidateName: candidate.name,
+          startDate: ballot.startDate,
+          endDate: ballot.endDate,
+          now: now.toISOString()
+        });
+        return res.status(403).json({
+          success: false,
+          message: 'ভোট চলছে। এখন প্রার্থীর তথ্য সম্পাদনা করা যাবে না।'
+        });
+      }
     }
 
     // Check if user is superadmin or creator
@@ -596,6 +726,32 @@ router.delete('/candidates/:id', authenticateAdmin, async (req, res) => {
         success: false,
         message: 'প্রার্থী পাওয়া যায়নি'
       });
+    }
+
+    // Check if voting is currently ongoing for this candidate's ballot
+    const ballot = await Ballot.findOne({ 
+      name: candidate.ballotName, 
+      location: candidate.area 
+    });
+
+    // If ballot exists with dates, check if voting is ongoing
+    if (ballot && ballot.startDate && ballot.endDate) {
+      const now = new Date();
+      const startDate = new Date(ballot.startDate);
+      const endDate = new Date(ballot.endDate);
+      
+      if (now >= startDate && now <= endDate) {
+        console.log('❌ Delete blocked - Voting ongoing:', {
+          candidateName: candidate.name,
+          startDate: ballot.startDate,
+          endDate: ballot.endDate,
+          now: now.toISOString()
+        });
+        return res.status(403).json({
+          success: false,
+          message: 'ভোট চলছে। এখন প্রার্থী মুছা যাবে না।'
+        });
+      }
     }
 
     // Check if user is superadmin or creator
