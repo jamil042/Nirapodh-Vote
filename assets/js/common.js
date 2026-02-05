@@ -65,10 +65,11 @@ function openChatBot() {
 // Logout function
 function logout() {
     if (confirm('আপনি কি লগআউট করতে চান?')) {
-        // Clear all auth related storage
+        // Clear all auth related storage from both localStorage and sessionStorage
         localStorage.removeItem('nirapodh_token');
         localStorage.removeItem('nirapodh_user');
-        sessionStorage.clear();
+        sessionStorage.removeItem('nirapodh_token');
+        sessionStorage.removeItem('nirapodh_user');
         
         // Set flag to prevent auto-redirect on login page
         sessionStorage.setItem('justLoggedOut', 'true');

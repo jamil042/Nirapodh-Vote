@@ -364,6 +364,7 @@ function sendAdminMessage() {
     currentCitizen.lastMessage = text;
 
     socket.emit('admin_message', {
+        id: messageId,
         message: text,
         recipientNID: currentCitizen.nid,
         timestamp: message.timestamp,

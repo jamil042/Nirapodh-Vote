@@ -11,6 +11,8 @@ const { randomUUID } = require('crypto');
 const authRoutes = require('./server/routes/auth');
 const voteRoutes = require('./server/routes/vote');
 const adminRoutes = require('./server/routes/admin');
+const complaintRoutes = require('./server/routes/complaint');
+const noticeRoutes = require('./server/routes/notice');
 
 const app = express();
 const server = http.createServer(app);
@@ -21,17 +23,20 @@ app.use(cors({
   credentials: true
 }));
 
-// Body parser middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Body parser middleware with increased limit for large candidate bios
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Serve static files
 app.use(express.static(__dirname));
+app.use('/uploads', express.static('uploads')); // Serve uploaded files
 
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/vote', voteRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/complaint', complaintRoutes);
+app.use('/api/notice', noticeRoutes);
 
 // Socket.IO setup for chat
 const io = new Server(server, {
@@ -49,7 +54,9 @@ const io = new Server(server, {
 // ===== CHAT STATE MANAGEMENT =====
 
 // Anonymous chat state - Track by NID to prevent duplicate counting
-const onlineUsers = new Map(); // nid -> { username, sockets: Set, joinedAt }
+const onlineUsers = new Map(); // nid -> { username, sockets: Set, joinedAt, anonymousName }
+const anonymousCounter = new Map(); // nid -> anonymousNumber
+let nextAnonymousNumber = 1;
 let globalMessageHistory = [];
 
 // Dashboard users tracking - Track by NID to prevent duplicate counting
@@ -149,11 +156,16 @@ io.on('connection', (socket) => {
       onlineUsers.get(userNID).sockets.add(socket.id);
       console.log(`🔄 User ${username} opened new tab (total: ${onlineUsers.get(userNID).sockets.size})`);
     } else {
-      // New user
+      // New user - assign anonymous number
+      const anonymousName = `Person-${nextAnonymousNumber}`;
+      anonymousCounter.set(userNID, nextAnonymousNumber);
+      nextAnonymousNumber++;
+      
       onlineUsers.set(userNID, {
         username,
         sockets: new Set([socket.id]),
-        joinedAt: new Date().toISOString()
+        joinedAt: new Date().toISOString(),
+        anonymousName: anonymousName
       });
       
       io.emit('user_joined', { 
@@ -161,10 +173,11 @@ io.on('connection', (socket) => {
         timestamp: new Date().toISOString()
       });
       
-      console.log(`✅ Anonymous user logged in: ${username}`);
+      console.log(`✅ Anonymous user logged in: ${username} as ${anonymousName}`);
     }
 
-    socket.emit('login_success', { username });
+    const anonymousName = onlineUsers.get(userNID)?.anonymousName || 'Person';
+    socket.emit('login_success', { username, anonymousName });
     socket.emit('message_history', { messages: globalMessageHistory });
     
     broadcastOnlineUsers();
@@ -216,11 +229,18 @@ io.on('connection', (socket) => {
       return;
     }
 
+    // Get sender info from NID mapping
+    const userNID = data.senderNID || socketToNID.get(socket.id);
+    const user = userNID ? onlineUsers.get(userNID) : null;
+    const anonymousName = user?.anonymousName || 'Person';
+
     const msgObj = {
       id: data.id || randomUUID(),
       message,
       timestamp: data.timestamp || new Date().toISOString(),
-      socketId: socket.id,
+      socketId: data.socketId || socket.id,
+      senderNID: userNID || data.senderNID,
+      anonymousName: anonymousName,
       replyTo: data.replyTo || null
     };
 
@@ -232,7 +252,7 @@ io.on('connection', (socket) => {
     io.emit('receive_global_message', msgObj);
 
     const replyInfo = msgObj.replyTo ? ` (replying to: "${msgObj.replyTo.substring(0, 20)}...")` : '';
-    console.log(`💬 Global [${socket.id.slice(0, 8)}]: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}${replyInfo}`);
+    console.log(`💬 Global [${anonymousName}]: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}${replyInfo}`);
   });
 
   socket.on('user_logout', () => {
@@ -376,7 +396,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('citizen_message', (data) => {
-    const { message, senderNID, senderName, timestamp } = data;
+    const { message, senderNID, senderName, timestamp, replyTo, id } = data;
     
     if (!message || !senderNID) {
       console.log(`❌ Invalid citizen message from ${socket.id}`);
@@ -386,11 +406,13 @@ io.on('connection', (socket) => {
     const sanitized = sanitizeMessage(message);
     
     const msgObj = {
+      id: id || `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       message: sanitized,
       senderNID,
       senderName,
       timestamp: timestamp || new Date().toISOString(),
-      type: 'citizen_to_admin'
+      type: 'citizen_to_admin',
+      replyTo: replyTo || null
     };
 
     // Store in PERSISTENT chatHistory
@@ -416,7 +438,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('admin_message', (data) => {
-    const { message, recipientNID, timestamp } = data;
+    const { message, recipientNID, timestamp, replyTo } = data;
     
     if (!message || !recipientNID) {
       console.log(`❌ Invalid admin message from ${socket.id}`);
@@ -426,10 +448,12 @@ io.on('connection', (socket) => {
     const sanitized = sanitizeMessage(message);
     
     const msgObj = {
+      id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       message: sanitized,
       recipientNID,
       timestamp: timestamp || new Date().toISOString(),
-      type: 'admin_to_citizen'
+      type: 'admin_to_citizen',
+      replyTo: replyTo || null
     };
 
     // Store in PERSISTENT chatHistory
@@ -443,7 +467,8 @@ io.on('connection', (socket) => {
       history.shift();
     }
 
-    console.log(`👨‍💼 Admin to ${recipientNID}: ${sanitized.substring(0, 50)}${sanitized.length > 50 ? '...' : ''}`);
+    const replyInfo = msgObj.replyTo ? ` (replying to: "${msgObj.replyTo.substring(0, 20)}...")` : '';
+    console.log(`👨‍💼 Admin to ${recipientNID}: ${sanitized.substring(0, 50)}${sanitized.length > 50 ? '...' : ''}${replyInfo}`);
 
     // Send to the citizen
     const citizen = activeCitizens.get(recipientNID);

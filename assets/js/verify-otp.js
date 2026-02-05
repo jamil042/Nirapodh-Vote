@@ -519,12 +519,12 @@ function setButtonLoading(buttonId, isLoading) {
  * Save auth token
  */
 function saveAuthToken(token) {
-    localStorage.setItem('nirapodh_token', token);
+    sessionStorage.setItem('nirapodh_token', token);
 }
 
 /**
  * Save user data
  */
 function saveUserData(user) {
-    localStorage.setItem('nirapodh_user', JSON.stringify(user));
+    sessionStorage.setItem('nirapodh_user', JSON.stringify(user));
 }
