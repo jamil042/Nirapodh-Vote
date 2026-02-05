@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupNavigationListeners();
     setupRealtimeFeatures();
     setupMobileMenu();
-    loadUserData();
+    // loadUserData(); // Handled by citizen-dashboard-backend.js
     updateTimeRemaining();
 });
 
@@ -19,18 +19,21 @@ function initializeDashboard() {
         localStorage.removeItem('nirapodh_token');
     }
     
-    // Check if user is logged in (from sessionStorage only)
-    const userData = getUserData();
-    console.log('Dashboard - User Data:', userData); // Debug log
-    if (!userData) {
-        window.location.href = 'login.html';
-        return;
-    }
+    // Note: User authentication is handled by citizen-dashboard-backend.js
+    // which will redirect if no valid token is found
     
-    // Display user name
-    document.getElementById('userName').textContent = userData.name || 'নাগরিক';
-    document.getElementById('userArea').textContent = userData.votingArea || 'N/A';
-    console.log('Dashboard - Voting Area:', userData.votingArea); // Debug log
+    // Check if user data is already available (after backend loads it)
+    const userData = getUserData();
+    if (userData) {
+        console.log('Dashboard - User Data:', userData); // Debug log
+        // Display user name
+        document.getElementById('userName').textContent = userData.name || 'নাগরিক';
+        const userAreaElement = document.getElementById('userArea');
+        if (userAreaElement) {
+            userAreaElement.textContent = userData.votingArea || 'N/A';
+        }
+        console.log('Dashboard - Voting Area:', userData.votingArea); // Debug log
+    }
     
     // Set active section from URL hash or default to voting
     const hash = window.location.hash.substring(1) || 'voting';
@@ -87,6 +90,11 @@ function showSection(sectionName) {
             item.classList.add('active');
         }
     });
+    
+    // Load results when switching to results section
+    if (sectionName === 'results' && typeof loadAllResults === 'function') {
+        loadAllResults();
+    }
 }
 
 // Setup mobile menu

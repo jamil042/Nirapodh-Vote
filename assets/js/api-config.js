@@ -14,7 +14,11 @@ const API_CONFIG = {
     // Vote endpoints
     CAST_VOTE: '/vote/cast',
     VOTE_STATUS: '/vote/status',
+    BALLOT_STATUS: '/vote/status',
     VOTE_STATISTICS: '/vote/statistics',
+    GET_BALLOTS: '/vote/ballots',
+    GET_CANDIDATES: '/vote/candidates',
+    GET_RESULTS: '/vote/results',
     
     // Admin endpoints
     ADMIN_LOGIN: '/admin/login',
@@ -48,9 +52,11 @@ async function apiRequest(endpoint, method = 'GET', data = null, requiresAuth = 
 
   // Add auth token if required
   if (requiresAuth) {
-    const token = localStorage.getItem('nirapodh_token');
+    const token = sessionStorage.getItem('nirapodh_token');
     if (token) {
       options.headers['Authorization'] = `Bearer ${token}`;
+    } else {
+      console.warn('⚠️ No token found in sessionStorage for authenticated request');
     }
   }
 

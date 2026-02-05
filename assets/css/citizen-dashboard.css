@@ -335,11 +335,71 @@
 
 .ballot-card.voted {
     border: 3px solid var(--success-green);
+    background: linear-gradient(to bottom, #f0f9f4, white);
+}
+
+.ballot-card.missed {
+    border: 3px solid var(--danger-red);
+    background: linear-gradient(to bottom, #fef2f2, white);
 }
 
 .ballot-card.upcoming {
     opacity: 0.7;
     border: 2px dashed var(--border-color);
+}
+
+.voted-message {
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+    border: 2px solid var(--success-green);
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.voted-message p {
+    font-size: 1.1rem;
+    color: var(--text-dark);
+    margin: 10px 0;
+}
+
+.voted-message p:first-child {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--primary-green);
+}
+
+.voted-message .vote-time {
+    font-size: 0.95rem;
+    color: #555;
+    font-style: italic;
+}
+
+.missed-message {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    border: 2px solid var(--danger-red);
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.missed-message p {
+    font-size: 1.1rem;
+    color: var(--text-dark);
+    margin: 10px 0;
+}
+
+.missed-message p:first-child {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--danger-red);
+}
+
+.missed-message .vote-time {
+    font-size: 0.95rem;
+    color: #555;
+    font-style: italic;
 }
 
 .ballot-header {
@@ -377,6 +437,11 @@
 .ballot-status.upcoming {
     background: var(--warning-yellow);
     color: var(--text-dark);
+}
+
+.ballot-status.expired {
+    background: var(--danger-red);
+    color: white;
 }
 
 .ballot-time {
@@ -513,6 +578,58 @@
     border: 3px solid var(--success-green);
 }
 
+.result-card.completed-election {
+    border: 3px solid var(--success-green);
+    background: linear-gradient(to bottom, #f0fdf4, white);
+    padding: 0;
+    overflow: hidden;
+}
+
+.election-title {
+    font-size: 1.6rem;
+    color: var(--primary-green);
+    margin: 0;
+    padding: 30px 30px 20px 30px;
+    font-weight: 600;
+}
+
+.winner-banner {
+    background: linear-gradient(135deg, var(--primary-green), var(--success-green));
+    color: white;
+    padding: 30px;
+    font-size: 1.4rem;
+    font-weight: 600;
+    text-align: center;
+    margin: 0;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.btn-download-pdf {
+    display: block;
+    width: calc(100% - 60px);
+    margin: 30px;
+    padding: 15px 30px;
+    background: white;
+    border: 2px solid var(--primary-green);
+    color: var(--primary-green);
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-download-pdf:hover {
+    background: var(--primary-green);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-download-pdf:active {
+    transform: translateY(0);
+}
+
 .result-card h3 {
     font-size: 1.5rem;
     color: var(--primary-green);
@@ -556,6 +673,26 @@
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.result-item.user-voted {
+    border: 3px solid var(--success-green);
+    background: linear-gradient(to right, #e8f5e9, white);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.user-vote-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--success-green);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-left: 10px;
 }
 
 .result-info {
