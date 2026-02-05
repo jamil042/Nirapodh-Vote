@@ -983,6 +983,31 @@
     background: var(--dark-green);
 }
 
+/* Complaints List Scrollbar */
+#myComplaintsList {
+    max-height: 600px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+#myComplaintsList::-webkit-scrollbar {
+    width: 8px;
+}
+
+#myComplaintsList::-webkit-scrollbar-track {
+    background: rgba(30, 126, 52, 0.05);
+    border-radius: 10px;
+}
+
+#myComplaintsList::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--primary-green), var(--dark-green));
+    border-radius: 10px;
+}
+
+#myComplaintsList::-webkit-scrollbar-thumb:hover {
+    background: var(--dark-green);
+}
+
 .candidate-profile-header {
     display: flex;
     align-items: center;
