@@ -3163,3 +3163,212 @@
     50% { opacity: 1; }
     100% { opacity: 1; }
 }
+/* ===================================================
+   COMPREHENSIVE RESPONSIVE DESIGN FOR CITIZEN DASHBOARD
+   =================================================== */
+
+/* Tablet & Below (1024px) */
+@media (max-width: 1024px) {
+    .dashboard-container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        border-right: none;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .content-area {
+        width: 100%;
+        padding: 20px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .candidates-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Mobile Landscape & Small Tablets (768px) */
+@media (max-width: 768px) {
+    .header-content {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 0 15px;
+    }
+    
+    .logo-section {
+        gap: 10px;
+    }
+    
+    .logo-small {
+        height: 40px;
+    }
+    
+    .header-content h1 {
+        font-size: 1.2rem;
+    }
+    
+    .user-section {
+        gap: 10px;
+    }
+    
+    .user-name {
+        font-size: 0.9rem;
+    }
+    
+    .sidebar {
+        padding: 15px 0;
+    }
+    
+    .sidebar-nav {
+        flex-direction: row;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 10px;
+        padding: 0 15px;
+    }
+    
+    .nav-item {
+        min-width: 120px;
+        padding: 12px 15px;
+        flex-direction: column;
+        text-align: center;
+        gap: 5px;
+    }
+    
+    .nav-icon {
+        margin-right: 0;
+    }
+    
+    .nav-text {
+        font-size: 0.8rem;
+    }
+    
+    .content-area {
+        padding: 15px;
+    }
+    
+    .section-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .candidates-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .card {
+        padding: 20px;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 20px auto;
+        max-height: 90vh;
+    }
+}
+
+/* Mobile Portrait (480px) */
+@media (max-width: 480px) {
+    .hamburger-menu {
+        display: flex;
+    }
+    
+    .header-content h1 {
+        font-size: 1rem;
+    }
+    
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 280px;
+        height: 100vh;
+        z-index: 1000;
+        transition: left 0.3s ease;
+        background: white;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+    }
+    
+    .sidebar.active {
+        left: 0;
+    }
+    
+    .sidebar-nav {
+        flex-direction: column;
+        padding: 0;
+    }
+    
+    .nav-item {
+        min-width: auto;
+        width: 100%;
+        flex-direction: row;
+        text-align: left;
+        padding: 15px 20px;
+    }
+    
+    .nav-icon {
+        margin-right: 12px;
+    }
+    
+    .content-area {
+        padding: 12px;
+    }
+    
+    .section-header h2 {
+        font-size: 1.3rem;
+    }
+    
+    .stat-card {
+        padding: 15px;
+    }
+    
+    .candidate-card {
+        padding: 15px;
+    }
+    
+    .candidate-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .card {
+        padding: 15px;
+    }
+    
+    .btn {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+    }
+    
+    .modal-content {
+        width: 100%;
+        margin: 10px;
+        max-height: 95vh;
+    }
+    
+    .modal-body {
+        padding: 15px;
+    }
+    
+    #myComplaintsList {
+        max-height: 400px;
+    }
+}

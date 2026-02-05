@@ -1990,3 +1990,221 @@ background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 1
     background: #f8d7da;
     color: #721c24;
 }
+
+/* ===================================================
+   COMPREHENSIVE RESPONSIVE DESIGN
+   =================================================== */
+
+/* Tablet & Below (1024px) */
+@media (max-width: 1024px) {
+    .admin-layout {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        border-right: none;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .main-content {
+        width: 100%;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Mobile Landscape & Small Tablets (768px) */
+@media (max-width: 768px) {
+    .header-content {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .header-title h1 {
+        font-size: 1.2rem;
+    }
+    
+    .header-title p {
+        font-size: 0.85rem;
+    }
+    
+    .logo {
+        height: 40px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .stat-card {
+        padding: 20px;
+    }
+    
+    .sidebar-nav .nav-item {
+        padding: 12px 15px;
+        font-size: 0.9rem;
+    }
+    
+    .nav-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .section-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .card {
+        padding: 20px;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+    }
+    
+    table {
+        min-width: 600px;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 20px auto;
+        max-height: 90vh;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+}
+
+/* Mobile Portrait (480px) */
+@media (max-width: 480px) {
+    .header-content {
+        padding: 0 10px;
+    }
+    
+    .header-title h1 {
+        font-size: 1rem;
+    }
+    
+    .header-title p {
+        display: none;
+    }
+    
+    .logo {
+        height: 35px;
+    }
+    
+    .header-actions .btn {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+    
+    .sidebar {
+        padding: 15px 0;
+    }
+    
+    .sidebar-nav {
+        flex-direction: row;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .sidebar-nav .nav-item {
+        min-width: 120px;
+        text-align: center;
+        padding: 10px;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .nav-icon {
+        margin-right: 0;
+    }
+    
+    .nav-text {
+        font-size: 0.75rem;
+    }
+    
+    .main-content {
+        padding: 15px;
+    }
+    
+    .section-header {
+        margin-bottom: 20px;
+    }
+    
+    .section-header h2 {
+        font-size: 1.3rem;
+    }
+    
+    .stat-card {
+        padding: 15px;
+    }
+    
+    .stat-value {
+        font-size: 1.8rem;
+    }
+    
+    .stat-label {
+        font-size: 0.85rem;
+    }
+    
+    .card {
+        padding: 15px;
+    }
+    
+    .card-header h3 {
+        font-size: 1rem;
+    }
+    
+    .btn {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+    }
+    
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+    }
+    
+    .input-field,
+    .select-field,
+    textarea {
+        font-size: 0.9rem;
+        padding: 10px;
+    }
+    
+    .modal-content {
+        width: 100%;
+        margin: 10px;
+        max-height: 95vh;
+    }
+    
+    .modal-header h2 {
+        font-size: 1.2rem;
+    }
+    
+    .modal-body {
+        padding: 15px;
+    }
+}
