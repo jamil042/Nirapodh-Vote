@@ -14,34 +14,32 @@ async function handleNoticeSubmit(event) {
 
         const title = document.getElementById('noticeTitle').value.trim();
         const type = document.getElementById('noticeType').value;
-        const contentType = document.querySelector('input[name="contentType"]:checked').value;
         const message = document.getElementById('noticeMessage').value.trim();
         const pdfFile = document.getElementById('noticePdf').files[0];
 
-        console.log('Form data:', { title, type, contentType, messageLength: message.length });
+        console.log('Form data:', { title, type, hasMessage: !!message, hasPdf: !!pdfFile });
 
-        // Validation
+        // Validation - at least one content type required
         if (!title || !type) {
             throw new Error('শিরোনাম এবং ধরন আবশ্যক');
         }
 
-        if (contentType === 'text' && !message) {
-            throw new Error('টেক্সট নোটিশের জন্য বার্তা আবশ্যক');
-        }
-
-        if (contentType === 'pdf' && !pdfFile) {
-            throw new Error('PDF নোটিশের জন্য ফাইল আবশ্যক');
+        if (!message && !pdfFile) {
+            throw new Error('বার্তা অথবা PDF ফাইল অন্তত একটি প্রদান করতে হবে');
         }
 
         // Prepare form data
         const formData = new FormData();
         formData.append('title', title);
         formData.append('type', type);
-        formData.append('contentType', contentType);
 
-        if (contentType === 'text') {
+        // Add message if provided
+        if (message) {
             formData.append('message', message);
-        } else {
+        }
+
+        // Add PDF if provided
+        if (pdfFile) {
             formData.append('pdfFile', pdfFile);
         }
 
@@ -79,10 +77,6 @@ async function handleNoticeSubmit(event) {
         }
         
         form.reset();
-        
-        // Reset to text mode
-        document.querySelector('input[name="contentType"][value="text"]').checked = true;
-        toggleNoticeContent('text');
 
         // Reload notices
         await loadPublishedNotices();
@@ -140,9 +134,18 @@ async function loadPublishedNotices() {
 // Render single notice item
 function renderNoticeItem(notice) {
     const badgeClass = `badge-${getNoticeBadgeType(notice.type)}`;
-    const preview = notice.contentType === 'text' 
-        ? (notice.message ? notice.message.substring(0, 100) + '...' : 'বার্তা নেই')
-        : 'PDF ফাইল';
+    
+    // Build preview text
+    let preview = '';
+    if (notice.message) {
+        preview = notice.message.substring(0, 100) + (notice.message.length > 100 ? '...' : '');
+    }
+    if (notice.pdfUrl && !notice.message) {
+        preview = 'PDF ফাইল';
+    }
+    if (!notice.message && !notice.pdfUrl) {
+        preview = 'বিষয়বস্তু নেই';
+    }
     
     const date = new Date(notice.createdAt).toLocaleDateString('bn-BD', {
         year: 'numeric',
@@ -164,7 +167,7 @@ function renderNoticeItem(notice) {
                 <span>👤 ${notice.publishedByName}</span>
             </div>
             <div class="notice-actions">
-                ${notice.contentType === 'pdf' ? 
+                ${notice.pdfUrl ? 
                     `<button onclick="viewNoticePDF('${notice.pdfUrl}')" class="btn btn-sm btn-secondary">
                         <i class="fas fa-file-pdf"></i> PDF দেখুন
                     </button>` : ''}

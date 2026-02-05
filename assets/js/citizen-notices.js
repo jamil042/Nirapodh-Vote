@@ -41,11 +41,18 @@ function renderCitizenNoticeCard(notice) {
         day: 'numeric'
     });
 
-    const content = notice.contentType === 'text' 
-        ? `<p>${notice.message}</p>`
-        : `<p>এই নোটিশের জন্য একটি PDF ফাইল উপলব্ধ আছে।</p>`;
+    // Build content - show message if exists, otherwise show PDF message
+    let content = '';
+    if (notice.message) {
+        content = `<p>${notice.message}</p>`;
+    } else if (notice.pdfUrl) {
+        content = `<p>এই নোটিশের জন্য একটি PDF ফাইল উপলব্ধ আছে।</p>`;
+    } else {
+        content = `<p>বিষয়বস্তু নেই।</p>`;
+    }
 
-    const pdfButton = notice.contentType === 'pdf' 
+    // Show PDF button if PDF exists
+    const pdfButton = notice.pdfUrl
         ? `<button class="btn btn-secondary btn-sm" onclick="viewCitizenNoticePDF('${notice.pdfUrl}')">
                <span>📄 PDF দেখুন</span>
            </button>`
@@ -65,7 +72,9 @@ function renderCitizenNoticeCard(notice) {
 }
 
 function viewCitizenNoticePDF(pdfUrl) {
-    window.open(API_CONFIG.API_URL + pdfUrl, '_blank');
+    // Remove /api from URL since uploads are served from root /uploads
+    const baseUrl = API_CONFIG.API_URL.replace('/api', '');
+    window.open(baseUrl + pdfUrl, '_blank');
 }
 
 // Initialize when page loads

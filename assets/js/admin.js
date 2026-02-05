@@ -567,19 +567,6 @@ function previewBallot() {
     showAlert('ব্যালট পূর্বরূপ শীঘ্রই উপলব্ধ হবে', 'info');
 }
 
-function toggleNoticeContent(type) {
-    const textContent = document.getElementById('textContent');
-    const pdfContent = document.getElementById('pdfContent');
-    
-    if (type === 'text') {
-        textContent.classList.remove('hidden');
-        pdfContent.classList.add('hidden');
-    } else {
-        textContent.classList.add('hidden');
-        pdfContent.classList.remove('hidden');
-    }
-}
-
 // Notice functions moved to admin-notices.js
 
 function oldSaveNoticeToArray_REMOVED(title, type, contentType, message, pdfData) {

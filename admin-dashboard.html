@@ -325,26 +325,13 @@
                         </div>
 
                         <div class="form-group">
-                            <label>নোটিশ বিষয়বস্তু *</label>
-                            <div class="radio-group">
-                                <label class="radio-label">
-                                    <input type="radio" name="contentType" value="text" checked onclick="toggleNoticeContent('text')">
-                                    <span>টেক্সট বার্তা</span>
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="contentType" value="pdf" onclick="toggleNoticeContent('pdf')">
-                                    <span>PDF ফাইল</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="form-group" id="textContent">
-                            <label for="noticeMessage">বার্তা *</label>
+                            <label for="noticeMessage">বার্তা</label>
                             <textarea id="noticeMessage" rows="6" placeholder="নোটিশের বিস্তারিত লিখুন..."></textarea>
+                            <small class="form-text">শুধু বার্তা, শুধু PDF অথবা উভয়ই প্রদান করতে পারবেন</small>
                         </div>
 
-                        <div class="form-group hidden" id="pdfContent">
-                            <label for="noticePdf">PDF ফাইল আপলোড করুন *</label>
+                        <div class="form-group">
+                            <label for="noticePdf">PDF ফাইল আপলোড করুন</label>
                             <input type="file" id="noticePdf" accept=".pdf">
                         </div>
 

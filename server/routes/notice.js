@@ -41,43 +41,42 @@ router.post('/create', authenticateAdmin, upload.single('pdfFile'), async (req, 
         console.log('Body:', req.body);
         console.log('File:', req.file);
 
-        const { title, type, contentType, message } = req.body;
+        const { title, type, message } = req.body;
         const adminId = req.admin._id || req.admin.id;
         const adminName = req.admin.username;
 
         console.log('Admin ID:', adminId, 'Admin Name:', adminName);
 
         // Validation
-        if (!title || !type || !contentType) {
+        if (!title || !type) {
             return res.status(400).json({ 
                 success: false, 
-                message: 'শিরোনাম, ধরন এবং কন্টেন্ট টাইপ আবশ্যক' 
+                message: 'শিরোনাম এবং ধরন আবশ্যক' 
+            });
+        }
+
+        // At least one content type required
+        if (!message && !req.file) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'বার্তা অথবা PDF ফাইল অন্তত একটি আবশ্যক' 
             });
         }
 
         const noticeData = {
             title,
             type,
-            contentType,
             publishedBy: adminId,
             publishedByName: adminName
         };
 
-        if (contentType === 'text') {
-            if (!message) {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: 'টেক্সট নোটিশের জন্য বার্তা আবশ্যক' 
-                });
-            }
+        // Add message if provided
+        if (message) {
             noticeData.message = message;
-        } else if (contentType === 'pdf') {
-            if (!req.file) {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: 'PDF নোটিশের জন্য ফাইল আবশ্যক' 
-                });
-            }
+        }
+
+        // Add PDF if provided
+        if (req.file) {
             noticeData.pdfUrl = `/uploads/notices/${req.file.filename}`;
         }
 
