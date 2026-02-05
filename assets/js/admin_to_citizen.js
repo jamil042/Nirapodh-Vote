@@ -523,3 +523,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     console.log('✅ Admin Chat Panel Ready');
 });
+
+// Expose functions globally
+window.selectCitizen = selectCitizen;
+window.sendAdminMessage = sendAdminMessage;
+window.replyToAdminMessage = replyToAdminMessage;
+window.cancelAdminReply = cancelAdminReply;

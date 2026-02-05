@@ -55,10 +55,17 @@ async function handleAdminLogin(e) {
             hideLoadingState();
             showAlert('লগইন সফল হয়েছে!', 'success');
 
-            // Redirect to admin dashboard
-            setTimeout(() => {
-                window.location.href = 'admin-dashboard.html';
-            }, 1000);
+            // Check if first login - redirect to password update
+            if (result.admin.isFirstLogin) {
+                setTimeout(() => {
+                    window.location.href = 'update-password.html';
+                }, 1000);
+            } else {
+                // Redirect to admin dashboard
+                setTimeout(() => {
+                    window.location.href = 'admin-dashboard.html';
+                }, 1000);
+            }
         } else {
             throw new Error(result.message);
         }

@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="assets/css/common.css">
     <link rel="stylesheet" href="assets/css/admin.css">
     <link rel="stylesheet" href="assets/css/admin_to_citizen.css">
+    <link rel="stylesheet" href="assets/css/admin_admin_chat.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 </head>
 <body>
@@ -17,8 +18,8 @@
         <div class="header-content">
             <img src="assets/images/election_comission_logo-removebg-preview.png" alt="বাংলাদেশ সরকার" class="logo">
             <div class="header-title">
-                <h1 style="color: #1e7e34; font-size: 1.6rem;">প্রধান নির্বাচন কমিশনার</h1>
-                <p style="color: #d32f2f;">Bangladesh Election Commissioner</p>
+                <h1 style="color: #1e7e34; font-size: 1.6rem;">বাংলাদেশ নির্বাচন কমিশন</h1>
+                <p style="color: #d32f2f;">Bangladesh Election Commission</p>
             </div>
             <div class="header-actions">
                 <button class="btn btn-secondary btn-sm" onclick="logout()">লগআউট</button>
@@ -78,13 +79,21 @@
                     </span>
                     <span class="nav-text">অভিযোগ ব্যবস্থাপনা</span>
                 </a>
-                <a href="#" class="nav-item" onclick="showSection('chat')">
+                <a href="#" class="nav-item" id="chat-menu-item" onclick="showSection('chat')" style="display: none;">
                     <span class="nav-icon">
                         <svg viewBox="0 0 24 24" fill="currentColor">
                             <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
                         </svg>
                     </span>
                     <span class="nav-text">নাগরিক চ্যাট</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('admin-chat')">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                        </svg>
+                    </span>
+                    <span class="nav-text">অ্যাডমিন চ্যাট</span>
                 </a>
                 <a href="#" class="nav-item" onclick="showSection('settings')">
                     <span class="nav-icon">
@@ -210,7 +219,13 @@
                     </div>
                 </div>
 
-                <div class="card">
+
+
+                <div class="card" id="ballotFormCard">
+                    <h3>ব্যালট তৈরি করুন</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">
+                        <strong>সুপার অ্যাডমিন:</strong> ড্রপডাউনে রাইট-ক্লিক করে ব্যালট/এলাকা মুছতে পারবেন
+                    </p>
                     <form id="ballotForm" class="ballot-form">
                         <div class="form-row">
                             <div class="form-group">
@@ -300,10 +315,12 @@
                             <label for="noticeType">নোটিশ ধরন *</label>
                             <select id="noticeType" required>
                                 <option value="">নির্বাচন করুন</option>
-                                <option value="general">সাধারণ</option>
-                                <option value="urgent">জরুরী</option>
-                                <option value="schedule">সময়সূচী</option>
-                                <option value="result">ফলাফল</option>
+                                <option value="সাধারণ">সাধারণ</option>
+                                <option value="জরুরি">জরুরি</option>
+                                <option value="নির্বাচন সংক্রান্ত">নির্বাচন সংক্রান্ত</option>
+                                <option value="প্রার্থী তালিকা">প্রার্থী তালিকা</option>
+                                <option value="ফলাফল">ফলাফল</option>
+                                <option value="সতর্কতা">সতর্কতা</option>
                             </select>
                         </div>
 
@@ -449,14 +466,72 @@
                 <div class="section-header">
                     <h2>অভিযোগ ব্যবস্থাপনা</h2>
                     <p>নাগরিকদের অভিযোগ দেখুন ও সমাধান করুন</p>
+                    <p style="color: #4caf50; font-size: 13px; margin-top: 5px;">
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                        স্বয়ংক্রিয় আপডেট চালু আছে (প্রতি ১৫ সেকেন্ডে)
+                    </p>
+                </div>
+
+                <div class="stats-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ff9800, #f57c00); color: white;">
+                        <div class="stat-value" id="totalComplaints">0</div>
+                        <div class="stat-label">মোট অভিযোগ</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ffc107, #ff9800); color: white;">
+                        <div class="stat-value" id="processingComplaints">0</div>
+                        <div class="stat-label">প্রক্রিয়াধীন</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #2196f3, #1976d2); color: white;">
+                        <div class="stat-value" id="answeredComplaints">0</div>
+                        <div class="stat-label">উত্তর প্রদান</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #4caf50, #388e3c); color: white;">
+                        <div class="stat-value" id="resolvedComplaints">0</div>
+                        <div class="stat-label">সমাধানকৃত</div>
+                    </div>
                 </div>
 
                 <div class="card">
+                    <div class="filters-bar" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                        <select id="statusFilter" class="input-field" style="flex: 1; min-width: 150px;" onchange="filterComplaints()">
+                            <option value="">সকল স্ট্যাটাস</option>
+                            <option value="প্রক্রিয়াধীন">প্রক্রিয়াধীন</option>
+                            <option value="উত্তর প্রদান">উত্তর প্রদান</option>
+                            <option value="সমাধানকৃত">সমাধানকৃত</option>
+                            <option value="প্রত্যাখ্যাত">প্রত্যাখ্যাত</option>
+                        </select>
+                        <select id="priorityFilter" class="input-field" style="flex: 1; min-width: 150px;" onchange="filterComplaints()">
+                            <option value="">সকল প্রায়োরিটি</option>
+                            <option value="সাধারণ">সাধারণ</option>
+                            <option value="জরুরি">জরুরি</option>
+                            <option value="অত্যন্ত জরুরি">অত্যন্ত জরুরি</option>
+                        </select>
+                        <input type="text" id="searchFilter" class="input-field" placeholder="খুঁজুন..." style="flex: 1; min-width: 200px;" oninput="filterComplaints()">
+                        <button class="btn btn-primary" onclick="loadAllComplaints()">রিফ্রেশ</button>
+                    </div>
+
                     <div class="complaints-list" id="complaints-list-container">
-                        <!-- Complaints will be loaded here dynamically -->
+                        <div style="text-align: center; padding: 40px; color: #666;">
+                            <p>লোড হচ্ছে...</p>
+                        </div>
                     </div>
                 </div>
             </section>
+
+            <!-- Admin Complaint Response Modal -->
+            <div id="adminComplaintModal" class="modal" style="display: none;">
+                <div class="modal-content" style="max-width: 800px;">
+                    <div class="modal-header">
+                        <h2>অভিযোগের বিস্তারিত ও প্রতিক্রিয়া</h2>
+                        <span class="close-modal" onclick="closeAdminComplaintModal()">&times;</span>
+                    </div>
+                    <div class="modal-body" id="adminComplaintModalBody">
+                        <!-- Content will be loaded dynamically -->
+                    </div>
+                </div>
+            </div>
 
     <section id="chat-section" class="content-section">
         <div class="section-header">  
@@ -469,7 +544,7 @@
             <div class="chat-list">
                 <div class="chat-list-header">
                     <h3>নাগরিক তালিকা</h3>
-                    <span id="citizenCount">0</span>
+                    <span id="citizenCount" class="count-badge">0</span>
                 </div>
 
                 <div class="search-box">
@@ -524,6 +599,78 @@
         </div>
     </section>
 
+    <!-- Admin to Admin Chat Section -->
+    <section id="admin-chat-section" class="content-section">
+        <div class="section-header">
+            <h2>👥 অ্যাডমিন চ্যাট সিস্টেম</h2>
+            <p>অন্যান্য অ্যাডমিনদের সাথে যোগাযোগ করুন</p>
+        </div>
+
+        <div class="chat-container">
+            <!-- Admin List -->
+            <div class="chat-list">
+                <div class="chat-list-header">
+                    <h3>অ্যাডমিন তালিকা</h3>
+                    <span id="adminChatAdminCount" class="count-badge">0</span>
+                </div>
+                
+                <div id="adminChatAdminList">
+                    <!-- Admin items will be dynamically added here -->
+                    <div class="chat-empty-state">
+                        <svg fill="currentColor" viewBox="0 0 24 24" width="80" height="80">
+                            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                        </svg>
+                        <h3>কোন অ্যাডমিন নেই</h3>
+                        <p>অ্যাডমিনরা যোগ দিলে এখানে দেখা যাবে</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Window -->
+            <div class="chat-window">
+                <div class="chat-header">
+                    <div class="chat-header-info">
+                        <h3 id="adminChatHeaderName">অ্যাডমিন নির্বাচন করুন</h3>
+                        <div class="chat-header-nid" id="adminChatHeaderRole"></div>
+                    </div>
+                    <span class="chat-status" id="adminChatStatus" style="display: none;">অনলাইন</span>
+                </div>
+
+                <div class="chat-messages" id="adminChatMessagesContainer">
+                    <div class="chat-empty-state">
+                        <svg fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+                        </svg>
+                        <h3>কথোপকথন শুরু করুন</h3>
+                        <p>বামদিক থেকে একজন অ্যাডমিন নির্বাচন করুন</p>
+                    </div>
+                </div>
+
+                <!-- Typing Indicator -->
+                <div id="adminChatTypingIndicator" class="typing-indicator" style="display: none;">
+                    <span class="typing-dots">
+                        <span></span><span></span><span></span>
+                    </span>
+                    <span class="typing-text">টাইপ করছে...</span>
+                </div>
+
+                <div class="chat-input" style="position: relative;">
+                    <!-- Reply Preview -->
+                    <div id="adminChatReplyPreview" class="reply-preview" style="display: none; position: absolute; top: -60px; left: 14px; right: 14px;">
+                        <div class="reply-preview-content">
+                            <div class="reply-preview-label">উত্তর দিচ্ছেন</div>
+                            <div class="reply-preview-text" id="adminChatReplyText"></div>
+                        </div>
+                        <button type="button" onclick="cancelAdminChatReply()" class="reply-preview-close">×</button>
+                    </div>
+                    
+                    <input type="text" id="adminChatMessageInput" placeholder="বার্তা লিখুন..." disabled>
+                    <button id="adminChatSendBtn" disabled>পাঠান</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
              <section id="settings-section" class="content-section">
                 <div class="section-header">
                     <h2>সেটিংস</h2>
@@ -564,6 +711,51 @@
                                 পাসওয়ার্ড পরিবর্তন করুন
                             </button>
                             <p class="security-hint">আপনার অ্যাকাউন্ট সুরক্ষিত রাখতে নিয়মিত পাসওয়ার্ড পরিবর্তন করুন</p>
+                        </div>
+                    </div>
+
+                    <!-- Create Admin Card (Superadmin Only) -->
+                    <div class="card create-admin-card" id="createAdminCard" style="display: none;">
+                        <div class="card-header-settings">
+                            <div class="card-icon">
+                                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                                    <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                </svg>
+                            </div>
+                            <h3>নতুন প্রশাসক তৈরি করুন</h3>
+                        </div>
+                        <form id="createAdminForm" class="create-admin-form">
+                            <div class="form-group">
+                                <label for="newAdminUsername">প্রশাসক আইডি *</label>
+                                <input type="text" id="newAdminUsername" class="form-control" placeholder="উদাহরণ: ADMIN-2026-002" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newAdminEmail">ইমেইল ঠিকানা *</label>
+                                <input type="email" id="newAdminEmail" class="form-control" placeholder="admin@example.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newAdminPassword">প্রাথমিক পাসওয়ার্ড *</label>
+                                <input type="text" id="newAdminPassword" class="form-control" placeholder="কমপক্ষে ৬ অক্ষর" required minlength="6">
+                                <small class="form-hint">এই পাসওয়ার্ড প্রশাসকের ইমেইলে পাঠানো হবে</small>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block" id="createAdminBtn">
+                                প্রশাসক তৈরি করুন
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Admin List (Superadmin Only) -->
+                    <div class="card admin-list-card" id="adminListCard" style="display: none;">
+                        <div class="card-header-settings">
+                            <div class="card-icon">
+                                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                                    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                                </svg>
+                            </div>
+                            <h3>প্রশাসক তালিকা</h3>
+                        </div>
+                        <div id="adminListContainer" class="admin-list-container">
+                            <!-- Admin list will be loaded here -->
                         </div>
                     </div>
                 </div>
@@ -639,9 +831,14 @@
         </div>
     </div>
 
+    <script src="assets/js/api-config.js"></script>
     <script src="assets/js/common.js"></script>
-    <script src="assets/js/admin-mock-data.js"></script>
+    <script src="assets/js/admin-backend-data.js"></script>
+    <script src="assets/js/admin-candidates.js"></script>
+    <script src="assets/js/admin-notices.js"></script>
     <script src="assets/js/admin.js"></script>
     <script src="assets/js/admin_to_citizen.js"></script>
+    <script src="assets/js/admin_admin_chat.js"></script>
+    <script src="assets/js/admin-complaints.js"></script>
 </body>
 </html>
