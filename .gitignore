@@ -5,6 +5,16 @@
 
 # Node modules
 node_modules/
+assets/images/ 
+uploads/
+ADMIN_CREATION_README.md 
+BALLOT_DELETION_FEATURE.md 
+COMPLAINT_SYSTEM_README.md 
+Id-history
+package-lock.json
+package.json
+project_structure.txt
+SMSBangladesh_API_Documentation.pdf
 
 # Logs
 logs
