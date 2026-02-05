@@ -827,5 +827,249 @@
     <script src="assets/js/admin_to_citizen.js"></script>
     <script src="assets/js/admin_admin_chat.js"></script>
     <script src="assets/js/admin-complaints.js"></script>
+    
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <script>
+        // Export results as PDF (using dummy data from HTML)
+        function exportResults() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Set font
+                doc.setFont('helvetica');
+                
+                // Header Background
+                doc.setFillColor(248, 249, 250);
+                doc.rect(0, 0, 210, 50, 'F');
+                
+                // Top border line (green)
+                doc.setFillColor(34, 139, 34);
+                doc.rect(0, 0, 210, 3, 'F');
+                
+                // Load and add logo
+                const logo = new Image();
+                logo.src = 'assets/images/election_commision_white_bg.png';
+                logo.onload = function() {
+                    // Add logo (centered at top)
+                    doc.addImage(logo, 'PNG', 15, 8, 25, 25);
+                    
+                    // Bangladesh Election Commission Header
+                    doc.setFontSize(18);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(34, 139, 34);
+                    doc.text('Bangladesh Election Commission', 105, 18, { align: 'center' });
+                    
+                    doc.setFontSize(14);
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('Nirapodh Vote - Secure Electronic Voting System', 105, 26, { align: 'center' });
+                    
+                    // Divider line
+                    doc.setDrawColor(34, 139, 34);
+                    doc.setLineWidth(1);
+                    doc.line(20, 37, 190, 37);
+                    
+                    // Official seal/badge
+                    doc.setFontSize(10);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text('Official Document', 105, 43, { align: 'center' });
+                    
+                    // Main Title
+                    doc.setFontSize(20);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('Election Results Report', 105, 60, { align: 'center' });
+                    
+                    // Subtitle
+                    doc.setFontSize(14);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('Dhaka-1 Constituency Election', 105, 68, { align: 'center' });
+                    
+                    // Line separator
+                    doc.setDrawColor(200, 200, 200);
+                    doc.setLineWidth(0.5);
+                    doc.line(20, 73, 190, 73);
+                    
+                    // Summary section
+                    doc.setFontSize(13);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(34, 139, 34);
+                    doc.text('Election Summary', 20, 83);
+                    
+                    // Summary box
+                    doc.setDrawColor(34, 139, 34);
+                    doc.setLineWidth(0.5);
+                    doc.rect(20, 87, 170, 28);
+                    
+                    doc.setFontSize(11);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('Total Registered Voters:', 25, 95);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('50,000', 85, 95);
+                    
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('Total Votes Cast:', 25, 102);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('45,234', 85, 102);
+                    
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('Voter Turnout:', 25, 109);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(34, 139, 34);
+                    doc.text('90.47%', 85, 109);
+                    
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('Date & Time:', 110, 95);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(new Date().toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric' 
+                    }) + ' ' + new Date().toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }), 110, 102);
+                    
+                    // Results section
+                    doc.setFontSize(13);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(34, 139, 34);
+                    doc.text('Candidate Results', 20, 127);
+                    
+                    // Table header
+                    doc.setFillColor(34, 139, 34);
+                    doc.rect(20, 131, 170, 10, 'F');
+                    
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(255, 255, 255);
+                    doc.text('Rank', 25, 138);
+                    doc.text('Candidate Name', 45, 138);
+                    doc.text('Party', 95, 138);
+                    doc.text('Votes', 135, 138);
+                    doc.text('Percentage', 160, 138);
+                    
+                    // Candidate 1 (Winner) - with light green background
+                    let yPos = 151;
+                    doc.setFillColor(232, 245, 233);
+                    doc.rect(20, yPos - 7, 170, 10, 'F');
+                    
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('1', 25, yPos);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('Moh. Karim', 45, yPos);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('National Citizen Party', 95, yPos);
+                    doc.text('25,450', 135, yPos);
+                    doc.text('56.25%', 160, yPos);
+                    
+                    // Winner badge
+                    doc.setFillColor(46, 204, 113);
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(8);
+                    doc.rect(180, yPos - 4, 10, 6, 'F');
+                    doc.text('W', 182, yPos);
+                    
+                    // Separator line
+                    doc.setDrawColor(200, 200, 200);
+                    doc.setLineWidth(0.3);
+                    doc.line(20, yPos + 3, 190, yPos + 3);
+                    
+                    // Candidate 2
+                    yPos += 12;
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('2', 25, yPos);
+                    doc.text('Moh. Rahim', 45, yPos);
+                    doc.text('BNP', 95, yPos);
+                    doc.text('19,784', 135, yPos);
+                    doc.text('43.75%', 160, yPos);
+                    
+                    // Winner declaration box
+                    yPos += 20;
+                    doc.setFillColor(240, 248, 255);
+                    doc.setDrawColor(34, 139, 34);
+                    doc.setLineWidth(1.5);
+                    doc.roundedRect(20, yPos, 170, 35, 3, 3, 'FD');
+                    
+                    doc.setFontSize(11);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(34, 139, 34);
+                    doc.text('OFFICIAL WINNER', 25, yPos + 12);
+                    
+                    doc.setFontSize(16);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('Moh. Karim', 25, yPos + 22);
+                    
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(80, 80, 80);
+                    doc.text('National Citizen Party | Votes: 25,450 (56.25%)', 25, yPos + 29);
+                    
+                    // Verification section
+                    yPos += 50;
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(34, 139, 34);
+                    doc.text('Verification Details', 20, yPos);
+                    
+                    doc.setFontSize(9);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(80, 80, 80);
+                    doc.text('Document ID: ' + 'BEC-' + new Date().getTime().toString().substr(-8), 20, yPos + 7);
+                    doc.text('Generated By: Bangladesh Election Commission', 20, yPos + 14);
+                    doc.text('Verification Portal: https://nirapodh-vote.gov.bd/verify', 20, yPos + 21);
+                    
+                    // Footer with green border
+                    doc.setFillColor(34, 139, 34);
+                    doc.rect(0, 285, 210, 3, 'F');
+                    
+                    doc.setFontSize(8);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text('This is an official election result document generated by NirapodhVote System.', 105, 277, { align: 'center' });
+                    doc.text('© ' + new Date().getFullYear() + ' Bangladesh Election Commission. All rights reserved.', 105, 282, { align: 'center' });
+                    
+                    // Generate timestamp filename
+                    const timestamp = new Date().getTime();
+                    const filename = `election-results-${timestamp}.pdf`;
+                    
+                    // Save PDF
+                    doc.save(filename);
+                    
+                    showSuccessMessage('PDF সফলভাবে ডাউনলোড হয়েছে');
+                };
+                
+                // Trigger image loading - handle error case
+                logo.onerror = function() {
+                    console.error('Failed to load logo');
+                    showErrorMessage('PDF তৈরিতে সমস্যা হয়েছে');
+                };
+                
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                showErrorMessage('PDF তৈরিতে সমস্যা হয়েছে');
+            }
+        }
+        
+        // Placeholder functions for other buttons
+        function calculateResults() {
+            showSuccessMessage('ফলাফল পুনর্গণনা করা হয়েছে');
+        }
+        
+        function publishResults() {
+            if (confirm('আপনি কি নিশ্চিত যে আপনি ফলাফল প্রকাশ করতে চান?')) {
+                showSuccessMessage('ফলাফল সফলভাবে প্রকাশিত হয়েছে');
+            }
+        }
+    </script>
 </body>
 </html>
