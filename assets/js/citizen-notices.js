@@ -34,7 +34,18 @@ async function loadCitizenNotices() {
 }
 
 function renderCitizenNoticeCard(notice) {
-    const isImportant = notice.type === 'জরুরি' || notice.type === 'ফলাফল';
+    // Determine notice styling based on type
+    const noticeStyles = {
+        'জরুরি': { class: 'important', badge: 'জরুরি', prefix: 'গুরুত্বপূর্ণ: ' },
+        'ফলাফল': { class: 'important', badge: 'ফলাফল', prefix: '' },
+        'নির্বাচন সংক্রান্ত': { class: 'election', badge: 'নির্বাচন', prefix: '' },
+        'প্রার্থী তালিকা': { class: 'candidate', badge: 'প্রার্থী', prefix: '' },
+        'সতর্কতা': { class: 'warning', badge: 'সতর্কতা', prefix: '' },
+        'সাধারণ': { class: '', badge: 'সাধারণ', prefix: '' }
+    };
+    
+    const style = noticeStyles[notice.type] || noticeStyles['সাধারণ'];
+    
     const date = new Date(notice.createdAt).toLocaleDateString('bn-BD', {
         year: 'numeric',
         month: 'long',
@@ -59,14 +70,14 @@ function renderCitizenNoticeCard(notice) {
         : '';
 
     return `
-        <div class="notice-card ${isImportant ? 'important' : ''}">
+        <div class="notice-card ${style.class}">
             <div class="notice-header">
-                <h3>${isImportant ? 'গুরুত্বপূর্ণ: ' : ''}${notice.title}</h3>
-                <span class="notice-date">${date}</span>
+                <h3>${style.prefix}${notice.title}</h3>
+                <span class="notice-badge notice-badge-${notice.type}">${style.badge}</span>
             </div>
+            <div class="notice-date">${date}</div>
             ${content}
             ${pdfButton}
-            ${isImportant ? '<div class="notice-badge">জরুরি</div>' : ''}
         </div>
     `;
 }
