@@ -308,8 +308,14 @@ router.post('/login', async (req, res) => {
         id: user._id,
         nid: user.nid,
         name: user.name,
+        dob: user.dob,
+        fatherName: user.fatherName,
+        motherName: user.motherName,
+        presentAddress: user.presentAddress,
+        permanentAddress: user.permanentAddress,
         votingArea: votingArea,
-        hasVoted: user.hasVoted
+        hasVoted: user.hasVoted,
+        votedAt: user.votedAt
       }
     });
   } catch (error) {
@@ -336,12 +342,29 @@ router.get('/me', async (req, res) => {
       return res.status(404).json({ success: false, message: 'ব্যবহারকারী খুঁজে পাওয়া যায়নি' });
     }
 
+    console.log('📤 Sending user data to frontend:', {
+      id: user._id,
+      nid: user.nid,
+      name: user.name,
+      dob: user.dob,
+      fatherName: user.fatherName,
+      motherName: user.motherName,
+      presentAddress: user.presentAddress,
+      votingArea: user.votingArea
+    });
+
     res.json({
       success: true,
       user: {
         id: user._id,
         nid: user.nid,
         name: user.name,
+        dob: user.dob,
+        fatherName: user.fatherName,
+        motherName: user.motherName,
+        presentAddress: user.presentAddress,
+        permanentAddress: user.permanentAddress,
+        votingArea: user.votingArea,
         hasVoted: user.hasVoted,
         votedAt: user.votedAt
       }

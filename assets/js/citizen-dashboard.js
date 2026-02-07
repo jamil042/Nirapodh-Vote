@@ -51,6 +51,19 @@ function initializeDashboard() {
     }
 }
 
+// Close candidate modal
+function closeCandidateModal() {
+    document.getElementById('candidateModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('candidateModal');
+    if (event.target === modal) {
+        closeCandidateModal();
+    }
+}
+
 // Setup navigation listeners
 function setupNavigationListeners() {
     const navItems = document.querySelectorAll('.nav-item');
@@ -94,6 +107,14 @@ function showSection(sectionName) {
     // Load results when switching to results section
     if (sectionName === 'results' && typeof loadAllResults === 'function') {
         loadAllResults();
+    }
+    
+    // Refresh profile data when switching to profile section
+    if (sectionName === 'profile') {
+        const userData = getUserData();
+        if (userData && typeof populateProfileSection === 'function') {
+            populateProfileSection(userData);
+        }
     }
 }
 
