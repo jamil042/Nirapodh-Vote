@@ -959,9 +959,28 @@
 
 /* Profile Section */
 .profile-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.card h3 {
+    font-size: 1.5rem;
+    color: var(--primary-green);
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--light-green);
 }
 
 .profile-info {
@@ -1264,6 +1283,122 @@
 
 .modal-footer .btn {
     min-width: 120px;
+}
+
+/* Candidate Details Modal Styles */
+.candidate-details-content {
+    padding: 0;
+}
+
+.candidate-header-info {
+    display: flex;
+    gap: 25px;
+    padding-bottom: 25px;
+    border-bottom: 2px solid rgba(30, 126, 52, 0.1);
+    margin-bottom: 25px;
+    align-items: center;
+}
+
+.candidate-image-large {
+    flex-shrink: 0;
+}
+
+.candidate-image-large img {
+    width: 150px;
+    height: 150px;
+    border-radius: 15px;
+    object-fit: cover;
+    border: 3px solid var(--primary-green);
+    box-shadow: 0 4px 15px rgba(30, 126, 52, 0.2);
+}
+
+.candidate-basic-info {
+    flex: 1;
+}
+
+.candidate-basic-info h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.8rem;
+    color: var(--dark-green);
+    font-weight: 700;
+}
+
+.party-name-large {
+    font-size: 1.2rem;
+    color: var(--primary-green);
+    margin: 5px 0 15px 0;
+    font-weight: 600;
+}
+
+.party-symbol-large {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    margin-top: 10px;
+}
+
+.candidate-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.info-section {
+    background: rgba(30, 126, 52, 0.03);
+    padding: 20px;
+    border-radius: 10px;
+    border-left: 4px solid var(--primary-green);
+    transition: all 0.3s ease;
+}
+
+.info-section:hover {
+    background: rgba(30, 126, 52, 0.06);
+    box-shadow: 0 4px 12px rgba(30, 126, 52, 0.1);
+}
+
+.info-section h4 {
+    margin: 0 0 12px 0;
+    color: var(--dark-green);
+    font-size: 1.2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.info-section p {
+    margin: 0;
+    line-height: 1.8;
+    color: #333;
+    font-size: 1rem;
+    text-align: justify;
+}
+
+/* Responsive adjustments for candidate details */
+@media (max-width: 768px) {
+    .candidate-header-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .candidate-image-large img {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .candidate-basic-info h3 {
+        font-size: 1.5rem;
+    }
+    
+    .party-name-large {
+        font-size: 1.1rem;
+    }
+    
+    .party-symbol-large {
+        width: 60px;
+        height: 60px;
+        margin: 10px auto;
+    }
 }
 
 /* Mobile Sidebar Overlay & Animation */
@@ -1808,9 +1943,12 @@
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .complaints-container,
-    .profile-container {
+    .complaints-container {
         grid-template-columns: 1fr;
+    }
+
+    .profile-container {
+        padding: 0 15px;
     }
 
     .content-area {
@@ -2793,8 +2931,7 @@
     }
 
     .profile-container {
-        grid-template-columns: 1fr;
-        gap: 15px;
+        padding: 0 5px;
     }
 
     .card {

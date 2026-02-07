@@ -34,8 +34,20 @@ async function loadUserData() {
         console.log('🔐 Loading user data, token exists:', !!token);
         
         const response = await apiRequest('GET_USER', 'GET', null, true);
+        console.log('📥 API Response:', response);
+        
         if (response.success) {
             const user = response.user;
+            console.log('👤 User data received:', user);
+            console.log('📋 User fields:', {
+                name: user.name,
+                nid: user.nid,
+                dob: user.dob,
+                fatherName: user.fatherName,
+                motherName: user.motherName,
+                presentAddress: user.presentAddress,
+                votingArea: user.votingArea
+            });
             
             // Update UI with user data
             const userNameElement = document.getElementById('userName');
@@ -69,24 +81,48 @@ async function loadUserData() {
 
 // Populate profile section with user data
 function populateProfileSection(user) {
-    // Get all info-value elements in profile section
-    const profileSection = document.getElementById('profile-section');
-    if (!profileSection) return;
+    console.log('📝 Populating profile with user data:', user);
     
-    const infoValues = profileSection.querySelectorAll('.info-value');
-    if (infoValues.length >= 4) {
-        // Name
-        infoValues[0].textContent = user.name || 'N/A';
-        
-        // NID - convert to Bangla numerals
-        infoValues[1].textContent = user.nid ? toBengaliNumber(user.nid) : 'N/A';
-        
-        // Phone - this might not be in user model, show placeholder
-        infoValues[2].textContent = user.phone || 'N/A';
-        
-        // Voting Area
-        infoValues[3].textContent = user.votingArea || 'N/A';
+    // Use specific IDs for reliable data binding
+    const profileName = document.getElementById('profileName');
+    const profileNID = document.getElementById('profileNID');
+    const profileDOB = document.getElementById('profileDOB');
+    const profileFatherName = document.getElementById('profileFatherName');
+    const profileMotherName = document.getElementById('profileMotherName');
+    const profileAddress = document.getElementById('profileAddress');
+    const profileArea = document.getElementById('profileArea');
+    
+    if (profileName) {
+        profileName.textContent = user.name || 'N/A';
     }
+    
+    if (profileNID) {
+        // Convert NID to Bengali numerals
+        profileNID.textContent = user.nid ? toBengaliNumber(user.nid) : 'N/A';
+    }
+    
+    if (profileDOB) {
+        // Display date of birth (convert to Bengali if needed)
+        profileDOB.textContent = user.dob ? toBengaliNumber(user.dob) : 'N/A';
+    }
+    
+    if (profileFatherName) {
+        profileFatherName.textContent = user.fatherName || 'N/A';
+    }
+    
+    if (profileMotherName) {
+        profileMotherName.textContent = user.motherName || 'N/A';
+    }
+    
+    if (profileAddress) {
+        profileAddress.textContent = user.presentAddress || user.permanentAddress || 'N/A';
+    }
+    
+    if (profileArea) {
+        profileArea.textContent = user.votingArea || 'N/A';
+    }
+    
+    console.log('✅ Profile populated successfully');
 }
 
 // Load ballots for user's voting area
@@ -348,7 +384,15 @@ function renderCandidatesForBallot(ballotId, candidates) {
     
     container.innerHTML = '';
     
+    // Store candidates in cache for quick access
+    if (!window.candidatesCache) {
+        window.candidatesCache = {};
+    }
+    
     candidates.forEach(candidate => {
+        // Cache candidate data
+        window.candidatesCache[candidate._id] = candidate;
+        
         const candidateCard = document.createElement('div');
         candidateCard.className = 'candidate-card';
         candidateCard.innerHTML = `
@@ -535,10 +579,106 @@ async function renderBallotResults(ballot, resultData, container) {
 }
 
 // Show candidate details (placeholder)
-window.showCandidateDetails = function(candidateId, ballotId) {
+// Store candidates data globally for easy access
+window.candidatesCache = {};
+
+window.showCandidateDetails = async function(candidateId, ballotId) {
     console.log('Show details for candidate:', candidateId, 'in ballot:', ballotId);
-    // TODO: Implement modal with full candidate details
-    alert('প্রার্থীর বিস্তারিত তথ্য শীঘ্রই যুক্ত করা হবে');
+    
+    try {
+        // Try to get from cache first
+        let candidate = window.candidatesCache[candidateId];
+        
+        if (!candidate) {
+            // If not in cache, try to fetch candidates for this ballot
+            console.log('Candidate not in cache, fetching from API...');
+            const url = `${API_CONFIG.API_URL}${API_CONFIG.ENDPOINTS.GET_CANDIDATES}/${ballotId}`;
+            const token = getAuthToken();
+            
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success && result.candidates) {
+                // Store all candidates in cache
+                result.candidates.forEach(c => {
+                    window.candidatesCache[c._id] = c;
+                });
+                candidate = window.candidatesCache[candidateId];
+            }
+        }
+        
+        if (!candidate) {
+            alert('প্রার্থীর তথ্য পাওয়া যায়নি');
+            return;
+        }
+        
+        // Populate modal with candidate details
+        const modalBody = document.getElementById('candidateModalBody');
+        modalBody.innerHTML = `
+            <div class="candidate-details-content">
+                <div class="candidate-header-info">
+                    <div class="candidate-image-large">
+                        <img src="${candidate.image || 'assets/images/default-avatar.png'}" alt="${candidate.name}">
+                    </div>
+                    <div class="candidate-basic-info">
+                        <h3>${candidate.name}</h3>
+                        <p class="party-name-large">${candidate.party}</p>
+                        ${candidate.symbol ? `<img src="${candidate.symbol}" alt="প্রতীক" class="party-symbol-large">` : ''}
+                    </div>
+                </div>
+                
+                <div class="candidate-sections">
+                    ${candidate.bio ? `
+                        <div class="info-section">
+                            <h4>📋 পরিচিতি</h4>
+                            <p>${candidate.bio}</p>
+                        </div>
+                    ` : ''}
+                    
+                    ${candidate.manifesto ? `
+                        <div class="info-section">
+                            <h4>📜 নির্বাচনী ইশতেহার</h4>
+                            <p>${candidate.manifesto}</p>
+                        </div>
+                    ` : ''}
+                    
+                    ${candidate.socialWork ? `
+                        <div class="info-section">
+                            <h4>🤝 সামাজিক কাজ</h4>
+                            <p>${candidate.socialWork}</p>
+                        </div>
+                    ` : ''}
+                    
+                    ${candidate.partyHistory ? `
+                        <div class="info-section">
+                            <h4>🏛️ দলীয় ইতিহাস</h4>
+                            <p>${candidate.partyHistory}</p>
+                        </div>
+                    ` : ''}
+                    
+                    ${!candidate.bio && !candidate.manifesto && !candidate.socialWork && !candidate.partyHistory ? `
+                        <div class="info-section">
+                            <p style="text-align: center; color: #666;">এই প্রার্থী সম্পর্কে অতিরিক্ত তথ্য পাওয়া যায়নি।</p>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+        
+        // Show modal
+        document.getElementById('candidateModal').style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error loading candidate details:', error);
+        alert('প্রার্থীর তথ্য লোড করতে ব্যর্থ হয়েছে');
+    }
 }
 
 // Download result PDF

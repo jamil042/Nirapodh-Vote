@@ -23,7 +23,7 @@
                 <h1>নিরাপদ ভোট - নাগরিক ড্যাশবোর্ড</h1>
             </div>
             <div class="user-section">
-                <span class="user-name" id="userName">মোঃ আবদুল করিম</span>
+                <span class="user-name" id="userName">নাগরিক</span>
                 <button onclick="logout()" class="btn btn-secondary btn-sm">লগআউট</button>
             </div>
             <button class="hamburger-menu" id="hamburgerMenu" onclick="toggleSidebar()">
@@ -98,6 +98,14 @@
                     </span>
                     <span class="nav-text">প্রোফাইল</span>
                 </button>
+                <button class="nav-item" data-section="settings">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                        </svg>
+                    </span>
+                    <span class="nav-text">সেটিংস</span>
+                </button>
             </nav>
         </aside>
 
@@ -112,90 +120,11 @@
                         </svg>
                         ভোট প্রদান
                     </h2>
-                    <p class="user-area">আপনার এলাকা: <strong id="userArea">ঢাকা-১০</strong></p>
+                    <p class="user-area">আপনার এলাকা: <strong id="userArea">লোড হচ্ছে...</strong></p>
                 </div>
 
                 <div class="ballots-container" id="ballotsContainer">
-                    <!-- Ballot 1 -->
-                    <div class="ballot-card">
-                        <div class="ballot-header">
-                            <h3>জাতীয় সংসদ নির্বাচন ২০২৫</h3>
-                            <span class="ballot-status active">সক্রিয়</span>
-                        </div>
-                        <div class="ballot-time">
-                            <p>⏰ ভোটের সময়: ০৮:০০ - ১৬:০০ | ০৫ জানুয়ারি ২০২৫</p>
-                            <p class="time-remaining">⏳ অবশিষ্ট সময়: <span id="timeRemaining1">২ ঘন্টা ৩৫ মিনিট</span></p>
-                        </div>
-                        
-                        <div class="candidates-grid">
-                            <div class="candidate-card">
-                                <input type="radio" name="vote1" id="candidate1" value="1">
-                                <label for="candidate1" class="candidate-label">
-                                    <img src="assets/images/Tamim.jpeg" alt="প্রার্থী" class="candidate-photo">
-                                    <div class="candidate-info">
-                                        <h4>মোঃ আবদুল্লাহ</h4>
-                                        <p class="party-name">জাতীয় নাগরিক পার্টি</p>
-                                        <img src="assets/images/bodna.jpg" alt="প্রতীক" class="party-symbol">
-                                    </div>
-                                </label>
-                                <button class="btn btn-sm btn-secondary" onclick="openCandidateModal(1)" style="margin-top: 10px; width: 100%;">বিস্তারিত দেখুন</button>
-                            </div>
-
-                            <div class="candidate-card">
-                                <input type="radio" name="vote1" id="candidate2" value="2">
-                                <label for="candidate2" class="candidate-label">
-                                    <img src="assets/images/Saima_apu.jpeg" alt="প্রার্থী" class="candidate-photo">
-                                    <div class="candidate-info">
-                                        <h4>সালমা খাতুন</h4>
-                                        <p class="party-name">জনকল্যাণ পার্টি</p>
-                                        <img src="assets/images/honey-bee.jpg" alt="প্রতীক" class="party-symbol">
-                                    </div>
-                                </label>
-                                <button class="btn btn-sm btn-secondary" onclick="openCandidateModal(2)" style="margin-top: 10px; width: 100%;">বিস্তারিত দেখুন</button>
-                            </div>
-
-                            <div class="candidate-card">
-                                <input type="radio" name="vote1" id="candidate3" value="3">
-                                <label for="candidate3" class="candidate-label">
-                                    <img src="assets/images/Taz.jpg" alt="প্রার্থী" class="candidate-photo">
-                                    <div class="candidate-info">
-                                        <h4>রহিম উদ্দিন</h4>
-                                        <p class="party-name">স্বাধীন প্রার্থী</p>
-                                        <img src="assets/images/ant.jpg" alt="প্রতীক" class="party-symbol">
-                                    </div>
-                                </label>
-                                <button class="btn btn-sm btn-secondary" onclick="openCandidateModal(3)" style="margin-top: 10px; width: 100%;">বিস্তারিত দেখুন</button>
-                            </div>
-                        </div>
-
-                        <button onclick="submitVote(1)" class="btn btn-primary btn-large vote-btn">
-                            ভোট প্রদান করুন
-                        </button>
-                    </div>
-
-                    <!-- Already Voted Ballot -->
-                    <div class="ballot-card voted">
-                        <div class="ballot-header">
-                            <h3>মেয়র নির্বাচন ২০২৫</h3>
-                            <span class="ballot-status completed">✓ ভোট প্রদান সম্পন্ন</span>
-                        </div>
-                        <div class="voted-message">
-                            <p>✅ আপনি এই নির্বাচনে ভোট প্রদান করেছেন। ধন্যবাদ!</p>
-                            <p class="vote-time">ভোট প্রদানের সময়: ০৫ জানুয়ারি ২০২৫, ১০:৩০ AM</p>
-                        </div>
-                    </div>
-
-                    <!-- Upcoming Ballot -->
-                    <div class="ballot-card upcoming">
-                        <div class="ballot-header">
-                            <h3>উপজেলা চেয়ারম্যান নির্বাচন ২০২৫</h3>
-                            <span class="ballot-status upcoming">শীঘ্রই</span>
-                        </div>
-                        <div class="ballot-time">
-                            <p>⏰ ভোটের সময়: ০৮:০০ - ১৬:০০ | ১৫ জানুয়ারি ২০২৫</p>
-                        </div>
-                        <p class="upcoming-message">এই নির্বাচন এখনও শুরু হয়নি। নির্ধারিত সময়ে ভোট দিতে পারবেন।</p>
-                    </div>
+                    <!-- Ballots will be loaded dynamically -->
                 </div>
             </div>
 
@@ -211,75 +140,7 @@
                 </div>
 
                 <div class="results-container">
-                    <div class="result-card">
-                        <h3>জাতীয় সংসদ নির্বাচন ২০২৫</h3>
-                        <p class="result-status live">⚪ লাইভ ফলাফল</p>
-                        
-                        <div class="result-item">
-                            <div class="result-info">
-                                <img src="assets/images/Tamim.jpeg" alt="প্রার্থী" class="result-photo">
-                                <div>
-                                    <h4>মোঃ আবদুল্লাহ</h4>
-                                    <p>জাতীয় নাগরিক পার্টি</p>
-                                </div>
-                            </div>
-                            <div class="result-stats">
-                                <div class="vote-count">১,২৩৪ ভোট</div>
-                                <div class="vote-percentage">৪৫%</div>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 45%"></div>
-                            </div>
-                        </div>
-
-                        <div class="result-item">
-                            <div class="result-info">
-                                <img src="assets/images/Saima_apu.jpeg" alt="প্রার্থী" class="result-photo">
-                                <div>
-                                    <h4>সালমা খাতুন</h4>
-                                    <p>জনকল্যাণ পার্টি</p>
-                                </div>
-                            </div>
-                            <div class="result-stats">
-                                <div class="vote-count">৯৮৭ ভোট</div>
-                                <div class="vote-percentage">৩৬%</div>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 36%"></div>
-                            </div>
-                        </div>
-
-                        <div class="result-item">
-                            <div class="result-info">
-                                <img src="assets/images/Taz.jpg" alt="প্রার্থী" class="result-photo">
-                                <div>
-                                    <h4>রহিম উদ্দিন</h4>
-                                    <p>স্বাধীন প্রার্থী</p>
-                                </div>
-                            </div>
-                            <div class="result-stats">
-                                <div class="vote-count">৫২১ ভোট</div>
-                                <div class="vote-percentage">১৯%</div>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 19%"></div>
-                            </div>
-                        </div>
-
-                        <div class="total-votes">
-                            মোট ভোট: <strong>২,৭৪২</strong>
-                        </div>
-                    </div>
-
-                    <div class="result-card completed">
-                        <h3>মেয়র নির্বাচন ২০২৫</h3>
-                        <br>
-                        <div class="winner-announcement">
-                            🏆 বিজয়ী: করিম উদ্দিন (জনকল্যাণ পার্টি)
-                        </div>
-                        <br>
-                        <button class="btn btn-secondary">PDF ডাউনলোড করুন</button>
-                    </div>
+                    <!-- Results will be loaded dynamically -->
                 </div>
             </div>
 
@@ -526,7 +387,7 @@
                         <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
                         </svg>
-                        প্রোফাইল সেটিংস
+                        প্রোফাইল
                     </h2>
                 </div>
 
@@ -536,23 +397,49 @@
                         <div class="profile-info">
                             <div class="info-row">
                                 <span class="info-label">নাম:</span>
-                                <span class="info-value">মোঃ আবদুল করিম</span>
+                                <span class="info-value" id="profileName">-</span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">এনআইডি:</span>
-                                <span class="info-value">১২৩৪৫৬৭৮৯০১২</span>
+                                <span class="info-value" id="profileNID">-</span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label">ফোন:</span>
-                                <span class="info-value">০১৭১২৩৪৫৬৭৮</span>
+                                <span class="info-label">জন্ম তারিখ:</span>
+                                <span class="info-value" id="profileDOB">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">পিতার নাম:</span>
+                                <span class="info-value" id="profileFatherName">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">মাতার নাম:</span>
+                                <span class="info-value" id="profileMotherName">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">বর্তমান ঠিকানা:</span>
+                                <span class="info-value" id="profileAddress">-</span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">ভোটিং এলাকা:</span>
-                                <span class="info-value">ঢাকা-১০</span>
+                                <span class="info-value" id="profileArea">-</span>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
+            <!-- Settings Section -->
+            <div id="settings-section" class="content-section">
+                <div class="section-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
+                            <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                        </svg>
+                        সেটিংস
+                    </h2>
+                </div>
+
+                <div class="profile-container">
                     <div class="card">
                         <h3>পাসওয়ার্ড পরিবর্তন</h3>
                         <form id="passwordForm" onsubmit="changePassword(event)">
