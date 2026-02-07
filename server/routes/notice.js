@@ -5,6 +5,14 @@ const { authenticateAdmin } = require('../utils/helpers');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 // Socket.IO instance will be set from server.js
 let io;
@@ -12,10 +20,10 @@ router.setIO = (socketIO) => {
     io = socketIO;
 };
 
-// Configure multer for PDF uploads
+// Configure multer for temporary PDF uploads (will upload to Cloudinary)
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const uploadDir = 'uploads/notices';
+        const uploadDir = 'uploads/temp';
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -81,12 +89,39 @@ router.post('/create', authenticateAdmin, upload.single('pdfFile'), async (req, 
             noticeData.message = message;
         }
 
-        // Add PDF if provided
+        // Upload PDF to Cloudinary if provided
         if (req.file) {
-            // Use full URL path instead of relative path
-            const protocol = req.protocol || 'http';
-            const host = req.get('host') || 'localhost:3000';
-            noticeData.pdfUrl = `${protocol}://${host}/uploads/notices/${req.file.filename}`;
+            try {
+                console.log('📤 Uploading PDF to Cloudinary...');
+                
+                // Upload to Cloudinary
+                const result = await cloudinary.uploader.upload(req.file.path, {
+                    folder: 'nirapodh-vote/notices',
+                    resource_type: 'raw', // For PDF files
+                    public_id: `notice-${Date.now()}`,
+                    access_mode: 'public'
+                });
+                
+                // Save Cloudinary URL to database
+                noticeData.pdfUrl = result.secure_url;
+                console.log('✅ PDF uploaded to Cloudinary:', result.secure_url);
+                
+                // Delete temporary local file
+                fs.unlinkSync(req.file.path);
+                console.log('🗑️ Temporary file deleted');
+                
+            } catch (uploadError) {
+                console.error('Cloudinary upload error:', uploadError);
+                // Clean up temp file
+                if (fs.existsSync(req.file.path)) {
+                    fs.unlinkSync(req.file.path);
+                }
+                return res.status(500).json({
+                    success: false,
+                    message: 'PDF আপলোড করতে সমস্যা হয়েছে',
+                    error: uploadError.message
+                });
+            }
         }
 
         // Set priority based on type

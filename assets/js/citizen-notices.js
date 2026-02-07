@@ -89,7 +89,8 @@ function renderCitizenNoticeCard(notice) {
 }
 
 function viewCitizenNoticePDF(pdfUrl) {
-    // PDF URL is now a full URL from server, use it directly
+    // Cloudinary provides full URL, use it directly
+    console.log('Opening PDF from cloud:', pdfUrl);
     window.open(pdfUrl, '_blank');
 }
 

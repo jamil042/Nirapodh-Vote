@@ -1,8 +1,16 @@
 // API Configuration
+// Note: Replace 'localhost' with your server IP address for network access
+// Example: 'http://192.168.1.5:3000' or 'http://192.168.0.100:3000'
 const API_CONFIG = {
-  BASE_URL: 'http://localhost:3000',
-  API_URL: 'http://localhost:3000/api',
-  SOCKET_URL: 'http://localhost:3000',
+  BASE_URL: window.location.origin.includes('localhost') 
+    ? 'http://localhost:3000' 
+    : window.location.origin,
+  API_URL: window.location.origin.includes('localhost') 
+    ? 'http://localhost:3000/api' 
+    : window.location.origin + '/api',
+  SOCKET_URL: window.location.origin.includes('localhost') 
+    ? 'http://localhost:3000' 
+    : window.location.origin,
   ENDPOINTS: {
     // Auth endpoints
     REGISTER: '/auth/register',
