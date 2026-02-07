@@ -94,17 +94,23 @@ router.post('/create', authenticateAdmin, upload.single('pdfFile'), async (req, 
             try {
                 console.log('📤 Uploading PDF to Cloudinary...');
                 
-                // Upload to Cloudinary
+                // Upload to Cloudinary with public access
                 const result = await cloudinary.uploader.upload(req.file.path, {
                     folder: 'nirapodh-vote/notices',
                     resource_type: 'raw', // For PDF files
                     public_id: `notice-${Date.now()}`,
-                    access_mode: 'public'
+                    type: 'upload', // Use 'upload' type for public access
+                    invalidate: true
                 });
                 
+                // Construct public URL for raw files
+                // Format: https://res.cloudinary.com/{cloud_name}/raw/upload/{folder}/{public_id}.{format}
+                const publicUrl = result.secure_url;
+                
                 // Save Cloudinary URL to database
-                noticeData.pdfUrl = result.secure_url;
-                console.log('✅ PDF uploaded to Cloudinary:', result.secure_url);
+                noticeData.pdfUrl = publicUrl;
+                console.log('✅ PDF uploaded to Cloudinary:', publicUrl);
+                console.log('📋 Full result:', JSON.stringify(result, null, 2));
                 
                 // Delete temporary local file
                 fs.unlinkSync(req.file.path);
