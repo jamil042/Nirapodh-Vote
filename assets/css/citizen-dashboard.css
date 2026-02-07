@@ -232,15 +232,20 @@
 }
 
 .notification-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
     background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
     color: white;
-    padding: 4px 10px;
+    padding: 4px 8px;
     border-radius: 12px;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 700;
     box-shadow: 0 2px 6px rgba(255, 68, 68, 0.3);
     animation: pulse-badge 2.5s ease-in-out infinite;
     transition: all 0.3s ease;
+    min-width: 20px;
+    text-align: center;
 }
 
 .nav-item:hover .notification-badge {

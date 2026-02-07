@@ -4,6 +4,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const path = require('path');
 const connectDB = require('./server/config/db');
 const { randomUUID } = require('crypto');
 
@@ -29,16 +30,9 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Serve static files
 app.use(express.static(__dirname));
-app.use('/uploads', express.static('uploads')); // Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Serve uploaded files
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/vote', voteRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/complaint', complaintRoutes);
-app.use('/api/notice', noticeRoutes);
-
-// Socket.IO setup for chat
+// Socket.IO setup for chat and notifications
 const io = new Server(server, {
   cors: {
     origin: '*',
@@ -50,6 +44,16 @@ const io = new Server(server, {
   pingTimeout: 60000,
   pingInterval: 25000
 });
+
+// Pass Socket.IO to notice routes for real-time notifications
+noticeRoutes.setIO(io);
+
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/vote', voteRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/complaint', complaintRoutes);
+app.use('/api/notice', noticeRoutes);
 
 // ===== CHAT STATE MANAGEMENT =====
 

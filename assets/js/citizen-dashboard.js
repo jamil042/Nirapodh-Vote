@@ -116,6 +116,11 @@ function showSection(sectionName) {
             populateProfileSection(userData);
         }
     }
+    
+    // Clear notification badge when entering notices section
+    if (sectionName === 'notices' && typeof markNoticesAsViewed === 'function') {
+        markNoticesAsViewed();
+    }
 }
 
 // Setup mobile menu

@@ -6,6 +6,12 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+// Socket.IO instance will be set from server.js
+let io;
+router.setIO = (socketIO) => {
+    io = socketIO;
+};
+
 // Configure multer for PDF uploads
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -77,7 +83,10 @@ router.post('/create', authenticateAdmin, upload.single('pdfFile'), async (req, 
 
         // Add PDF if provided
         if (req.file) {
-            noticeData.pdfUrl = `/uploads/notices/${req.file.filename}`;
+            // Use full URL path instead of relative path
+            const protocol = req.protocol || 'http';
+            const host = req.get('host') || 'localhost:3000';
+            noticeData.pdfUrl = `${protocol}://${host}/uploads/notices/${req.file.filename}`;
         }
 
         // Set priority based on type
@@ -95,6 +104,17 @@ router.post('/create', authenticateAdmin, upload.single('pdfFile'), async (req, 
         console.log('💾 Saving notice to database...');
         await notice.save();
         console.log('✅ Notice saved successfully:', notice._id);
+
+        // Emit socket event for real-time notification
+        if (io) {
+            io.emit('new_notice', {
+                noticeId: notice._id,
+                title: notice.title,
+                type: notice.type,
+                message: 'নতুন নোটিশ পাবলিশ করা হয়েছে'
+            });
+            console.log('🔔 Socket event emitted: new_notice');
+        }
 
         res.status(201).json({
             success: true,

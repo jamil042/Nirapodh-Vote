@@ -14,6 +14,9 @@ async function loadCitizenNotices() {
         }
 
         const notices = data.notices || [];
+        
+        // Update total notice count for badge tracking
+        totalNotices = notices.length;
 
         if (notices.length === 0) {
             noticesContainer.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">কোন নোটিশ উপলব্ধ নেই</p>';
@@ -26,6 +29,9 @@ async function loadCitizenNotices() {
         });
 
         noticesContainer.innerHTML = html;
+        
+        // Mark notices as viewed when loading - clear badge immediately
+        window.markNoticesAsViewed();
 
     } catch (error) {
         console.error('Load citizen notices error:', error);
@@ -83,13 +89,104 @@ function renderCitizenNoticeCard(notice) {
 }
 
 function viewCitizenNoticePDF(pdfUrl) {
-    // Remove /api from URL since uploads are served from root /uploads
-    const baseUrl = API_CONFIG.API_URL.replace('/api', '');
-    window.open(baseUrl + pdfUrl, '_blank');
+    // PDF URL is now a full URL from server, use it directly
+    window.open(pdfUrl, '_blank');
 }
+
+// Notification Badge Management with Socket.IO
+let totalNotices = 0;
+let noticeSocket = null;
+
+// Initialize Socket.IO connection for notices
+function initNoticeSocket() {
+    if (noticeSocket) return; // Already connected
+    
+    const socketUrl = API_CONFIG.API_URL.replace('/api', '');
+    noticeSocket = io(socketUrl, {
+        transports: ['websocket', 'polling']
+    });
+    
+    // Listen for new notice events
+    noticeSocket.on('new_notice', (data) => {
+        console.log('🔔 New notice received:', data);
+        showNewNoticeNotification();
+    });
+    
+    noticeSocket.on('connect', () => {
+        console.log('✅ Socket connected for notice notifications');
+    });
+    
+    noticeSocket.on('disconnect', () => {
+        console.log('❌ Socket disconnected');
+    });
+}
+
+// Show notification badge when new notice arrives
+function showNewNoticeNotification() {
+    const badge = document.getElementById('notificationBadge');
+    if (!badge) return;
+    
+    const currentCount = parseInt(badge.textContent) || 0;
+    badge.textContent = currentCount + 1;
+    badge.style.display = 'inline-block';
+    
+    // Show alert
+    if (typeof showAlert === 'function') {
+        showAlert('নতুন নোটিশ এসেছে! নোটিশ সেকশনে দেখুন।', 'info');
+    }
+}
+
+// Initialize badge count on first load
+async function initBadgeCount() {
+    try {
+        const response = await fetch(`${API_CONFIG.API_URL}/notice/all`);
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            totalNotices = data.notices.length;
+            
+            const badge = document.getElementById('notificationBadge');
+            if (!badge) return;
+            
+            // Get last viewed from localStorage
+            const lastViewed = localStorage.getItem('lastViewedNoticeCount');
+            const unreadCount = lastViewed ? totalNotices - parseInt(lastViewed) : 0;
+            
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error('Init badge count error:', error);
+    }
+}
+
+// Mark notices as viewed when entering notices section
+window.markNoticesAsViewed = function() {
+    const badge = document.getElementById('notificationBadge');
+    if (badge) {
+        badge.style.display = 'none';
+        badge.textContent = '0';
+    }
+    
+    // Store current count in localStorage
+    if (totalNotices > 0) {
+        localStorage.setItem('lastViewedNoticeCount', totalNotices.toString());
+    }
+}
+
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Socket.IO for real-time notifications
+    initNoticeSocket();
+    
+    // Initialize badge count
+    initBadgeCount();
+    
     // Load notices if on notices section
     if (document.getElementById('notices-section')) {
         loadCitizenNotices();
