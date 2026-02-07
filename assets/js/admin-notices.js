@@ -124,6 +124,14 @@ async function loadPublishedNotices() {
         });
 
         noticeList.innerHTML = html;
+        
+        // Add event listeners to PDF buttons
+        document.querySelectorAll('.pdf-view-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const pdfUrl = this.getAttribute('data-pdf-url');
+                viewNoticePDF(pdfUrl);
+            });
+        });
 
     } catch (error) {
         console.error('Load notices error:', error);
@@ -168,7 +176,7 @@ function renderNoticeItem(notice) {
             </div>
             <div class="notice-actions">
                 ${notice.pdfUrl ? 
-                    `<button onclick="viewNoticePDF('${notice.pdfUrl}')" class="btn btn-sm btn-secondary">
+                    `<button class="btn btn-sm btn-secondary pdf-view-btn" data-pdf-url="${notice.pdfUrl}">
                         <i class="fas fa-file-pdf"></i> PDF দেখুন
                     </button>` : ''}
                 <button onclick="toggleNoticeStatus('${notice._id}', ${notice.isActive})" 
@@ -199,7 +207,14 @@ function getNoticeBadgeType(type) {
 
 // View PDF notice
 function viewNoticePDF(pdfUrl) {
-    window.open(API_CONFIG.API_URL + pdfUrl, '_blank');
+    // If Cloudinary URL (starts with https://), use directly
+    // Otherwise, construct URL with API base
+    const fullUrl = pdfUrl.startsWith('http') 
+        ? pdfUrl 
+        : API_CONFIG.API_URL.replace('/api', '') + pdfUrl;
+    
+    console.log('Opening PDF:', fullUrl);
+    window.open(fullUrl, '_blank');
 }
 
 // Toggle notice active status

@@ -32,6 +32,14 @@ async function loadCitizenNotices() {
         
         // Mark notices as viewed when loading - clear badge immediately
         window.markNoticesAsViewed();
+        
+        // Add event listeners to PDF buttons
+        document.querySelectorAll('.pdf-view-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const pdfUrl = this.getAttribute('data-pdf-url');
+                viewCitizenNoticePDF(pdfUrl);
+            });
+        });
 
     } catch (error) {
         console.error('Load citizen notices error:', error);
@@ -70,7 +78,7 @@ function renderCitizenNoticeCard(notice) {
 
     // Show PDF button if PDF exists
     const pdfButton = notice.pdfUrl
-        ? `<button class="btn btn-secondary btn-sm" onclick="viewCitizenNoticePDF('${notice.pdfUrl}')">
+        ? `<button class="btn btn-secondary btn-sm pdf-view-btn" data-pdf-url="${notice.pdfUrl}">
                <span>📄 PDF দেখুন</span>
            </button>`
         : '';
