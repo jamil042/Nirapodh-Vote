@@ -184,11 +184,12 @@
 
                 <div class="chart-grid">
                     <div class="card">
-                        <h3>ভোটিং টার্নআউট ট্রেন্ড</h3>
-                        <canvas id="turnoutChart" height="220"></canvas>
-                    </div>
-                    <div class="card">
-                        <h3>ফলাফলের সারাংশ</h3>
+                        <div class="result-chart-header">
+                            <h3>ফলাফলের সারাংশ</h3>
+                            <select id="resultBallotSelect" class="result-ballot-dropdown">
+                                <option value="">ব্যালট নির্বাচন করুন</option>
+                            </select>
+                        </div>
                         <canvas id="resultChart" height="220"></canvas>
                     </div>
                 </div>
@@ -371,80 +372,15 @@
                         <label for="selectBallot">ব্যালট নির্বাচন করুন</label>
                         <select id="selectBallot">
                             <option value="">ব্যালট নির্বাচন করুন</option>
-                            <option value="1">ঢাকা-১ আসন নির্বাচন</option>
-                            <option value="2">চট্টগ্রাম-২ আসন নির্বাচন</option>
                         </select>
                     </div>
 
                     <div class="results-summary">
-                        <h3>ফলাফল সারসংক্ষেপ - ঢাকা-১ আসন</h3>
-                        <div class="result-stats">
-                            <div class="result-stat">
-                                <span class="result-label">মোট ভোটার:</span>
-                                <span class="result-value">৫০,০০০</span>
-                            </div>
-                            <div class="result-stat">
-                                <span class="result-label">প্রদত্ত ভোট:</span>
-                                <span class="result-value">৪৫,২৩৪</span>
-                            </div>
-                            <div class="result-stat">
-                                <span class="result-label">ভোট প্রদানের হার:</span>
-                                <span class="result-value">৯০.৪৭%</span>
-                            </div>
-                        </div>
-
-                        <div class="candidate-results">
-                            <div class="candidate-result-item">
-                                <div class="candidate-info">
-                                    <div class="candidate-photo">
-                                        <svg viewBox="0 0 24 24" fill="#757575" width="32" height="32">
-                                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <h4>মোঃ করিম</h4>
-                                        <p>জাতীয় নাগরিক পার্টি - 
-                                            <img src="assets/images/জাতীয়_নাগরিক_পার্টির_লোগো.svg.png" alt="জাতীয় নাগরিক পার্টি" width="16" height="16" style="vertical-align: middle;">
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="vote-count">
-                                    <span class="votes">২৫,৪৫০ ভোট</span>
-                                    <div class="vote-bar">
-                                        <div class="vote-fill" style="width: 56%"></div>
-                                    </div>
-                                    <span class="percentage">৫৬.২৫%</span>
-                                </div>
-                            </div>
-                            <div class="candidate-result-item">
-                                <div class="candidate-info">
-                                    <div class="candidate-photo">
-                                        <svg viewBox="0 0 24 24" fill="#757575" width="32" height="32">
-                                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <h4>মোঃ রহিম</h4>
-                                        <p>বিএনপি - 
-                                            <img src="assets/images/dhan.png" alt="বিএনপি" width="16" height="16" style="vertical-align: middle;">
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="vote-count">
-                                    <span class="votes">১৯,৭৮৪ ভোট</span>
-                                    <div class="vote-bar">
-                                        <div class="vote-fill" style="width: 44%"></div>
-                                    </div>
-                                    <span class="percentage">৪৩.৭৫%</span>
-                                </div>
-                            </div>
-                        </div>
+                        <p style="text-align: center; color: #999; padding: 40px;">একটি ব্যালট নির্বাচন করুন ফলাফল দেখতে</p>
                     </div>
 
                     <div class="form-actions">
                         <button class="btn btn-primary" onclick="calculateResults()">ফলাফল পুনর্গণনা করুন</button>
-                        <button class="btn btn-secondary" onclick="exportResults()">PDF হিসেবে পাঠান</button>
-                        <button class="btn btn-primary" onclick="publishResults()">ফলাফল প্রকাশ করুন</button>
                     </div>
                 </div>
             </section>
@@ -1060,16 +996,7 @@
             }
         }
         
-        // Placeholder functions for other buttons
-        function calculateResults() {
-            showSuccessMessage('ফলাফল পুনর্গণনা করা হয়েছে');
-        }
-        
-        function publishResults() {
-            if (confirm('আপনি কি নিশ্চিত যে আপনি ফলাফল প্রকাশ করতে চান?')) {
-                showSuccessMessage('ফলাফল সফলভাবে প্রকাশিত হয়েছে');
-            }
-        }
+        // Results management functions are now in admin-backend-data.js
     </script>
 </body>
 </html>

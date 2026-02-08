@@ -17,7 +17,7 @@
     display: grid;
     grid-template-columns: 350px 1fr;
     gap: 20px;
-    height: 550px;
+    height: 480px;
 }
 
 /* =========================

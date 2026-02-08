@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeDashboard() {
-    loadDashboardData(); // Load mock data
+    loadDashboardData(); // Load real-time data from backend
     loadCandidatesData(); // Load mock candidates data
     loadComplaintsData(); // Load mock complaints data
     loadAdminProfile(); // Load mock admin info
@@ -65,6 +65,7 @@ function initializeDashboard() {
     populateBallotFormOptions(); // Load ballot form options from mock data
     loadPublishedNotices(); // Load published notices
     loadExistingBallots(); // Load existing ballots for superadmin
+    loadBallotsForResults(); // Load ballots for results management section
     checkAdminRole(); // Check if superadmin and show admin creation section
     
     // Mark card for superadmin styling and show/hide hints
@@ -109,103 +110,79 @@ function populateBallotFormOptions() {
 }
 
 function renderCharts() {
-    // Charts will be populated with real data from backend
-    // For now, display placeholder charts
-    const turnoutCtx = document.getElementById('turnoutChart');
-    if (turnoutCtx && typeof Chart !== 'undefined') {
-        // Sample data for turnout chart
-        const turnoutData = {
-            labels: ['সকাল ৮টা', '১০টা', '১২টা', '২টা', '৪টা'],
-            percentage: [15, 35, 55, 70, 85]
-        };
-        
-        new Chart(turnoutCtx, {
-            type: 'line',
-            data: {
-                labels: turnoutData.labels,
-                datasets: [{
-                    label: 'টার্নআউট শতাংশ (%)',
-                    data: turnoutData.percentage,
-                    borderColor: '#1976d2',
-                    backgroundColor: 'rgba(25, 118, 210, 0.05)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#1976d2',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: true,
-                        labels: {
-                            font: {
-                                size: 12,
-                                family: "'Roboto', sans-serif"
-                            },
-                            color: '#666',
-                            padding: 12
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        ticks: {
-                            font: {
-                                size: 11
-                            },
-                            color: '#999'
-                        },
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)',
-                            drawBorder: false
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            font: {
-                                size: 11
-                            },
-                            color: '#999'
-                        },
-                        grid: {
-                            display: false,
-                            drawBorder: false
-                        }
+    const token = sessionStorage.getItem('nirapodh_admin_token');
+    if (!token) return;
+
+        // === Results Summary Chart (per ballot) ===
+        const resultSelect = document.getElementById('resultBallotSelect');
+        if (resultSelect) {
+            // Load ballots into dropdown
+            fetch(`${API_CONFIG.API_URL}/admin/ballots`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(r => r.json())
+            .then(bData => {
+                if (bData.success && bData.ballots) {
+                    resultSelect.innerHTML = '<option value="">ব্যালট নির্বাচন করুন</option>';
+                    bData.ballots.forEach(b => {
+                        const opt = document.createElement('option');
+                        opt.value = b._id;
+                        opt.textContent = `${b.name} - ${b.location}`;
+                        resultSelect.appendChild(opt);
+                    });
+                    // Auto-select first ballot
+                    if (bData.ballots.length > 0) {
+                        resultSelect.value = bData.ballots[0]._id;
+                        loadResultChart(bData.ballots[0]._id, token);
                     }
                 }
-            }
-        });
-    }
+            });
 
-    // Results Chart (Doughnut Chart)
-    const resultCtx = document.getElementById('resultChart');
-    if (resultCtx && typeof Chart !== 'undefined') {
-        // Sample data for results chart
-        const resultData = {
-            labels: ['প্রার্থী ক', 'প্রার্থী খ', 'প্রার্থী গ'],
-            data: [45, 35, 20]
-        };
-        
-        new Chart(resultCtx, {
+            resultSelect.addEventListener('change', function() {
+                if (this.value) loadResultChart(this.value, token);
+            });
+        }
+}
+
+let _resultChartInstance = null;
+
+function loadResultChart(ballotId, token) {
+    fetch(`${API_CONFIG.API_URL}/admin/results/${ballotId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(r => r.json())
+    .then(data => {
+        const resultCtx = document.getElementById('resultChart');
+        if (!resultCtx || typeof Chart === 'undefined') return;
+
+        // Destroy old chart if exists
+        if (_resultChartInstance) {
+            _resultChartInstance.destroy();
+            _resultChartInstance = null;
+        }
+
+        const chartColors = [
+            '#006A4E', '#C62828', '#1565C0', '#E65100', 
+            '#6A1B9A', '#F9A825', '#00838F', '#D81B60',
+            '#4E342E', '#43A047'
+        ];
+
+        let labels, values;
+        if (data.success && data.results && data.results.length > 0) {
+            labels = data.results.map(r => r.name);
+            values = data.results.map(r => r.voteCount);
+        } else {
+            labels = ['কোনো ভোট নেই'];
+            values = [1];
+        }
+
+        _resultChartInstance = new Chart(resultCtx, {
             type: 'doughnut',
             data: {
-                labels: resultData.labels,
+                labels: labels,
                 datasets: [{
-                    data: resultData.data,
-                    backgroundColor: [
-                        '#1976d2',
-                        '#f57c00',
-                        '#d32f2f'
-                    ],
+                    data: values,
+                    backgroundColor: chartColors.slice(0, values.length),
                     borderColor: '#fff',
                     borderWidth: 2
                 }]
@@ -217,10 +194,7 @@ function renderCharts() {
                     legend: {
                         position: 'bottom',
                         labels: {
-                            font: {
-                                size: 11,
-                                family: "'Roboto', sans-serif"
-                            },
+                            font: { size: 11, family: "'Roboto', sans-serif" },
                             color: '#666',
                             padding: 12,
                             usePointStyle: true
@@ -230,7 +204,10 @@ function renderCharts() {
                 cutout: '62%'
             }
         });
-    }
+    })
+    .catch(err => {
+        console.error('❌ Result chart load error:', err);
+    });
 }
 
 function showSection(sectionId) {
@@ -609,67 +586,7 @@ function resetNoticeForm(btn, originalText) {
 
 // Notice functions removed - moved to admin-notices.js
 
-function calculateResults() {
-    const btn = event?.target || null;
-    const originalText = btn?.textContent || 'গণনা করুন';
-    
-    if (btn) {
-        btn.disabled = true;
-        btn.classList.add('btn-loading');
-        btn.textContent = 'গণনা চলছে...';
-    }
-    
-    setTimeout(() => {
-        showAlert('ফলাফল সফলভাবে গণনা করা হয়েছে!', 'success');
-        if (btn) {
-            btn.disabled = false;
-            btn.classList.remove('btn-loading');
-            btn.textContent = originalText;
-        }
-    }, 1500);
-}
-
-function exportResults() {
-    const btn = event?.target || null;
-    const originalText = btn?.textContent || 'PDF রপ্তানি';
-    
-    if (btn) {
-        btn.disabled = true;
-        btn.classList.add('btn-loading');
-        btn.textContent = 'রপ্তানি হচ্ছে...';
-    }
-    
-    setTimeout(() => {
-        showAlert('ফলাফল PDF হিসেবে রপ্তানি হয়েছে!', 'success');
-        if (btn) {
-            btn.disabled = false;
-            btn.classList.remove('btn-loading');
-            btn.textContent = originalText;
-        }
-    }, 1500);
-}
-
-function publishResults() {
-    if (confirm('আপনি কি ফলাফল প্রকাশ করতে চান? প্রকাশের পর সকল নাগরিক দেখতে পারবে।')) {
-        const btn = event?.target || null;
-        const originalText = btn?.textContent || 'প্রকাশ করুন';
-        
-        if (btn) {
-            btn.disabled = true;
-            btn.classList.add('btn-loading');
-            btn.textContent = 'প্রকাশিত হচ্ছে...';
-        }
-        
-        setTimeout(() => {
-            showAlert('ফলাফল সফলভাবে প্রকাশিত হয়েছে!', 'success');
-            if (btn) {
-                btn.disabled = false;
-                btn.classList.remove('btn-loading');
-                btn.textContent = originalText;
-            }
-        }, 1500);
-    }
-}
+// Results management functions removed - moved to admin-backend-data.js with backend integration
 
 // editCandidate and deleteCandidate moved to admin-candidates.js
 // Old mock versions removed

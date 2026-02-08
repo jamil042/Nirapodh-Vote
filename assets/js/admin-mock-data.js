@@ -144,41 +144,8 @@ const ballotMockData = {
     ballotLocations: []
 };
 
-function loadDashboardData() {
-    // Load Stats
-    const totalBallotsEl = document.getElementById('total-ballots');
-    const activeVotesEl = document.getElementById('active-votes');
-    const totalVotersEl = document.getElementById('total-voters');
-    const votesCastEl = document.getElementById('votes-cast');
-
-    if (totalBallotsEl) totalBallotsEl.textContent = toBengaliNumber(mockDashboardData.stats.totalBallots);
-    if (activeVotesEl) activeVotesEl.textContent = toBengaliNumber(mockDashboardData.stats.activeVotes);
-    if (totalVotersEl) totalVotersEl.textContent = mockDashboardData.stats.totalVoters;
-    if (votesCastEl) votesCastEl.textContent = mockDashboardData.stats.votesCast;
-
-    // Load Live Stats
-    const liveStatsContainer = document.getElementById('live-stats-container');
-    if (liveStatsContainer) {
-        liveStatsContainer.innerHTML = mockDashboardData.liveStats.map(stat => `
-            <div class="live-stat-item">
-                <span class="live-label">${stat.seat}:</span>
-                <span class="live-value">${stat.votes} ভোট</span>
-                <span class="live-percentage">${toBengaliNumber(stat.percentage)}%</span>
-            </div>
-        `).join('');
-    }
-
-    // Load Activities
-    const activityListContainer = document.getElementById('activity-list-container');
-    if (activityListContainer) {
-        activityListContainer.innerHTML = mockDashboardData.activities.map(activity => `
-            <div class="activity-item">
-                <span class="activity-time">${activity.time}</span>
-                <p>${activity.text}</p>
-            </div>
-        `).join('');
-    }
-}
+// Dashboard data loading moved to admin-backend-data.js - this mock function is disabled
+// function loadDashboardData() - DISABLED - using backend data now
 
 async function loadCandidatesData() {
     const candidatesTableBody = document.getElementById('candidatesTableBody');
