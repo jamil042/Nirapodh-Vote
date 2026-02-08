@@ -37,7 +37,9 @@ const complaintSchema = new mongoose.Schema({
   attachments: [{
     filename: String,
     originalName: String,
-    path: String,
+    path: String, // Deprecated - kept for backward compatibility
+    url: String, // Cloudinary URL
+    cloudinaryId: String, // Cloudinary public ID for deletion
     mimetype: String,
     size: Number,
     uploadedAt: {
@@ -68,7 +70,9 @@ const complaintSchema = new mongoose.Schema({
     attachments: [{
       filename: String,
       originalName: String,
-      path: String,
+      path: String, // Deprecated - kept for backward compatibility
+      url: String, // Cloudinary URL
+      cloudinaryId: String, // Cloudinary public ID for deletion
       mimetype: String,
       size: Number,
       uploadedAt: {

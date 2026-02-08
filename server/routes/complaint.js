@@ -6,17 +6,25 @@ const path = require('path');
 const fs = require('fs');
 const Complaint = require('../models/Complaint');
 const User = require('../models/User');
+const cloudinary = require('cloudinary').v2;
 
-// Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, '../../uploads/complaints');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Create temporary uploads directory if it doesn't exist
+const tempDir = path.join(__dirname, '../../uploads/temp');
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true });
 }
 
-// Configure multer for file uploads
+// Configure multer for temporary file uploads (will upload to Cloudinary)
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, uploadsDir);
+    cb(null, tempDir);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -73,14 +81,41 @@ router.post('/submit', upload.array('attachments', 5), async (req, res) => {
       });
     }
 
-    // Process uploaded files
-    const attachments = req.files ? req.files.map(file => ({
-      filename: file.filename,
-      originalName: file.originalname,
-      path: file.path,
-      mimetype: file.mimetype,
-      size: file.size
-    })) : [];
+    // Upload files to Cloudinary
+    const attachments = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        try {
+          // Determine resource type based on mimetype
+          const resourceType = file.mimetype.startsWith('image/') ? 'image' : 'raw';
+          
+          // Upload to Cloudinary
+          const result = await cloudinary.uploader.upload(file.path, {
+            folder: 'nirapodh-vote/complaints',
+            resource_type: resourceType,
+            public_id: `complaint-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+          });
+          
+          attachments.push({
+            filename: file.originalname,
+            originalName: file.originalname,
+            url: result.secure_url,
+            cloudinaryId: result.public_id,
+            mimetype: file.mimetype,
+            size: file.size
+          });
+          
+          // Delete temporary file
+          fs.unlinkSync(file.path);
+        } catch (uploadError) {
+          console.error('Cloudinary upload error:', uploadError);
+          // Clean up temp file
+          if (fs.existsSync(file.path)) {
+            fs.unlinkSync(file.path);
+          }
+        }
+      }
+    }
 
     // Create complaint
     const complaint = new Complaint({
@@ -275,14 +310,41 @@ router.post('/admin/respond/:complaintId', upload.array('attachments', 5), async
       });
     }
 
-    // Process uploaded files
-    const attachments = req.files ? req.files.map(file => ({
-      filename: file.filename,
-      originalName: file.originalname,
-      path: file.path,
-      mimetype: file.mimetype,
-      size: file.size
-    })) : [];
+    // Upload files to Cloudinary
+    const attachments = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        try {
+          // Determine resource type based on mimetype
+          const resourceType = file.mimetype.startsWith('image/') ? 'image' : 'raw';
+          
+          // Upload to Cloudinary
+          const result = await cloudinary.uploader.upload(file.path, {
+            folder: 'nirapodh-vote/complaints',
+            resource_type: resourceType,
+            public_id: `admin-response-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+          });
+          
+          attachments.push({
+            filename: file.originalname,
+            originalName: file.originalname,
+            url: result.secure_url,
+            cloudinaryId: result.public_id,
+            mimetype: file.mimetype,
+            size: file.size
+          });
+          
+          // Delete temporary file
+          fs.unlinkSync(file.path);
+        } catch (uploadError) {
+          console.error('Cloudinary upload error:', uploadError);
+          // Clean up temp file
+          if (fs.existsSync(file.path)) {
+            fs.unlinkSync(file.path);
+          }
+        }
+      }
+    }
 
     // Update complaint with admin response
     complaint.adminResponse = {
@@ -332,12 +394,19 @@ router.delete('/admin/delete/:complaintId', async (req, res) => {
       });
     }
 
-    // Delete associated files
-    [...complaint.attachments, ...(complaint.adminResponse?.attachments || [])].forEach(file => {
-      if (fs.existsSync(file.path)) {
-        fs.unlinkSync(file.path);
+    // Delete associated files from Cloudinary
+    const allAttachments = [...complaint.attachments, ...(complaint.adminResponse?.attachments || [])];
+    for (const file of allAttachments) {
+      if (file.cloudinaryId) {
+        try {
+          await cloudinary.uploader.destroy(file.cloudinaryId, {
+            resource_type: file.mimetype?.startsWith('image/') ? 'image' : 'raw'
+          });
+        } catch (deleteError) {
+          console.error('Cloudinary delete error:', deleteError);
+        }
       }
-    });
+    }
 
     await Complaint.deleteOne({ complaintId });
 
@@ -355,20 +424,41 @@ router.delete('/admin/delete/:complaintId', async (req, res) => {
   }
 });
 
-// Download attachment
-router.get('/download/:filename', (req, res) => {
+// View/Download attachment (redirect to Cloudinary URL)
+router.get('/download/:filename', async (req, res) => {
   try {
     const { filename } = req.params;
-    const filePath = path.join(uploadsDir, filename);
+    
+    // Find complaint with this attachment
+    const complaint = await Complaint.findOne({
+      $or: [
+        { 'attachments.filename': filename },
+        { 'adminResponse.attachments.filename': filename }
+      ]
+    });
 
-    if (!fs.existsSync(filePath)) {
+    if (!complaint) {
       return res.status(404).json({
         success: false,
         message: 'ফাইল খুঁজে পাওয়া যায়নি'
       });
     }
 
-    res.download(filePath);
+    // Find the attachment
+    let attachment = complaint.attachments.find(a => a.filename === filename);
+    if (!attachment && complaint.adminResponse) {
+      attachment = complaint.adminResponse.attachments.find(a => a.filename === filename);
+    }
+
+    if (!attachment || !attachment.url) {
+      return res.status(404).json({
+        success: false,
+        message: 'ফাইল URL খুঁজে পাওয়া যায়নি'
+      });
+    }
+
+    // Redirect to Cloudinary URL
+    res.redirect(attachment.url);
 
   } catch (error) {
     console.error('Download error:', error);

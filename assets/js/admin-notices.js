@@ -179,11 +179,6 @@ function renderNoticeItem(notice) {
                     `<button class="btn btn-sm btn-secondary pdf-view-btn" data-pdf-url="${notice.pdfUrl}">
                         <i class="fas fa-file-pdf"></i> PDF দেখুন
                     </button>` : ''}
-                <button onclick="toggleNoticeStatus('${notice._id}', ${notice.isActive})" 
-                        class="btn btn-sm ${notice.isActive ? 'btn-warning' : 'btn-success'}">
-                    <i class="fas fa-${notice.isActive ? 'eye-slash' : 'eye'}"></i> 
-                    ${notice.isActive ? 'নিষ্ক্রিয়' : 'সক্রিয়'} করুন
-                </button>
                 <button onclick="deleteNotice('${notice._id}')" class="btn btn-sm btn-danger">
                     <i class="fas fa-trash"></i> মুছুন
                 </button>
@@ -215,42 +210,6 @@ function viewNoticePDF(pdfUrl) {
     
     console.log('Opening PDF:', fullUrl);
     window.open(fullUrl, '_blank');
-}
-
-// Toggle notice active status
-async function toggleNoticeStatus(noticeId, currentStatus) {
-    const token = sessionStorage.getItem('nirapodh_admin_token');
-    if (!token) {
-        showErrorMessage('অনুগ্রহ করে লগইন করুন');
-        return;
-    }
-
-    if (!confirm(`এই নোটিশটি ${currentStatus ? 'নিষ্ক্রিয়' : 'সক্রিয়'} করতে চান?`)) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_CONFIG.API_URL}/notice/${noticeId}/toggle`, {
-            method: 'PATCH',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-            throw new Error(data.message || 'স্ট্যাটাস পরিবর্তন করতে সমস্যা হয়েছে');
-        }
-
-        showSuccessMessage(data.message);
-        await loadPublishedNotices();
-
-    } catch (error) {
-        console.error('Toggle notice error:', error);
-        showErrorMessage(error.message);
-    }
 }
 
 // Delete notice
