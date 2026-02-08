@@ -93,7 +93,7 @@
 ================================ */
 
 .global-chat-messages {
-  height: 400px;
+  height: 310px;
   background: #f8fafc;
   border: 1px solid var(--border);
   border-top: none;
