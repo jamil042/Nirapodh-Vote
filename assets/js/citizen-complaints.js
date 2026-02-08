@@ -23,6 +23,7 @@ async function submitComplaint(event) {
     const complaintType = document.getElementById('complaintType').value;
     const description = document.getElementById('complaintDescription').value;
     const attachmentsInput = document.getElementById('complaintAttachments');
+    const submitBtn = event.target.querySelector('button[type="submit"]');
 
     // Get citizen NID from sessionStorage
     const userData = getUserData();
@@ -30,6 +31,15 @@ async function submitComplaint(event) {
         showAlert('লগইন তথ্য পাওয়া যাচ্ছে না। পুনরায় লগইন করুন।', 'error');
         return;
     }
+
+    // Set loading state
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.classList.add('btn-loading');
+    submitBtn.innerHTML = `
+        <span class="spinner"></span>
+        <span>জমা দিচ্ছি...</span>
+    `;
 
     try {
         // Create FormData for file upload
@@ -53,18 +63,43 @@ async function submitComplaint(event) {
         const data = await response.json();
 
         if (data.success) {
-            showAlert('অভিযোগ সফলভাবে জমা হয়েছে। আপনার অভিযোগ নম্বর: ' + data.complaint.complaintId, 'success');
+            // Show success state briefly
+            submitBtn.classList.remove('btn-loading');
+            submitBtn.classList.add('btn-success');
+            submitBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 5px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>সফল!</span>
+            `;
             
-            // Reset form
-            document.getElementById('complaintForm').reset();
-            
-            // Reload complaints list
-            loadMyComplaints();
+            setTimeout(() => {
+                showAlert('অভিযোগ সফলভাবে জমা হয়েছে। আপনার অভিযোগ নম্বর: ' + data.complaint.complaintId, 'success');
+                
+                // Reset form
+                document.getElementById('complaintForm').reset();
+                
+                // Reset button
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('btn-success');
+                submitBtn.innerHTML = originalText;
+                
+                // Reload complaints list
+                loadMyComplaints();
+            }, 1000);
         } else {
+            // Reset button on error
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('btn-loading');
+            submitBtn.innerHTML = originalText;
             showAlert(data.message || 'অভিযোগ জমা দিতে সমস্যা হয়েছে', 'error');
         }
     } catch (error) {
         console.error('Submit complaint error:', error);
+        // Reset button on error
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('btn-loading');
+        submitBtn.innerHTML = originalText;
         showAlert('সার্ভারে সংযোগ সমস্যা হয়েছে', 'error');
     }
 }

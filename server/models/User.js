@@ -43,6 +43,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: false
   },
+  // DEPRECATED: These fields are no longer used. Vote status is now tracked per-ballot in Vote collection
+  // Users can vote once per ballot, not once globally
   hasVoted: {
     type: Boolean,
     default: false

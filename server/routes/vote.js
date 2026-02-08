@@ -123,13 +123,16 @@ router.post('/cast', authenticateToken, async (req, res) => {
   }
 });
 
-// Check Vote Status
+// DEPRECATED: Check Global Vote Status (DO NOT USE)
+// This endpoint returns global hasVoted flag which is deprecated
+// Use /vote/status/:ballotId instead to check ballot-specific vote status
 router.get('/status', authenticateToken, async (req, res) => {
   try {
+    // Return false by default since users can vote once per ballot
     res.json({
       success: true,
-      hasVoted: req.user.hasVoted,
-      votedAt: req.user.votedAt
+      hasVoted: false, // Always false since voting is now per-ballot
+      message: 'Use /vote/status/:ballotId for ballot-specific status'
     });
   } catch (error) {
     console.error('Status error:', error);
@@ -140,7 +143,7 @@ router.get('/status', authenticateToken, async (req, res) => {
   }
 });
 
-// Check if user voted for specific ballot
+// Check if user voted for specific ballot (RECOMMENDED)
 router.get('/status/:ballotId', authenticateToken, async (req, res) => {
   try {
     const { ballotId } = req.params;
