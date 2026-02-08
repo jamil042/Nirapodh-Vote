@@ -303,8 +303,8 @@
   overflow-y: auto;
   background: #f8fafc;
   scroll-behavior: smooth;
-  min-height: 350px;
-  max-height: 400px;
+  min-height: 310px;
+  max-height: 310px;
 }
 
 .chat-messages::-webkit-scrollbar {

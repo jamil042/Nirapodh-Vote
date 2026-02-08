@@ -447,29 +447,67 @@ window.submitVoteToBallot = async function(ballotId) {
     }
 };
 
+// Track if results are currently being loaded to prevent duplicate requests
+let isLoadingResults = false;
+let resultsCache = null;
+
 // Load results for all ballots
 async function loadAllResults() {
+    // Prevent duplicate loading
+    if (isLoadingResults) {
+        console.log('⏳ Results already loading, skipping...');
+        return;
+    }
+    
     try {
+        isLoadingResults = true;
         console.log('📊 Loading results for all ballots...');
+        
+        const resultsContainer = document.querySelector('#results-section .results-container');
+        if (!resultsContainer) return;
+        
+        // If we have cached results, show them immediately while loading fresh data
+        if (resultsCache && resultsContainer.innerHTML.trim() === '') {
+            resultsContainer.innerHTML = resultsCache;
+        } else if (resultsContainer.innerHTML.trim() === '') {
+            // Only show loading on first load when container is empty
+            resultsContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">ফলাফল লোড হচ্ছে...</div>';
+        }
+        
         const response = await apiRequest('GET_BALLOTS', 'GET', null, true);
         
         if (response.success && response.ballots) {
-            const resultsContainer = document.querySelector('#results-section .results-container');
-            if (!resultsContainer) return;
-            
-            resultsContainer.innerHTML = '';
+            // Build all results first
+            const fragment = document.createDocumentFragment();
             
             for (const ballot of response.ballots) {
-                await loadBallotResults(ballot, resultsContainer);
+                const resultCard = await buildBallotResultCard(ballot);
+                if (resultCard) {
+                    fragment.appendChild(resultCard);
+                }
             }
+            
+            // Create a temporary container to get the HTML
+            const tempContainer = document.createElement('div');
+            tempContainer.appendChild(fragment);
+            
+            // Cache the results and update display
+            resultsCache = tempContainer.innerHTML;
+            resultsContainer.innerHTML = resultsCache;
         }
     } catch (error) {
         console.error('❌ Failed to load results:', error);
+        const resultsContainer = document.querySelector('#results-section .results-container');
+        if (resultsContainer && !resultsCache) {
+            resultsContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">ফলাফল লোড করতে ব্যর্থ হয়েছে</div>';
+        }
+    } finally {
+        isLoadingResults = false;
     }
 }
 
-// Load results for a specific ballot
-async function loadBallotResults(ballot, container) {
+// Build ballot result card (returns the card element)
+async function buildBallotResultCard(ballot) {
     try {
         const url = `${API_CONFIG.API_URL}${API_CONFIG.ENDPOINTS.GET_RESULTS}/${ballot._id}`;
         const token = getAuthToken();
@@ -485,15 +523,24 @@ async function loadBallotResults(ballot, container) {
         const result = await response.json();
         
         if (result.success) {
-            renderBallotResults(ballot, result, container);
+            return await createBallotResultCard(ballot, result);
         }
     } catch (error) {
         console.error('Failed to load ballot results:', error);
+        return null;
     }
 }
 
-// Render ballot results
-async function renderBallotResults(ballot, resultData, container) {
+// Load results for a specific ballot (legacy - kept for compatibility)
+async function loadBallotResults(ballot, container) {
+    const card = await buildBallotResultCard(ballot);
+    if (card) {
+        container.appendChild(card);
+    }
+}
+
+// Create ballot result card element (returns the card, doesn't append)
+async function createBallotResultCard(ballot, resultData) {
     const resultCard = document.createElement('div');
     resultCard.className = 'result-card';
     
@@ -521,8 +568,7 @@ async function renderBallotResults(ballot, resultData, container) {
             </button>
         `;
         
-        container.appendChild(resultCard);
-        return;
+        return resultCard;
     }
     
     // For live/ongoing elections, show detailed results
@@ -575,7 +621,15 @@ async function renderBallotResults(ballot, resultData, container) {
         </div>
     `;
     
-    container.appendChild(resultCard);
+    return resultCard;
+}
+
+// Render ballot results (legacy - kept for compatibility)
+async function renderBallotResults(ballot, resultData, container) {
+    const card = await createBallotResultCard(ballot, resultData);
+    if (card) {
+        container.appendChild(card);
+    }
 }
 
 // Show candidate details (placeholder)
@@ -1043,14 +1097,8 @@ async function castVote(candidate) {
 
 // Setup event listeners
 function setupEventListeners() {
-    // Vote buttons
-    const voteButtons = document.querySelectorAll('.vote-btn');
-    voteButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const candidate = this.dataset.candidate;
-            castVote(candidate);
-        });
-    });
+    // Note: Vote buttons are handled by onclick attributes in createBallotCard()
+    // No need to add additional event listeners here to avoid double submission
     
     // Logout button
     const logoutBtn = document.getElementById('logoutBtn');

@@ -783,6 +783,46 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 30px;
+    max-height: calc(100vh - 250px);
+    align-items: start;
+}
+
+.complaints-container > .card {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 250px);
+    height: fit-content;
+}
+
+.complaints-container > .card > h3,
+.complaints-container > .card > div:first-child {
+    flex-shrink: 0;
+}
+
+.complaints-container > .card > form {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 10px;
+    min-height: 0;
+}
+
+/* Custom scrollbar for complaint form */
+.complaints-container > .card > form::-webkit-scrollbar {
+    width: 8px;
+}
+
+.complaints-container > .card > form::-webkit-scrollbar-track {
+    background: rgba(30, 126, 52, 0.05);
+    border-radius: 10px;
+}
+
+.complaints-container > .card > form::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--primary-green), var(--dark-green));
+    border-radius: 10px;
+}
+
+.complaints-container > .card > form::-webkit-scrollbar-thumb:hover {
+    background: var(--dark-green);
 }
 
 .complaint-item {
@@ -1201,9 +1241,10 @@
 
 /* Complaints List Scrollbar */
 #myComplaintsList {
-    max-height: 600px;
+    flex: 1;
     overflow-y: auto;
     padding-right: 5px;
+    min-height: 0;
 }
 
 #myComplaintsList::-webkit-scrollbar {
@@ -2005,6 +2046,11 @@
 
     .complaints-container {
         grid-template-columns: 1fr;
+        max-height: calc(100vh - 200px);
+    }
+
+    .complaints-container > .card {
+        max-height: calc(50vh - 120px);
     }
 
     .profile-container {
@@ -2902,6 +2948,11 @@
     .complaints-container {
         grid-template-columns: 1fr;
         gap: 15px;
+        max-height: calc(100vh - 180px);
+    }
+
+    .complaints-container > .card {
+        max-height: calc(45vh - 100px);
     }
 
     .complaint-item {
