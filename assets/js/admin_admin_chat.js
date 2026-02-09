@@ -55,7 +55,7 @@ function initAdminToAdminChat() {
 // ===================================
 
 function initAdminChatSocket() {
-    adminChatSocket = io('http://localhost:3000', {
+    adminChatSocket = io(API_CONFIG.SOCKET_URL, {
         transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionDelay: 1000,

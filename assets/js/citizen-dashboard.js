@@ -316,7 +316,7 @@ let dashboardSocket = null;
 // Setup realtime features
 function setupRealtimeFeatures() {
     // Connect to server
-    dashboardSocket = io('http://localhost:3000', {
+    dashboardSocket = io(API_CONFIG.SOCKET_URL, {
         transports: ['websocket', 'polling'],
         reconnection: true
     });
