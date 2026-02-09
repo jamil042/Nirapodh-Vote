@@ -10,7 +10,7 @@ let replyingTo = null; // Track message being replied to
 
 // Initialize socket connection
 function initAdminSocket() {
-    socket = io('http://localhost:3000', {
+    socket = io(API_CONFIG.SOCKET_URL, {
         transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionDelay: 1000,

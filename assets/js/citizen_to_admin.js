@@ -10,7 +10,7 @@
 
   // Initialize socket connection
   function initSocket() {
-    socket = io('http://localhost:3000', {
+    socket = io(API_CONFIG.SOCKET_URL, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
