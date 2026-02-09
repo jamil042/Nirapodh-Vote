@@ -233,7 +233,7 @@ async function handleLogin(e) {
 
 // Forgot Password Handler
 function forgotPassword() {
-    showAlert('পাসওয়ার্ড রিসেট লিংক আপনার মোবাইলে পাঠানো হয়েছে (মক)।', 'info', 'ℹ তথ্য');
+    window.location.href = 'forgot-password.html';
 }
 
 // Toggle password visibility

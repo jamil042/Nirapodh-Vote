@@ -18,6 +18,9 @@ const API_CONFIG = {
     GET_USER: '/auth/me',
     SEND_OTP: '/auth/send-otp',
     VERIFY_OTP_REGISTER: '/auth/verify-otp-register',
+    FORGOT_PASSWORD_OTP: '/auth/forgot-password-otp',
+    VERIFY_RESET_OTP: '/auth/verify-reset-otp',
+    RESET_PASSWORD: '/auth/reset-password',
     
     // Vote endpoints
     CAST_VOTE: '/vote/cast',
