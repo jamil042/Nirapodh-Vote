@@ -2,10 +2,10 @@
 // Mock Data for Dashboard
 const mockDashboardData = {
     stats: {
-        totalBallots: 12,
-        activeVotes: 3,
+        totalBallots: 0,
+        activeVotes: 0,
         totalVoters: "১,২৫,৪৫০",
-        votesCast: "৮৫,৩২০"
+        votesCast: "০"
     },
     liveStats: [
         { seat: "ঢাকা-১ আসন", votes: "৪৫,২৩৪", percentage: 68 },
@@ -13,7 +13,6 @@ const mockDashboardData = {
         { seat: "সিলেট-৩ আসন", votes: "৭,৮৯৭", percentage: 42 }
     ],
     activities: [
-        { time: "৫ মিনিট আগে", text: 'নতুন ব্যালট "ঢাকা-৫ আসন" তৈরি হয়েছে' },
         { time: "১৫ মিনিট আগে", text: "১২৩ জন নতুন ভোটার নিবন্ধিত হয়েছে" },
         { time: "৩০ মিনিট আগে", text: 'নোটিশ প্রকাশ: "ভোটিং সময় বৃদ্ধি"' }
     ],
@@ -139,101 +138,92 @@ const mockDashboardData = {
     }
 };
 
-// Mock data for ballot form selections
+// Empty ballot mock data - all mock data removed
 const ballotMockData = {
     ballotTypes: [],
     ballotLocations: []
 };
 
-function loadDashboardData() {
-    // Load Stats
-    const totalBallotsEl = document.getElementById('total-ballots');
-    const activeVotesEl = document.getElementById('active-votes');
-    const totalVotersEl = document.getElementById('total-voters');
-    const votesCastEl = document.getElementById('votes-cast');
+// Dashboard data loading moved to admin-backend-data.js - this mock function is disabled
+// function loadDashboardData() - DISABLED - using backend data now
 
-    if (totalBallotsEl) totalBallotsEl.textContent = toBengaliNumber(mockDashboardData.stats.totalBallots);
-    if (activeVotesEl) activeVotesEl.textContent = toBengaliNumber(mockDashboardData.stats.activeVotes);
-    if (totalVotersEl) totalVotersEl.textContent = mockDashboardData.stats.totalVoters;
-    if (votesCastEl) votesCastEl.textContent = mockDashboardData.stats.votesCast;
-
-    // Load Live Stats
-    const liveStatsContainer = document.getElementById('live-stats-container');
-    if (liveStatsContainer) {
-        liveStatsContainer.innerHTML = mockDashboardData.liveStats.map(stat => `
-            <div class="live-stat-item">
-                <span class="live-label">${stat.seat}:</span>
-                <span class="live-value">${stat.votes} ভোট</span>
-                <span class="live-percentage">${toBengaliNumber(stat.percentage)}%</span>
-            </div>
-        `).join('');
-    }
-
-    // Load Activities
-    const activityListContainer = document.getElementById('activity-list-container');
-    if (activityListContainer) {
-        activityListContainer.innerHTML = mockDashboardData.activities.map(activity => `
-            <div class="activity-item">
-                <span class="activity-time">${activity.time}</span>
-                <p>${activity.text}</p>
-            </div>
-        `).join('');
-    }
-}
-
-function loadCandidatesData() {
+async function loadCandidatesData() {
     const candidatesTableBody = document.getElementById('candidatesTableBody');
-    if (candidatesTableBody) {
-        // Combine mock candidates with custom candidates
-        const allCandidates = [
-            ...mockDashboardData.candidates,
-            ...customCandidates.filter(c => c) // Filter out null/undefined entries
-        ];
+    if (!candidatesTableBody) return;
+    
+    const token = sessionStorage.getItem('nirapodh_admin_token');
+    if (!token) {
+        candidatesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">অনুমোদন প্রয়োজন</td></tr>';
+        return;
+    }
+    
+    try {
+        // Fetch candidates from DB
+        const response = await fetch(`${API_CONFIG.API_URL}/admin/candidates`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const data = await response.json();
         
-        candidatesTableBody.innerHTML = allCandidates.map(candidate => {
-            const statusBadge = candidate.status === 'active' 
-                ? '<span class="badge badge-success">সক্রিয়</span>' 
-                : '<span class="badge badge-danger">নিষ্ক্রিয়</span>';
-            
-            // Handle image error with a default fallback
-            const imageSrc = candidate.image || 'assets/images/default-avatar.png';
+        if (data.success && data.candidates && data.candidates.length > 0) {
+            candidatesTableBody.innerHTML = data.candidates.map(candidate => {
+                const statusBadge = candidate.status === 'active' 
+                    ? '<span class="badge badge-success">সক্রিয়</span>' 
+                    : '<span class="badge badge-danger">নিষ্ক্রিয়</span>';
+                
+                // Handle image with fixed size
+                const imageSrc = candidate.image || 'assets/images/default-avatar.png';
+                
+                // Handle symbol
+                let symbolHtml = '';
+                if (candidate.symbol && candidate.symbol.startsWith('data:')) {
+                    // Base64 image
+                    symbolHtml = `<img src="${candidate.symbol}" alt="Party Symbol" style="width: 40px; height: 40px; object-fit: contain;">`;
+                } else if (candidate.symbol) {
+                    // File path
+                    symbolHtml = `<img src="${candidate.symbol}" alt="Party Symbol" style="width: 40px; height: 40px; object-fit: contain;" onerror="this.src='assets/images/powerful-symbol-unity-anti-corruption-day_968957-12635.avif'">`;
+                } else {
+                    symbolHtml = '<span style="font-size: 12px; color: #999;">নেই</span>';
+                }
 
-            return `
-                <tr>
-                    <td>
-                        <div class="candidate-photo">
-                            <img src="${imageSrc}" alt="${candidate.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/images/default-avatar.png'">
-                        </div>
-                    </td>
-                    <td>${candidate.name}</td>
-                    <td>${candidate.party}</td>
-                    <td>
-                        <div class="party-symbol">
-                            ${candidate.symbolSvg}
-                        </div>
-                    </td>
-                    <td>${candidate.area}</td>
-                    <td>${statusBadge}</td>
-                    <td>
-                        <button class="btn-icon" onclick="viewCandidateDetails(${candidate.id})" title="বিস্তারিত দেখুন">
-                            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-                            </svg>
-                        </button>
-                        <button class="btn-icon" onclick="editCandidate(${candidate.id})">
-                            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                            </svg>
-                        </button>
-                        <button class="btn-icon" onclick="deleteCandidate(${candidate.id})">
-                            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                            </svg>
-                        </button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+                return `
+                    <tr>
+                        <td>
+                            <div class="candidate-photo">
+                                <img src="${imageSrc}" alt="${candidate.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;" onerror="this.src='assets/images/default-avatar.png'">
+                            </div>
+                        </td>
+                        <td>${candidate.name}</td>
+                        <td>${candidate.party}</td>
+                        <td>
+                            <div class="party-symbol">
+                                ${symbolHtml}
+                            </div>
+                        </td>
+                        <td>${candidate.area}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <button class="btn-icon" onclick="viewCandidateDetails('${candidate._id}')" title="বিস্তারিত দেখুন">
+                                <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                                </svg>
+                            </button>
+                            <button class="btn-icon" onclick="deleteCandidateFromDB('${candidate._id}')">
+                                <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } else {
+            candidatesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #999;">কোনো প্রার্থী নেই</td></tr>';
+        }
+    } catch (error) {
+        console.error('Load candidates error:', error);
+        candidatesTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #f44336;">প্রার্থী তালিকা লোড করতে ব্যর্থ হয়েছে</td></tr>';
     }
 }
 
@@ -351,4 +341,46 @@ function loadAdminProfile() {
             <span class="info-value">${profile.lastLogin}</span>
         </div>
     `;
+}
+
+// Load Dashboard Statistics
+function loadDashboardData() {
+    // Update stat cards
+    const totalBallots = document.getElementById('total-ballots');
+    const activeVotes = document.getElementById('active-votes');
+    const totalVoters = document.getElementById('total-voters');
+    const votesCast = document.getElementById('votes-cast');
+    
+    if (totalBallots) totalBallots.textContent = mockDashboardData.stats.totalBallots;
+    if (activeVotes) activeVotes.textContent = mockDashboardData.stats.activeVotes;
+    if (totalVoters) totalVoters.textContent = mockDashboardData.stats.totalVoters;
+    if (votesCast) votesCast.textContent = mockDashboardData.stats.votesCast;
+    
+    // Load live stats
+    const liveStatsContainer = document.getElementById('live-stats-container');
+    if (liveStatsContainer) {
+        liveStatsContainer.innerHTML = mockDashboardData.liveStats.map(stat => `
+            <div class="stat-item">
+                <div class="stat-header">
+                    <span class="stat-label">${stat.seat}</span>
+                    <span class="stat-value">${stat.votes} ভোট</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${stat.percentage}%"></div>
+                </div>
+                <span class="stat-percentage">${stat.percentage}%</span>
+            </div>
+        `).join('');
+    }
+    
+    // Load activity list
+    const activityListContainer = document.getElementById('activity-list-container');
+    if (activityListContainer) {
+        activityListContainer.innerHTML = mockDashboardData.activities.map(activity => `
+            <div class="activity-item">
+                <span class="activity-time">${activity.time}</span>
+                <p class="activity-text">${activity.text}</p>
+            </div>
+        `).join('');
+    }
 }

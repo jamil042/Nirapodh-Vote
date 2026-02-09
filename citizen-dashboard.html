@@ -6,9 +6,15 @@
     <title>নাগরিক ড্যাশবোর্ড - নিরাপদ ভোট</title>
     <link rel="stylesheet" href="assets/css/common.css">
     <link rel="stylesheet" href="assets/css/citizen-dashboard.css">
+    <link rel="stylesheet" href="assets/css/citizen_chat.css">
+    <link rel="stylesheet" href="assets/css/citizen_to_admin.css">
+
 </head>
 </head>
 <body>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
     <!-- Header -->
     <header class="dashboard-header">
         <div class="header-content">
@@ -17,7 +23,7 @@
                 <h1>নিরাপদ ভোট - নাগরিক ড্যাশবোর্ড</h1>
             </div>
             <div class="user-section">
-                <span class="user-name" id="userName">মোঃ আবদুল করিম</span>
+                <span class="user-name" id="userName">নাগরিক</span>
                 <button onclick="logout()" class="btn btn-secondary btn-sm">লগআউট</button>
             </div>
             <button class="hamburger-menu" id="hamburgerMenu" onclick="toggleSidebar()">
@@ -59,7 +65,6 @@
                         </svg>
                     </span>
                     <span class="nav-text">আলোচনা</span>
-                    <span class="notification-badge" id="discussionBadge">নতুন</span>
                 </button>
                 <button class="nav-item" data-section="chat">
                     <span class="nav-icon">
@@ -68,7 +73,6 @@
                         </svg>
                     </span>
                     <span class="nav-text">প্রশাসকের সাথে চ্যাট</span>
-                    <span class="notification-badge hidden" id="chatBadge">৩</span>
                 </button>
                 <button class="nav-item" data-section="complaints">
                     <span class="nav-icon">
@@ -79,10 +83,11 @@
                     <span class="nav-text">অভিযোগ</span>
                 </button>
                 <button class="nav-item" data-section="notices">
-                    <span class="nav-icon">
+                    <span class="nav-icon" style="position: relative;">
                         <svg viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/>
                         </svg>
+                        <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
                     </span>
                     <span class="nav-text">নোটিশ</span>
                 </button>
@@ -93,6 +98,14 @@
                         </svg>
                     </span>
                     <span class="nav-text">প্রোফাইল</span>
+                </button>
+                <button class="nav-item" data-section="settings">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                        </svg>
+                    </span>
+                    <span class="nav-text">সেটিংস</span>
                 </button>
             </nav>
         </aside>
@@ -108,90 +121,11 @@
                         </svg>
                         ভোট প্রদান
                     </h2>
-                    <p class="user-area">আপনার এলাকা: <strong id="userArea">ঢাকা-১০</strong></p>
+                    <p class="user-area">আপনার এলাকা: <strong id="userArea">লোড হচ্ছে...</strong></p>
                 </div>
 
                 <div class="ballots-container" id="ballotsContainer">
-                    <!-- Ballot 1 -->
-                    <div class="ballot-card">
-                        <div class="ballot-header">
-                            <h3>জাতীয় সংসদ নির্বাচন ২০২৫</h3>
-                            <span class="ballot-status active">সক্রিয়</span>
-                        </div>
-                        <div class="ballot-time">
-                            <p>⏰ ভোটের সময়: ০৮:০০ - ১৬:০০ | ০৫ জানুয়ারি ২০২৫</p>
-                            <p class="time-remaining">⏳ অবশিষ্ট সময়: <span id="timeRemaining1">২ ঘন্টা ৩৫ মিনিট</span></p>
-                        </div>
-                        
-                        <div class="candidates-grid">
-                            <div class="candidate-card">
-                                <input type="radio" name="vote1" id="candidate1" value="1">
-                                <label for="candidate1" class="candidate-label">
-                                    <img src="assets/images/Tamim.jpeg" alt="প্রার্থী" class="candidate-photo">
-                                    <div class="candidate-info">
-                                        <h4>মোঃ আবদুল্লাহ</h4>
-                                        <p class="party-name">জাতীয় নাগরিক পার্টি</p>
-                                        <img src="assets/images/bodna.jpg" alt="প্রতীক" class="party-symbol">
-                                    </div>
-                                </label>
-                                <button class="btn btn-sm btn-secondary" onclick="openCandidateModal(1)" style="margin-top: 10px; width: 100%;">বিস্তারিত দেখুন</button>
-                            </div>
-
-                            <div class="candidate-card">
-                                <input type="radio" name="vote1" id="candidate2" value="2">
-                                <label for="candidate2" class="candidate-label">
-                                    <img src="assets/images/Saima_apu.jpeg" alt="প্রার্থী" class="candidate-photo">
-                                    <div class="candidate-info">
-                                        <h4>সালমা খাতুন</h4>
-                                        <p class="party-name">জনকল্যাণ পার্টি</p>
-                                        <img src="assets/images/honey-bee.jpg" alt="প্রতীক" class="party-symbol">
-                                    </div>
-                                </label>
-                                <button class="btn btn-sm btn-secondary" onclick="openCandidateModal(2)" style="margin-top: 10px; width: 100%;">বিস্তারিত দেখুন</button>
-                            </div>
-
-                            <div class="candidate-card">
-                                <input type="radio" name="vote1" id="candidate3" value="3">
-                                <label for="candidate3" class="candidate-label">
-                                    <img src="assets/images/Taz.jpg" alt="প্রার্থী" class="candidate-photo">
-                                    <div class="candidate-info">
-                                        <h4>রহিম উদ্দিন</h4>
-                                        <p class="party-name">স্বাধীন প্রার্থী</p>
-                                        <img src="assets/images/ant.jpg" alt="প্রতীক" class="party-symbol">
-                                    </div>
-                                </label>
-                                <button class="btn btn-sm btn-secondary" onclick="openCandidateModal(3)" style="margin-top: 10px; width: 100%;">বিস্তারিত দেখুন</button>
-                            </div>
-                        </div>
-
-                        <button onclick="submitVote(1)" class="btn btn-primary btn-large vote-btn">
-                            ভোট প্রদান করুন
-                        </button>
-                    </div>
-
-                    <!-- Already Voted Ballot -->
-                    <div class="ballot-card voted">
-                        <div class="ballot-header">
-                            <h3>মেয়র নির্বাচন ২০২৫</h3>
-                            <span class="ballot-status completed">✓ ভোট প্রদান সম্পন্ন</span>
-                        </div>
-                        <div class="voted-message">
-                            <p>✅ আপনি এই নির্বাচনে ভোট প্রদান করেছেন। ধন্যবাদ!</p>
-                            <p class="vote-time">ভোট প্রদানের সময়: ০৫ জানুয়ারি ২০২৫, ১০:৩০ AM</p>
-                        </div>
-                    </div>
-
-                    <!-- Upcoming Ballot -->
-                    <div class="ballot-card upcoming">
-                        <div class="ballot-header">
-                            <h3>উপজেলা চেয়ারম্যান নির্বাচন ২০২৫</h3>
-                            <span class="ballot-status upcoming">শীঘ্রই</span>
-                        </div>
-                        <div class="ballot-time">
-                            <p>⏰ ভোটের সময়: ০৮:০০ - ১৬:০০ | ১৫ জানুয়ারি ২০২৫</p>
-                        </div>
-                        <p class="upcoming-message">এই নির্বাচন এখনও শুরু হয়নি। নির্ধারিত সময়ে ভোট দিতে পারবেন।</p>
-                    </div>
+                    <!-- Ballots will be loaded dynamically -->
                 </div>
             </div>
 
@@ -207,178 +141,149 @@
                 </div>
 
                 <div class="results-container">
-                    <div class="result-card">
-                        <h3>জাতীয় সংসদ নির্বাচন ২০২৫</h3>
-                        <p class="result-status live">⚪ লাইভ ফলাফল</p>
-                        
-                        <div class="result-item">
-                            <div class="result-info">
-                                <img src="assets/images/Tamim.jpeg" alt="প্রার্থী" class="result-photo">
-                                <div>
-                                    <h4>মোঃ আবদুল্লাহ</h4>
-                                    <p>জাতীয় নাগরিক পার্টি</p>
-                                </div>
-                            </div>
-                            <div class="result-stats">
-                                <div class="vote-count">১,২৩৪ ভোট</div>
-                                <div class="vote-percentage">৪৫%</div>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 45%"></div>
-                            </div>
-                        </div>
-
-                        <div class="result-item">
-                            <div class="result-info">
-                                <img src="assets/images/Saima_apu.jpeg" alt="প্রার্থী" class="result-photo">
-                                <div>
-                                    <h4>সালমা খাতুন</h4>
-                                    <p>জনকল্যাণ পার্টি</p>
-                                </div>
-                            </div>
-                            <div class="result-stats">
-                                <div class="vote-count">৯৮৭ ভোট</div>
-                                <div class="vote-percentage">৩৬%</div>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 36%"></div>
-                            </div>
-                        </div>
-
-                        <div class="result-item">
-                            <div class="result-info">
-                                <img src="assets/images/Taz.jpg" alt="প্রার্থী" class="result-photo">
-                                <div>
-                                    <h4>রহিম উদ্দিন</h4>
-                                    <p>স্বাধীন প্রার্থী</p>
-                                </div>
-                            </div>
-                            <div class="result-stats">
-                                <div class="vote-count">৫২১ ভোট</div>
-                                <div class="vote-percentage">১৯%</div>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 19%"></div>
-                            </div>
-                        </div>
-
-                        <div class="total-votes">
-                            মোট ভোট: <strong>২,৭৪২</strong>
-                        </div>
-                    </div>
-
-                    <div class="result-card completed">
-                        <h3>মেয়র নির্বাচন ২০২৫</h3>
-                        <br>
-                        <div class="winner-announcement">
-                            🏆 বিজয়ী: করিম উদ্দিন (জনকল্যাণ পার্টি)
-                        </div>
-                        <br>
-                        <button class="btn btn-secondary">PDF ডাউনলোড করুন</button>
-                    </div>
+                    <!-- Results will be loaded dynamically -->
                 </div>
             </div>
 
-            <!-- Discussion Section -->
-            <div id="discussion-section" class="content-section">
-                <div class="section-header">
-                    <h2>
-                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
-                            <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/>
+<!-- Discussion Section - Global Chat for Citizens -->
+<div id="discussion-section" class="content-section">
+    <div class="section-header">
+        <h2>
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
+                <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/>
+            </svg>
+            সর্বজনীন আলোচনা
+        </h2>
+        <p class="anonymous-note">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;vertical-align:middle;margin-right:4px;">
+                <path d="M12 2a5 5 0 0 0-5 5 5 5 0 0 0 10 0 5 5 0 0 0-5-5zm0 12 c-3.33 0-10 1.67-10 5v3h20v-3 c0-3.33-6.67-5-10-5z"/>
+            </svg>
+
+            সকল নাগরিকদের সাথে কথা বলুন
+        </p>
+    </div>
+
+    <!-- Global Chat Interface -->
+    <div class="chat-interface">
+        <div class="chat-main-container">
+            <div class="chat-content-area" style="grid-column: 1 / -1;">
+                <div class="chat-header-bar">
+                    <div class="chat-header-left">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                         </svg>
-                        সর্বজনীন আলোচনা
-                    </h2>
-                    <p class="anonymous-note">
-                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;">
-                            <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
-                        </svg>
-                        এই আলোচনা সম্পূর্ণ বেনামী
-                    </p>
-                </div>
-
-                <div class="discussion-container">
-                    <div class="discussion-messages" id="discussionMessages">
-                        <div class="message">
-                            <div class="message-header">
-                                <span class="message-author">বেনামী নাগরিক</span>
-                                <span class="message-time">২ মিনিট আগে</span>
-                            </div>
-                            <p class="message-text">ভোট প্রদান প্রক্রিয়া খুবই সহজ এবং নিরাপদ। ধন্যবাদ!</p>
+                        <div>
+                            <h3 style="margin: 0; font-size: 16px;">গ্লোবাল চ্যাট</h3>
+                            <p class="online-count">
+                                <span class="online-dot"></span>
+                                <span id="onlineUserCount">০ জন অনলাইন</span>
+                            </p>
                         </div>
-
-                        <div class="message">
-                            <div class="message-header">
-                                <span class="message-author">বেনামী নাগরিক</span>
-                                <span class="message-time">৫ মিনিট আগে</span>
-                            </div>
-                            <p class="message-text">প্রার্থীদের তথ্য খুব পরিষ্কার করে দেওয়া হয়েছে। ভালো উদ্যোগ।</p>
-                        </div>
-
-                        <div class="message">
-                            <div class="message-header">
-                                <span class="message-author">বেনামী নাগরিক</span>
-                                <span class="message-time">৮ মিনিট আগে</span>
-                            </div>
-                            <p class="message-text">কখন ফলাফল প্রকাশ হবে?</p>
-                        </div>
-                    </div>
-
-                    <div class="discussion-input">
-                        <input type="text" id="discussionInput" placeholder="আপনার মন্তব্য লিখুন (বেনামী)..." class="input-field">
-                        <button onclick="sendDiscussionMessage()" class="btn btn-primary">পাঠান</button>
                     </div>
                 </div>
-            </div>
 
-            <!-- Chat with Admin Section -->
-            <div id="chat-section" class="content-section">
-                <div class="section-header">
-                    <h2>
-                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
-                            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
-                        </svg>
-                        প্রশাসকের সাথে চ্যাট
-                    </h2>
-                    <p class="private-note">
-                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;">
-                            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
-                        </svg>
-                        এটি একটি ব্যক্তিগত চ্যাট
-                    </p>
+                <!-- Messages Container -->
+                <div class="global-chat-messages" id="globalChatMessages">
+                    <!-- Messages will be appended here -->
                 </div>
 
-                <div class="chat-container">
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="chat-message admin">
-                            <div class="message-bubble">
-                                <p>স্বাগতম! আমি আপনাকে কীভাবে সাহায্য করতে পারি?</p>
-                                <span class="message-time">১০:৩০ AM</span>
-                            </div>
+                <!-- Chat Input -->
+                <div class="global-chat-input-container" style="position: relative;">
+                    <!-- Reply Preview -->
+                    <div id="replyPreview" class="reply-preview" style="display: none; position: absolute; top: -60px; left: 14px; right: 14px;">
+                        <div class="reply-preview-content">
+                            <div class="reply-preview-label">উত্তর দিচ্ছেন</div>
+                            <div class="reply-preview-text" id="replyPreviewText"></div>
                         </div>
-
-                        <div class="chat-message user">
-                            <div class="message-bubble">
-                                <p>ভোট প্রদানের সময় কি?</p>
-                                <span class="message-time">১০:৩২ AM</span>
-                            </div>
-                        </div>
-
-                        <div class="chat-message admin">
-                            <div class="message-bubble">
-                                <p>ভোট প্রদানের সময় সকাল ৮টা থেকে বিকাল ৪টা পর্যন্ত। আপনি এই সময়ের মধ্যে যেকোনো সময় ভোট দিতে পারবেন।</p>
-                                <span class="message-time">১০:৩২ AM</span>
-                            </div>
-                        </div>
+                        <button type="button" onclick="cancelReply()" class="reply-preview-close">×</button>
                     </div>
-
-                    <div class="chat-input">
-                        <input type="text" id="chatInput" placeholder="বার্তা লিখুন..." class="input-field">
-                        <button onclick="sendChatMessage()" class="btn btn-primary">পাঠান</button>
-                    </div>
+                    
+                    <input type="text" id="globalChatInput" class="input-field" placeholder="বার্তা লিখুন..." maxlength="500">
+                    <button type="button" onclick="sendGlobalMessage()" class="btn btn-primary_chat">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                        পাঠান
+                    </button>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
 
-            <!-- Complaints Section -->
+
+<div id="chat-section" class="content-section">
+    <div class="section-header">
+        <h2>প্রশাসকের সাথে চ্যাট</h2>
+        <p class="private-note">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 4px;">
+                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+            </svg>
+            এটি একটি ব্যক্তিগত চ্যাট
+        </p>
+    </div>
+
+    <!-- NID Login Form -->
+    <div class="chat-nid-login" style="display: none;">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+        </svg>
+        <h3>প্রশাসকের সাথে যোগাযোগ করুন</h3>
+        <p>আপনার নাম এবং এনআইডি নম্বর দিয়ে চ্যাট শুরু করুন</p>
+        
+        <div class="nid-login-form">
+            <div class="nid-input-group">
+                <label>আপনার নাম</label>
+                <input type="text" id="citizenChatName" placeholder="যেমন: মোহাম্মদ করিম">
+            </div>
+            <div class="nid-input-group">
+                <label>এনআইডি নম্বর</label>
+                <input type="text" id="citizenChatNID" placeholder="১০/১৩/১৭ ডিজিট" maxlength="21" inputmode="numeric">
+            </div>
+            <button onclick="loginToChatWithNID()" class="chat-btn btn-primary_chat" style="width: 100%;">
+                চ্যাট শুরু করুন
+            </button>
+        </div>
+    </div>
+
+    <!-- Chat Window (Hidden initially) -->
+    <div class="chat-window" style="display: none;">
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <h3 id="chat-header-name">প্রশাসক</h3>
+                <div class="chat-header-nid"></div>
+            </div>
+            <span class="chat-status">অনলাইন</span>
+        </div>
+        
+        <div class="chat-messages" id="chat-messages-container">
+            <!-- Initial loading state -->
+            <div class="chat-loading-state">
+                <p>চ্যাট লোড হচ্ছে...</p>
+            </div>
+        </div>
+        
+        <div class="chat-input" style="position: relative;">
+            <!-- Reply Preview -->
+            <div id="citizenReplyPreview" class="reply-preview" style="display: none; position: absolute; top: -60px; left: 14px; right: 14px;">
+                <div class="reply-preview-content">
+                    <div class="reply-preview-label">উত্তর দিচ্ছেন</div>
+                    <div class="reply-preview-text" id="citizenReplyPreviewText"></div>
+                </div>
+                <button type="button" onclick="cancelCitizenReply()" class="reply-preview-close">×</button>
+            </div>
+            
+            <input type="text" id="chatInput" placeholder="বার্তা লিখুন...">
+            <button onclick="sendChatMessage()" class="chat-btn btn-primary_chat">পাঠান</button>
+        </div>
+    </div>
+</div>
+
+             <!-- Complaints Section -->
             <div id="complaints-section" class="content-section">
                 <div class="section-header">
                     <h2>
@@ -387,6 +292,12 @@
                         </svg>
                         অভিযোগ দাখিল
                     </h2>
+                    <p style="color: #666; font-size: 14px; margin-top: 5px;">
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                        আপনার অভিযোগ প্রতি ৩০ সেকেন্ডে স্বয়ংক্রিয়ভাবে আপডেট হবে
+                    </p>
                 </div>
 
                 <div class="complaints-container">
@@ -395,15 +306,25 @@
                         
                         <form id="complaintForm" onsubmit="submitComplaint(event)">
                             <div class="form-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="anonymousComplaint" checked>
-                                    বেনামী অভিযোগ (আপনার পরিচয় গোপন থাকবে)
-                                </label>
+                                <label for="complaintType">অভিযোগের ধরন *</label>
+                                <select id="complaintType" class="input-field" required>
+                                    <option value="">নির্বাচন করুন...</option>
+                                    <option value="ভোটের সমস্যা">ভোটের সমস্যা</option>
+                                    <option value="প্রযুক্তিগত সমস্যা">প্রযুক্তিগত সমস্যা</option>
+                                    <option value="নিরাপত্তা সমস্যা">নিরাপত্তা সমস্যা</option>
+                                    <option value="অন্যান্য">অন্যান্য</option>
+                                </select>
                             </div>
 
                             <div class="form-group">
-                                <label for="complaintText">অভিযোগের বিবরণ</label>
-                                <textarea id="complaintText" rows="5" class="input-field" placeholder="আপনার অভিযোগ বিস্তারিত লিখুন..." required></textarea>
+                                <label for="complaintDescription">অভিযোগের বিবরণ *</label>
+                                <textarea id="complaintDescription" rows="5" class="input-field" placeholder="আপনার অভিযোগ বিস্তারিত লিখুন..." required></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="complaintAttachments">প্রমাণপত্র আপলোড করুন (ঐচ্ছিক)</label>
+                                <input type="file" id="complaintAttachments" class="input-field" multiple accept="image/*,.pdf,.doc,.docx">
+                                <small style="color: #666; display: block; margin-top: 5px;">সর্বোচ্চ ৫টি ফাইল, প্রতিটি ৫MB এর কম</small>
                             </div>
 
                             <button type="submit" class="btn btn-primary">অভিযোগ জমা দিন</button>
@@ -411,27 +332,34 @@
                     </div>
 
                     <div class="card">
-                        <h3>আপনার অভিযোগসমূহ</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3>আপনার অভিযোগসমূহ</h3>
+                            <button class="btn btn-sm" onclick="loadMyComplaints()" style="padding: 6px 12px; font-size: 14px;">
+                                <svg viewBox="0 0 24 24" fill="currentColor" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
+                                    <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                                </svg>
+                                রিফ্রেশ
+                            </button>
+                        </div>
                         
-                        <div class="complaint-item">
-                            <div class="complaint-header">
-                                <span class="complaint-status pending">⏳ প্রক্রিয়াধীন</span>
-                                <span class="complaint-date">০৪ জানুয়ারি ২০২৫</span>
+                        <div id="myComplaintsList">
+                            <div style="text-align: center; padding: 20px; color: #666;">
+                                <p>লোড হচ্ছে...</p>
                             </div>
-                            <p class="complaint-text">ভোট প্রদান করার সময় সিস্টেম ধীরগতিতে চলছিল।</p>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        <div class="complaint-item">
-                            <div class="complaint-header">
-                                <span class="complaint-status replied">✓ উত্তর প্রদান</span>
-                                <span class="complaint-date">০৩ জানুয়ারি ২০২৫</span>
-                            </div>
-                            <p class="complaint-text">প্রার্থীর ছবি ঠিকমতো দেখা যাচ্ছে না।</p>
-                            <div class="admin-reply">
-                                <strong>প্রশাসকের উত্তর:</strong>
-                                <p>সমস্যাটি সমাধান করা হয়েছে। এখন সব ছবি সঠিকভাবে দেখা যাচ্ছে। অসুবিধার জন্য দুঃখিত।</p>
-                            </div>
-                        </div>
+            <!-- Complaint Details Modal -->
+            <div id="complaintModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>অভিযোগের বিস্তারিত</h2>
+                        <span class="close-modal" onclick="closeComplaintModal()">&times;</span>
+                    </div>
+                    <div class="modal-body" id="complaintModalBody">
+                        <!-- Content will be loaded dynamically -->
                     </div>
                 </div>
             </div>
@@ -448,70 +376,62 @@
                 </div>
 
                 <div class="notices-container">
-                    <div class="notice-card important">
-                        <div class="notice-header">
-                            <h3>গুরুত্বপূর্ণ: ভোটের সময়সূচী</h3>
-                            <span class="notice-date">০৪ জানুয়ারি ২০২৫</span>
-                        </div>
-                        <p>জাতীয় সংসদ নির্বাচন ০৫ জানুয়ারি ২০২৫ তারিখে অনুষ্ঠিত হবে। ভোট প্রদানের সময় সকাল ৮টা থেকে বিকাল ৪টা পর্যন্ত।</p>
-                        <!--<button class="btn btn-secondary btn-sm">বিস্তারিত দেখুন</button>-->
-                    </div>
-
-                    <div class="notice-card">
-                        <div class="notice-header">
-                            <h3>প্রার্থীদের তালিকা প্রকাশ</h3>
-                            <span class="notice-date">০১ জানুয়ারি ২০২৫</span>
-                        </div>
-                        <p>ঢাকা-১০ আসনের জন্য চূড়ান্ত প্রার্থীদের তালিকা প্রকাশ করা হয়েছে। মোট ৩ জন প্রার্থী প্রতিদ্বন্দ্বিতা করছেন।</p>
-                        <button class="btn btn-secondary btn-sm">
-                            <span>📄 PDF ডাউনলোড</span>
-                        </button>
-                    </div>
-
-                    <div class="notice-card">
-                        <div class="notice-header">
-                            <h3>সিস্টেম আপডেট</h3>
-                            <span class="notice-date">২৮ ডিসেম্বর ২০২৪</span>
-                        </div>
-                        <p>আমাদের ভোটিং সিস্টেমে নতুন নিরাপত্তা ফিচার যুক্ত করা হয়েছে। এখন আপনার ভোট আরও বেশি সুরক্ষিত।</p>
-                    </div>
+                    <!-- Notices will be loaded dynamically from backend -->
                 </div>
             </div>
 
             <!-- Profile Section -->
             <div id="profile-section" class="content-section">
-                <div class="section-header">
-                    <h2>
-                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-                        </svg>
-                        প্রোফাইল সেটিংস
-                    </h2>
-                </div>
-
+                
                 <div class="profile-container">
                     <div class="card">
                         <h3>ব্যক্তিগত তথ্য</h3>
                         <div class="profile-info">
                             <div class="info-row">
                                 <span class="info-label">নাম:</span>
-                                <span class="info-value">মোঃ আবদুল করিম</span>
+                                <span class="info-value" id="profileName">-</span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">এনআইডি:</span>
-                                <span class="info-value">১২৩৪৫৬৭৮৯০১২</span>
+                                <span class="info-value" id="profileNID">-</span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label">ফোন:</span>
-                                <span class="info-value">০১৭১২৩৪৫৬৭৮</span>
+                                <span class="info-label">জন্ম তারিখ:</span>
+                                <span class="info-value" id="profileDOB">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">পিতার নাম:</span>
+                                <span class="info-value" id="profileFatherName">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">মাতার নাম:</span>
+                                <span class="info-value" id="profileMotherName">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">বর্তমান ঠিকানা:</span>
+                                <span class="info-value" id="profileAddress">-</span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">ভোটিং এলাকা:</span>
-                                <span class="info-value">ঢাকা-১০</span>
+                                <span class="info-value" id="profileArea">-</span>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
+            <!-- Settings Section -->
+            <div id="settings-section" class="content-section">
+                <div class="section-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
+                            <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                        </svg>
+                        সেটিংস
+                    </h2>
+                </div>
+
+                <div class="profile-container">
                     <div class="card">
                         <h3>পাসওয়ার্ড পরিবর্তন</h3>
                         <form id="passwordForm" onsubmit="changePassword(event)">
@@ -553,7 +473,32 @@
         </div>
     </div>
 
+    <!-- jsPDF Library for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <script src="assets/js/api-config.js"></script>
     <script src="assets/js/common.js"></script>
+    <script src="assets/js/citizen-notices.js"></script>
+    <script src="assets/js/citizen-dashboard-backend.js"></script>
     <script src="assets/js/citizen-dashboard.js"></script>
+    <script src="assets/js/citizen_chat.js"></script>
+    <script src="assets/js/citizen_to_admin.js"></script>
+    <script src="assets/js/citizen-complaints.js"></script>
+    
+    <script>
+        // NID auto-formatting for citizen chat (XXXX-XXXX-XXXX-XXXX-X format)
+        document.getElementById('citizenChatNID').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/[^0-9]/g, '');
+            let formatted = '';
+            for (let i = 0; i < value.length; i++) {
+                if (i > 0 && i % 4 === 0) {
+                    formatted += '-';
+                }
+                formatted += value[i];
+            }
+            e.target.value = formatted;
+        });
+    </script>
+    
 </body>
 </html>

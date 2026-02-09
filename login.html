@@ -41,7 +41,8 @@
                             name="nid" 
                             placeholder="আপনার NID নম্বর লিখুন"
                             required
-                            maxlength="17"
+                            maxlength="21"
+                            inputmode="numeric"
                         >
                     </div>
 
@@ -122,7 +123,23 @@
         </div>
     </footer>
 
+    <script src="assets/js/api-config.js"></script>
     <script src="assets/js/common.js"></script>
     <script src="assets/js/login.js"></script>
+    
+    <script>
+        // NID auto-formatting (XXXX-XXXX-XXXX-XXXX-X format)
+        document.getElementById('nid').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/[^0-9]/g, '');
+            let formatted = '';
+            for (let i = 0; i < value.length; i++) {
+                if (i > 0 && i % 4 === 0) {
+                    formatted += '-';
+                }
+                formatted += value[i];
+            }
+            e.target.value = formatted;
+        });
+    </script>
 </body>
 </html>

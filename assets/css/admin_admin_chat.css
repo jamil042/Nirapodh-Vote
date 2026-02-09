@@ -1,0 +1,32 @@
+/* =========================
+   Admin-to-Admin Chat Specific Styles
+   (Uses base styles from admin_to_citizen.css)
+========================= */
+
+/* Additional admin-specific badges and colors */
+.admin-role-badge.superadmin {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.admin-role-badge.admin {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+/* Typing animation for admin chat */
+@keyframes typing {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.7;
+    }
+    30% {
+        transform: translateY(-10px);
+        opacity: 1;
+    }
+}
+
+/* Override avatar colors for superadmin */
+.chat-item-avatar.superadmin {
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+}

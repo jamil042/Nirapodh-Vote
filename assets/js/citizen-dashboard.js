@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupNavigationListeners();
     setupRealtimeFeatures();
     setupMobileMenu();
-    loadUserData();
+    // loadUserData(); // Handled by citizen-dashboard-backend.js
     updateTimeRemaining();
 });
 
@@ -12,16 +12,28 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeDashboard() {
     console.log('নাগরিক ড্যাশবোর্ড লোড হয়েছে');
     
-    // Check if user is logged in
-    const userData = getUserData();
-    if (!userData) {
-        window.location.href = 'login.html';
-        return;
+    // Clear any old localStorage auth data (migration from old system)
+    if (localStorage.getItem('nirapodh_user') || localStorage.getItem('nirapodh_token')) {
+        console.log('Clearing old localStorage auth data...');
+        localStorage.removeItem('nirapodh_user');
+        localStorage.removeItem('nirapodh_token');
     }
     
-    // Display user name
-    document.getElementById('userName').textContent = userData.name || 'নাগরিক';
-    document.getElementById('userArea').textContent = userData.area || 'ঢাকা-১০';
+    // Note: User authentication is handled by citizen-dashboard-backend.js
+    // which will redirect if no valid token is found
+    
+    // Check if user data is already available (after backend loads it)
+    const userData = getUserData();
+    if (userData) {
+        console.log('Dashboard - User Data:', userData); // Debug log
+        // Display user name
+        document.getElementById('userName').textContent = userData.name || 'নাগরিক';
+        const userAreaElement = document.getElementById('userArea');
+        if (userAreaElement) {
+            userAreaElement.textContent = userData.votingArea || 'N/A';
+        }
+        console.log('Dashboard - Voting Area:', userData.votingArea); // Debug log
+    }
     
     // Set active section from URL hash or default to voting
     const hash = window.location.hash.substring(1) || 'voting';
@@ -36,6 +48,19 @@ function initializeDashboard() {
                 sendChatMessage();
             }
         });
+    }
+}
+
+// Close candidate modal
+function closeCandidateModal() {
+    document.getElementById('candidateModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('candidateModal');
+    if (event.target === modal) {
+        closeCandidateModal();
     }
 }
 
@@ -79,14 +104,22 @@ function showSection(sectionName) {
         }
     });
     
-    // Clear notification badges when section is opened
-    if (sectionName === 'discussion') {
-        const badge = document.getElementById('discussionBadge');
-        if (badge) badge.classList.add('hidden');
+    // Load results when switching to results section
+    if (sectionName === 'results' && typeof loadAllResults === 'function') {
+        loadAllResults();
     }
-    if (sectionName === 'chat') {
-        const badge = document.getElementById('chatBadge');
-        if (badge) badge.classList.add('hidden');
+    
+    // Refresh profile data when switching to profile section
+    if (sectionName === 'profile') {
+        const userData = getUserData();
+        if (userData && typeof populateProfileSection === 'function') {
+            populateProfileSection(userData);
+        }
+    }
+    
+    // Clear notification badge when entering notices section
+    if (sectionName === 'notices' && typeof markNoticesAsViewed === 'function') {
+        markNoticesAsViewed();
     }
 }
 
@@ -137,26 +170,33 @@ function closeSidebarMobile() {
 }
 
 
-// Get user data (simulate - in real app, get from server/session)
+// Get user data
 function getUserData() {
-    // In real application, this would fetch from session/localStorage
-    return {
-        name: 'মোঃ আবদুল করিম',
-        nid: '1234567890123',
-        phone: '01712345678',
-        area: 'ঢাকা-১০'
-    };
+    // Use sessionStorage instead of localStorage for security
+    // This ensures user must login every time they open a new tab/window
+    const storedUser = sessionStorage.getItem('nirapodh_user');
+    if (storedUser) {
+        try {
+            return JSON.parse(storedUser);
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+            return null;
+        }
+    }
+    return null;
 }
 
 // Load user data
 function loadUserData() {
-    // Simulate loading ballots for user's area
-    console.log('ব্যবহারকারীর তথ্য লোড হচ্ছে...');
-    
-    // In real app, fetch from API:
-    // fetch('/api/ballots?area=' + userData.area)
-    //     .then(response => response.json())
-    //     .then(data => displayBallots(data));
+    const userData = getUserData();
+    if (userData) {
+        console.log('ব্যবহারকারীর তথ্য লোড হয়েছে:', userData.name);
+        document.getElementById('userName').textContent = userData.name || 'নাগরিক';
+        if (userData.votingArea) {
+            document.getElementById('userArea').textContent = userData.votingArea;
+        }
+        // You might need to fetch ballot data based on user area from API here
+    }
 }
 
 // Update time remaining for active ballots
@@ -271,8 +311,58 @@ function highlightUserVote() {
 
 // ============= DISCUSSION FUNCTIONS =============
 
+let dashboardSocket = null;
+
 // Setup realtime features
 function setupRealtimeFeatures() {
+    // Connect to server
+    dashboardSocket = io('http://localhost:3000', {
+        transports: ['websocket', 'polling'],
+        reconnection: true
+    });
+
+    dashboardSocket.on('connect', () => {
+        console.log('✅ Connected to server');
+        
+        // Send dashboard login event
+        const userData = getUserData();
+        if (userData && userData.name && userData.nid) {
+            dashboardSocket.emit('dashboard_login', {
+                name: userData.name,
+                nid: userData.nid
+            });
+            console.log('📤 Dashboard login sent:', userData.name);
+        }
+    });
+
+    // Listen for dashboard count updates
+    dashboardSocket.on('dashboard_count', (data) => {
+        console.log('📥 Received dashboard_count:', JSON.stringify(data));
+        
+        const badge = document.getElementById('onlineUserCount');
+        
+        if (!badge) {
+            console.error('❌ Badge element NOT FOUND! Check HTML for id="onlineUserCount"');
+            return;
+        }
+        
+        const count = data && data.count ? data.count : 0;
+        console.log('🔢 Raw count value:', count, 'Type:', typeof count);
+        
+        // Convert to Bengali
+        const bengaliText = `${toBengaliNumber(count)} জন অনলাইন`;
+        console.log('📝 Setting badge text to:', bengaliText);
+        
+        badge.textContent = bengaliText;
+        badge.style.display = 'inline-block'; // Force show
+        
+        console.log('✅ Badge text now:', badge.textContent);
+    });
+
+    dashboardSocket.on('disconnect', () => {
+        console.log('❌ Disconnected from server');
+    });
+
     // Simulate receiving new messages
     startDiscussionSimulation();
     startChatSimulation();
@@ -331,15 +421,6 @@ function addDiscussionMessage(message, isCurrentUser) {
     
     messagesContainer.appendChild(messageDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    
-    if (!isCurrentUser) {
-        // Show notification badge if not on discussion section
-        const currentSection = document.querySelector('.content-section.active');
-        if (!currentSection || currentSection.id !== 'discussion-section') {
-            const badge = document.getElementById('discussionBadge');
-            if (badge) badge.classList.remove('hidden');
-        }
-    }
 }
 
 // ============= CHAT FUNCTIONS =============
@@ -395,19 +476,6 @@ function addChatMessage(message, type) {
     
     messagesContainer.appendChild(messageDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    
-    if (type === 'admin') {
-        // Show notification badge if not on chat section
-        const currentSection = document.querySelector('.content-section.active');
-        if (!currentSection || currentSection.id !== 'chat-section') {
-            const badge = document.getElementById('chatBadge');
-            if (badge) {
-                badge.classList.remove('hidden');
-                const currentCount = parseInt(badge.textContent) || 0;
-                badge.textContent = currentCount + 1;
-            }
-        }
-    }
 }
 
 // ============= COMPLAINT FUNCTIONS =============
@@ -697,34 +765,6 @@ function closeCandidateModal() {
 }
 
 // ============= FOUR STATES OF UI =============
-
-// Show Alert (Success, Error, Warning, Info)
-function showAlert(message, type = 'info') {
-    const alertContainer = document.getElementById('alertContainer');
-    if (!alertContainer) return;
-
-    const icons = {
-        success: '✓',
-        error: '✕',
-        warning: '⚠',
-        info: 'ℹ'
-    };
-
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type}`;
-    alert.innerHTML = `
-        <span class="alert-icon">${icons[type]}</span>
-        <span>${message}</span>
-    `;
-
-    alertContainer.appendChild(alert);
-
-    // Auto remove after 4 seconds
-    setTimeout(() => {
-        alert.classList.add('fade-out');
-        setTimeout(() => alert.remove(), 300);
-    }, 4000);
-}
 
 // Show Loading State
 function showLoadingState(container, type = 'ballot') {

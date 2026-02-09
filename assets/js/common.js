@@ -1,22 +1,38 @@
 // Common JavaScript functions for all pages
 
 // Show alert message
-function showAlert(message, type = 'info') {
+function showAlert(message, type = 'info', title = '', duration = 5000) {
     const alertContainer = document.getElementById('alertContainer');
     if (!alertContainer) return;
     
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type}`;
-    alertDiv.textContent = message;
+    
+    // Set default titles based on type if not provided
+    if (!title) {
+        switch(type) {
+            case 'success': title = '✓ সফল'; break;
+            case 'error': title = '✗ ত্রুটি'; break;
+            case 'warning': title = '⚠ সতর্কতা'; break;
+            case 'info': title = 'ℹ তথ্য'; break;
+        }
+    }
+    
+    alertDiv.innerHTML = `
+        <div class="alert-content">
+            <div class="alert-title">${title}</div>
+            <div class="alert-message">${message}</div>
+        </div>
+    `;
     
     alertContainer.innerHTML = '';
     alertContainer.appendChild(alertDiv);
     
-    // Auto-hide after 5 seconds
+    // Auto-hide after duration
     setTimeout(() => {
         alertDiv.style.opacity = '0';
         setTimeout(() => alertDiv.remove(), 300);
-    }, 5000);
+    }, duration);
 }
 
 // Toggle password visibility
@@ -49,6 +65,15 @@ function openChatBot() {
 // Logout function
 function logout() {
     if (confirm('আপনি কি লগআউট করতে চান?')) {
+        // Clear all auth related storage from both localStorage and sessionStorage
+        localStorage.removeItem('nirapodh_token');
+        localStorage.removeItem('nirapodh_user');
+        sessionStorage.removeItem('nirapodh_token');
+        sessionStorage.removeItem('nirapodh_user');
+        
+        // Set flag to prevent auto-redirect on login page
+        sessionStorage.setItem('justLoggedOut', 'true');
+        
         window.location.href = 'index.html';
     }
 }
@@ -77,28 +102,36 @@ function toBengaliNumber(num) {
 }
 
 // Loading button state
-function setButtonLoading(buttonId, loading = true) {
+function setButtonLoading(buttonId, loading = true, textId = 'btnText', loaderId = 'btnLoader') {
     const btn = document.getElementById(buttonId);
     if (!btn) return;
     
-    const btnText = btn.querySelector('#btnText');
-    const btnLoader = btn.querySelector('#btnLoader');
+    const btnText = document.getElementById(textId);
+    const btnLoader = document.getElementById(loaderId);
     
     if (loading) {
         btn.disabled = true;
         if (btnText) btnText.style.display = 'none';
-        if (btnLoader) btnLoader.classList.remove('hidden');
+        if (btnLoader) {
+            btnLoader.classList.remove('hidden');
+            btnLoader.style.display = 'inline-block';
+        }
     } else {
         btn.disabled = false;
         if (btnText) btnText.style.display = 'inline';
-        if (btnLoader) btnLoader.classList.add('hidden');
+        if (btnLoader) {
+            btnLoader.classList.add('hidden');
+            btnLoader.style.display = 'none';
+        }
     }
 }
 
 // Validate NID
 function validateNID(nid) {
+    // Remove dashes before validation
+    const cleanNid = nid.replace(/-/g, '');
     const nidPattern = /^[0-9]{10,17}$/;
-    return nidPattern.test(nid);
+    return nidPattern.test(cleanNid);
 }
 
 // Validate password strength

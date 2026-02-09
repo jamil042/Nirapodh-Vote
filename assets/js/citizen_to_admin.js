@@ -1,0 +1,442 @@
+// ===================================
+// Citizen-Admin Chat System with Validation
+// ===================================
+
+(function() {
+  let socket = null;
+  let citizenInfo = null;
+  const messageCache = [];
+  let replyingTo = null; // Track message being replied to
+
+  // Initialize socket connection
+  function initSocket() {
+    socket = io('http://localhost:3000', {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5
+    });
+
+    socket.on('connect', () => {
+      console.log('✅ Connected to admin chat');
+      if (citizenInfo) {
+        socket.emit('citizen_join', citizenInfo);
+      }
+    });
+
+    // ✅ Join success
+    socket.on('join_success', (data) => {
+      console.log('✅ Join successful:', data);
+      showChatWindow();
+    });
+
+    // ✅ Join error (NID validation failed)
+    socket.on('join_error', (data) => {
+      console.error('❌ Join error:', data.message);
+      alert(data.message);
+      
+      // Clear saved info and reload
+      localStorage.removeItem('citizenChatInfo');
+      citizenInfo = null;
+      location.reload();
+    });
+
+    socket.on('receive_admin_message', (data) => {
+      console.log('📩 Received admin message:', data);
+      appendMessage(data.message, 'admin', data.timestamp, data.replyTo || null, data.id || null);
+    });
+
+    socket.on('admin_typing', (data) => {
+      showTypingIndicator(data.typing);
+    });
+
+    // ✅ Receive chat history
+    socket.on('admin_chat_history', (data) => {
+      console.log('📜 Received message history:', data.messages ? data.messages.length : 0);
+      if (data.messages) {
+        loadMessageHistory(data.messages);
+      }
+    });
+
+    socket.on('disconnect', () => {
+      console.log('❌ Disconnected from chat server');
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('❌ Connection error:', error);
+    });
+  }
+
+  // Login with NID (fallback for manual login if auto-login fails)
+  window.loginToChatWithNID = function() {
+    const name = document.getElementById('citizenChatName')?.value?.trim();
+    const nidRaw = document.getElementById('citizenChatNID')?.value?.trim();
+    const nid = nidRaw.replace(/-/g, ''); // Remove dashes for backend
+
+    if (!name || !nid) {
+      alert('দয়া করে নাম এবং এনআইডি নম্বর প্রদান করুন');
+      return;
+    }
+
+    if (nid.length !== 10 && nid.length !== 13 && nid.length !== 17) {
+      alert('সঠিক এনআইডি নম্বর প্রদান করুন (১০, ১৩ বা ১৭ ডিজিট)');
+      return;
+    }
+
+    citizenInfo = {
+      name: name,
+      nid: nid,
+      timestamp: new Date().toISOString()
+    };
+
+    // Save to localStorage
+    localStorage.setItem('citizenChatInfo', JSON.stringify(citizenInfo));
+
+    // Initialize socket
+    if (!socket) {
+      initSocket();
+    } else if (socket.connected) {
+      socket.emit('citizen_join', citizenInfo);
+    }
+
+    console.log('🔄 Manual login as:', name, 'NID:', nid);
+  };
+
+  // Show chat window
+  function showChatWindow() {
+    const loginForm = document.querySelector('.chat-nid-login');
+    const chatWindow = document.querySelector('.chat-window');
+    const logoutBtn = document.querySelector('.logout-btn');
+
+    if (loginForm) loginForm.style.display = 'none';
+    if (chatWindow) chatWindow.style.display = 'flex';
+    if (logoutBtn) logoutBtn.style.display = 'inline-block';
+
+    const headerName = document.getElementById('chat-header-name');
+    const headerNID = document.querySelector('.chat-header-nid');
+
+    if (headerName) headerName.textContent = 'প্রশাসক';
+    if (headerNID && citizenInfo) headerNID.textContent = `আপনার NID: ${citizenInfo.nid}`;
+
+    console.log('✅ Chat window shown');
+  }
+
+  // Send message to admin
+  window.sendChatMessage = function() {
+    const input = document.getElementById('chatInput');
+    const message = input?.value?.trim();
+
+    if (!message || !citizenInfo) {
+      console.warn('⚠️ Cannot send: no message or not logged in');
+      return;
+    }
+
+    if (!socket || !socket.connected) {
+      alert('সার্ভারের সাথে সংযোগ নেই। দয়া করে পুনরায় চেষ্টা করুন।');
+      return;
+    }
+
+    const messageId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const messageData = {
+      id: messageId,
+      message: message,
+      senderNID: citizenInfo.nid,
+      senderName: citizenInfo.name,
+      timestamp: new Date().toISOString(),
+      type: 'citizen_to_admin',
+      replyTo: replyingTo ? replyingTo.text : null
+    };
+
+    // Send via socket
+    socket.emit('citizen_message', messageData);
+
+    console.log('📤 Message sent:', message);
+
+    // Append to UI
+    appendMessage(message, 'user', messageData.timestamp, messageData.replyTo, messageId);
+
+    // Clear reply state
+    cancelCitizenReply();
+
+    // Clear input
+    input.value = '';
+    input.focus();
+  };
+
+  // Append message to chat
+  function appendMessage(text, type, timestamp, replyTo = null, messageId = null) {
+    const container = document.getElementById('chat-messages-container');
+    if (!container) return;
+
+    // Remove empty state if exists
+    const emptyState = container.querySelector('.chat-empty-state');
+    if (emptyState) emptyState.remove();
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${type}`;
+    
+    // Generate or use existing message ID
+    const id = messageId || `${timestamp}-${text.substring(0, 20)}`;
+    messageDiv.dataset.messageId = id;
+    messageDiv.dataset.messageText = text;
+
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    
+    // Add reply indicator if this is a reply
+    if (replyTo) {
+      const replyIndicator = document.createElement('div');
+      replyIndicator.className = 'message-reply-indicator';
+      replyIndicator.innerHTML = `
+        <div class="reply-indicator-text">↩ উত্তর</div>
+        <div class="reply-indicator-message">${escapeHtml(replyTo)}</div>
+      `;
+      bubble.appendChild(replyIndicator);
+    }
+
+    const p = document.createElement('p');
+    p.textContent = text;
+
+    const time = document.createElement('span');
+    time.className = 'message-time';
+    time.textContent = formatTime(timestamp);
+
+    bubble.appendChild(p);
+    bubble.appendChild(time);
+    
+    // Double-click to reply
+    bubble.style.cursor = 'pointer';
+    bubble.style.userSelect = 'none';
+    bubble.addEventListener('dblclick', function() {
+      replyToCitizenMessage(id);
+    });
+    
+    messageDiv.appendChild(bubble);
+    container.appendChild(messageDiv);
+
+    // Scroll to bottom
+    container.scrollTop = container.scrollHeight;
+
+    // Cache message
+    messageCache.push({ text, type, timestamp, replyTo, id });
+  }
+
+  // Load message history
+  function loadMessageHistory(messages) {
+    const container = document.getElementById('chat-messages-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+    
+    if (!messages || messages.length === 0) {
+      container.innerHTML = `
+        <div class="chat-empty-state">
+          <p>এখানে আপনার কথোপকথন দেখা যাবে</p>
+        </div>
+      `;
+      return;
+    }
+
+    messages.forEach(msg => {
+      appendMessage(
+        msg.message,
+        msg.type === 'admin_to_citizen' ? 'admin' : 'user',
+        msg.timestamp,
+        msg.replyTo || null,
+        msg.id || null
+      );
+    });
+
+    console.log('✅ Loaded', messages.length, 'messages');
+  }
+
+  // Escape HTML
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // Format time
+  function formatTime(timestamp) {
+    const date = new Date(timestamp);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    
+    const bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    return `${hours}:${minutes}`.split('').map(c => {
+      const n = parseInt(c);
+      return isNaN(n) ? c : bn[n];
+    }).join('');
+  }
+
+  // Reply to message
+  function replyToCitizenMessage(messageId) {
+    const messageEl = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (!messageEl) return;
+
+    const messageText = messageEl.dataset.messageText;
+    if (!messageText) return;
+
+    replyingTo = { id: messageId, text: messageText };
+
+    const preview = document.getElementById('citizenReplyPreview');
+    const previewText = document.getElementById('citizenReplyPreviewText');
+    const input = document.getElementById('chatInput');
+    
+    if (preview && previewText && input) {
+      previewText.textContent = messageText.substring(0, 80) + (messageText.length > 80 ? '...' : '');
+      preview.style.display = 'flex';
+      input.focus();
+    }
+  }
+  
+  // Show reply preview (legacy support)
+  window.showCitizenReplyPreview = function(text) {
+    // Find message by text (fallback)
+    const messageEl = Array.from(document.querySelectorAll('[data-message-text]')).find(
+      el => el.dataset.messageText === text
+    );
+    if (messageEl && messageEl.dataset.messageId) {
+      replyToCitizenMessage(messageEl.dataset.messageId);
+    }
+  };
+
+  // Cancel reply
+  window.cancelCitizenReply = function() {
+    replyingTo = null;
+    const preview = document.getElementById('citizenReplyPreview');
+    if (preview) {
+      preview.style.display = 'none';
+    }
+  };
+
+  // Show typing indicator
+  function showTypingIndicator(isTyping) {
+    let indicator = document.getElementById('typing-indicator');
+    const container = document.getElementById('chat-messages-container');
+    
+    if (!container) return;
+
+    if (isTyping && !indicator) {
+      indicator = document.createElement('div');
+      indicator.id = 'typing-indicator';
+      indicator.className = 'chat-message admin';
+      indicator.innerHTML = `
+        <div class="message-bubble" style="background: #e5e7eb;">
+          <p style="color: #64748b;">প্রশাসক লিখছেন...</p>
+        </div>
+      `;
+      container.appendChild(indicator);
+      container.scrollTop = container.scrollHeight;
+    } else if (!isTyping && indicator) {
+      indicator.remove();
+    }
+  }
+
+  // Enter key to send
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 Citizen Chat Initializing...');
+
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+      chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          sendChatMessage();
+        }
+      });
+
+      // Emit typing event
+      let typingTimer;
+      chatInput.addEventListener('input', () => {
+        if (!socket || !citizenInfo || !socket.connected) return;
+        
+        socket.emit('citizen_typing', {
+          nid: citizenInfo.nid,
+          typing: true
+        });
+
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+          socket.emit('citizen_typing', {
+            nid: citizenInfo.nid,
+            typing: false
+          });
+        }, 1000);
+      });
+    }
+
+    // ✅ Auto-login using dashboard session data
+    autoLoginFromDashboard();
+
+    console.log('✅ Citizen Chat Ready');
+  });
+
+  // Logout function
+  window.logoutFromAdminChat = function() {
+    if (socket && citizenInfo) {
+      socket.emit('citizen_logout', { nid: citizenInfo.nid });
+      socket.disconnect();
+    }
+    
+    localStorage.removeItem('citizenChatInfo');
+    citizenInfo = null;
+    socket = null;
+    
+    location.reload();
+  };
+
+  // ✅ Auto-login from dashboard session
+  function autoLoginFromDashboard() {
+    // Check if getUserData function exists (from api-config.js)
+    if (typeof getUserData === 'function') {
+      const userData = getUserData();
+      
+      if (userData && userData.name && userData.nid) {
+        console.log('✅ Found dashboard session, auto-login as:', userData.name);
+        
+        citizenInfo = {
+          name: userData.name,
+          nid: userData.nid,
+          timestamp: new Date().toISOString()
+        };
+        
+        // Save to localStorage for persistence
+        localStorage.setItem('citizenChatInfo', JSON.stringify(citizenInfo));
+        
+        // Initialize socket and auto-login
+        initSocket();
+        return;
+      }
+    }
+    
+    // Fallback: Check localStorage for existing chat info
+    const savedInfo = localStorage.getItem('citizenChatInfo');
+    if (savedInfo) {
+      try {
+        citizenInfo = JSON.parse(savedInfo);
+        console.log('✅ Auto-login from saved info:', citizenInfo.name);
+        initSocket();
+      } catch (e) {
+        console.error('❌ Failed to parse saved info:', e);
+        localStorage.removeItem('citizenChatInfo');
+        showLoginForm();
+      }
+    } else {
+      console.warn('⚠️ No user data found, showing login form');
+      showLoginForm();
+    }
+  }
+
+  // Show login form if auto-login fails
+  function showLoginForm() {
+    const loginForm = document.querySelector('.chat-nid-login');
+    const chatWindow = document.querySelector('.chat-window');
+    const logoutBtn = document.querySelector('.logout-btn');
+
+    if (loginForm) loginForm.style.display = 'block';
+    if (chatWindow) chatWindow.style.display = 'none';
+    if (logoutBtn) logoutBtn.style.display = 'none';
+  }
+})();
