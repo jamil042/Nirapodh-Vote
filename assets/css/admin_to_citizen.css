@@ -489,27 +489,22 @@
 @media (max-width: 768px) {
     .chat-container {
         grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
         height: auto;
-        position: relative;
+        gap: 15px;
     }
     
     .chat-list {
-        position: absolute;
-        left: -100%;
-        top: 0;
-        height: 100%;
-        width: 280px;
-        transition: left 0.3s ease;
-        z-index: 100;
-        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-    }
-    
-    .chat-list.show {
-        left: 0;
-    }
-    
-    .chat-main {
+        position: relative;
+        height: auto;
+        max-height: 300px;
         width: 100%;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .chat-window {
+        min-height: 400px;
+        height: auto;
     }
     
     .chat-header {
@@ -540,13 +535,18 @@
 
 /* Mobile Portrait (480px) */
 @media (max-width: 480px) {
+    .chat-container {
+        gap: 12px;
+    }
+    
     .chat-list {
         width: 100%;
-        left: -100%;
+        max-height: 250px;
+        padding: 15px;
     }
     
     .chat-list-header {
-        padding: 12px 15px;
+        padding: 12px 0;
     }
     
     .chat-list-header h3 {
@@ -584,6 +584,10 @@
     
     .chat-item-message {
         font-size: 0.8rem;
+    }
+    
+    .chat-window {
+        min-height: 450px;
     }
     
     .chat-header {
