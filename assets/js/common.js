@@ -57,11 +57,6 @@ function togglePassword(inputId) {
     }
 }
 
-// Open chatbot (placeholder)
-function openChatBot() {
-    showAlert('AI চ্যাটবট শীঘ্রই চালু হবে। এখনই সাহায্যের জন্য প্রশাসকের সাথে যোগাযোগ করুন।', 'info');
-}
-
 // Logout function
 function logout() {
     if (confirm('আপনি কি লগআউট করতে চান?')) {
