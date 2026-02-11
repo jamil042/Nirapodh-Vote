@@ -30,7 +30,8 @@
     cursor: pointer;
     padding: 8px;
     z-index: 200;
-    margin-right: auto;
+    flex-shrink: 0;
+    order: -1; /* Ensure it's first */
 }
 
 .hamburger-menu span {
@@ -58,22 +59,28 @@
     align-items: center;
     gap: 15px;
     flex: 1;
+    min-width: 0; /* Allow text truncation */
 }
 
 .logo-small {
     height: 50px;
     width: auto;
+    flex-shrink: 0;
 }
 
 .header-content h1 {
     font-size: 1.5rem;
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .user-section {
     display: flex;
     align-items: center;
     gap: 15px;
+    flex-shrink: 0;
 }
 
 .user-name {
@@ -1503,6 +1510,24 @@
 }
 
 /* Mobile Sidebar Overlay & Animation */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 80px;
+    left: 0;
+    width: 100vw;
+    height: calc(100vh - 80px);
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 140;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
 .sidebar.mobile-open {
     position: fixed;
     left: 0;
@@ -1532,7 +1557,7 @@
     }
 
     .dashboard-container {
-        flex-direction: column;
+        flex-direction: row;
     }
 
     .sidebar {
@@ -1546,11 +1571,11 @@
         /* Position & Hidden State */
         position: fixed;
         left: 0;
-        top: 0;
-        height: 100vh;
+        top: 80px;
+        height: calc(100vh - 80px);
         transform: translateX(-100%); /* Hidden off-screen */
         transition: transform 0.3s ease;
-        z-index: 100;
+        z-index: 150;
         
         /* Scroll */
         overflow-y: auto;
@@ -1560,7 +1585,6 @@
     /* When sidebar is open */
     .sidebar.mobile-open {
         transform: translateX(0); /* Slides into view */
-        z-index: 150; /* Higher than before */
     }
 
     /* Custom Scrollbar for Sidebar */
@@ -1589,7 +1613,6 @@
         flex-direction: column;
         padding: 20px 0;
         animation: fadeInNav 0.4s ease-out;
-        margin-top: 80px; /* Instead of padding-top on sidebar */
     }
 
     /* Optional: Animation for nav items */
@@ -1606,10 +1629,9 @@
 
     .nav-item {
         flex-shrink: 0;
-        min-width: 120px;
-        padding: 10px 12px;
-        font-size: 0.8rem;
-        margin: 2px 4px;
+        padding: 15px 20px;
+        font-size: 0.9rem;
+        margin: 2px 0;
     }
 
     .nav-icon {
@@ -1618,7 +1640,7 @@
     }
 
     .nav-text {
-        font-size: 0.75rem;
+        font-size: 0.85rem;
         letter-spacing: 0;
     }
 
@@ -1631,7 +1653,7 @@
         flex-direction: row;
         gap: 10px;
         text-align: left;
-        padding: 0 10px;
+        padding: 0 15px;
     }
 
     .logo-section {
@@ -1648,7 +1670,11 @@
         font-size: 1.1rem;
     }
 
-    .user-section {
+    .content-area {
+        width: 100%;
+        margin-left: 0;
+        padding: 15px;
+    }    .user-section {
         flex-direction: column;
         gap: 10px;
         width: auto;
@@ -3613,21 +3639,45 @@
 
 /* Tablet & Below (1024px) */
 @media (max-width: 1024px) {
+    .hamburger-menu {
+        display: flex;
+    }
+
     .dashboard-container {
-        flex-direction: column;
+        flex-direction: row; /* Keep sidebar and content side by side */
     }
     
     .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-        border-right: none;
-        border-bottom: 2px solid #e0e0e0;
+        width: 280px;
+        background: #ffffff;
+        border-right: 1px solid #e0e0e0;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        
+        /* Position & Hidden State for tablet/split screen */
+        position: fixed;
+        left: 0;
+        top: 80px;
+        height: calc(100vh - 80px);
+        transform: translateX(-100%); /* Hidden off-screen by default */
+        transition: transform 0.3s ease;
+        z-index: 150;
+        
+        /* Scroll */
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    /* When sidebar is open */
+    .sidebar.mobile-open {
+        transform: translateX(0); /* Slides into view */
     }
     
     .content-area {
         width: 100%;
         padding: 20px;
+        margin-left: 0; /* No margin since sidebar is hidden */
     }
     
     .stats-grid {
@@ -3641,14 +3691,19 @@
 
 /* Mobile Landscape & Small Tablets (768px) */
 @media (max-width: 768px) {
+    .hamburger-menu {
+        display: flex;
+    }
+
     .header-content {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 10px;
         padding: 0 15px;
     }
     
     .logo-section {
         gap: 10px;
+        flex: 0 1 auto;
     }
     
     .logo-small {
@@ -3657,34 +3712,52 @@
     
     .header-content h1 {
         font-size: 1.2rem;
+        flex: 1;
+        min-width: 0;
     }
     
     .user-section {
         gap: 10px;
+        flex: 0 0 auto;
     }
     
     .user-name {
         font-size: 0.9rem;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     
     .sidebar {
-        padding: 15px 0;
+        position: fixed;
+        left: 0;
+        top: 80px;
+        width: 280px;
+        height: calc(100vh - 80px);
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 150;
+        overflow-y: auto;
+        background: white;
+        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .sidebar.mobile-open {
+        transform: translateX(0);
     }
     
     .sidebar-nav {
-        flex-direction: row;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        gap: 10px;
-        padding: 0 15px;
+        flex-direction: column;
+        padding: 15px 0;
+        gap: 0;
     }
     
     .nav-item {
-        min-width: 120px;
-        padding: 12px 15px;
-        flex-direction: column;
-        text-align: center;
-        gap: 5px;
+        padding: 15px 20px;
+        flex-direction: row;
+        text-align: left;
+        gap: 12px;
     }
     
     .nav-icon {
@@ -3692,11 +3765,26 @@
     }
     
     .nav-text {
-        font-size: 0.8rem;
+        font-size: 0.9rem;
     }
     
     .content-area {
+        width: 100%;
         padding: 15px;
+        margin-left: 0;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .candidates-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .section-header h2 {
+        font-size: 1.4rem;
     }
     
     .section-header h2 {
@@ -3734,29 +3822,39 @@
         display: flex;
     }
     
+    .header-content {
+        padding: 0 10px;
+    }
+    
     .header-content h1 {
-        font-size: 1rem;
+        font-size: 0.95rem;
+    }
+    
+    .user-name {
+        display: none; /* Hide name on very small screens */
     }
     
     .sidebar {
         position: fixed;
-        top: 0;
-        left: -100%;
+        top: 80px;
+        left: 0;
         width: 280px;
-        height: 100vh;
-        z-index: 1000;
-        transition: left 0.3s ease;
+        height: calc(100vh - 80px);
+        z-index: 150;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
         background: white;
         box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+        overflow-y: auto;
     }
     
-    .sidebar.active {
-        left: 0;
+    .sidebar.mobile-open {
+        transform: translateX(0);
     }
     
     .sidebar-nav {
         flex-direction: column;
-        padding: 0;
+        padding: 15px 0;
     }
     
     .nav-item {
@@ -3772,7 +3870,9 @@
     }
     
     .content-area {
+        width: 100%;
         padding: 12px;
+        margin-left: 0;
     }
     
     .section-header h2 {
@@ -3783,6 +3883,10 @@
         padding: 15px;
     }
     
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
     .candidate-card {
         padding: 15px;
     }
@@ -3791,6 +3895,10 @@
         flex-direction: column;
         text-align: center;
         gap: 15px;
+    }
+    
+    .candidates-grid {
+        grid-template-columns: 1fr;
     }
     
     .card {
