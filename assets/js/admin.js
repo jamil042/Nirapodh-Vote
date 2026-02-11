@@ -12,6 +12,77 @@ let customCandidateCount = 0;
 
 // Notice management moved to admin-notices.js
 
+// ===== MOBILE SIDEBAR FUNCTIONS =====
+function setupAdminMobileSidebar() {
+    const hamburger = document.getElementById('hamburgerMenu');
+    const sidebar = document.querySelector('.sidebar');
+    
+    // Create overlay element if it doesn't exist
+    let overlay = document.querySelector('.admin-sidebar-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'admin-sidebar-overlay';
+        document.body.appendChild(overlay);
+        
+        // Close sidebar when clicking overlay
+        overlay.addEventListener('click', function() {
+            closeAdminSidebar();
+        });
+    }
+    
+    if (hamburger && sidebar) {
+        // Close sidebar when nav item is clicked
+        document.querySelectorAll('.sidebar .nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                closeAdminSidebar();
+            });
+        });
+        
+        // Close sidebar when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.sidebar') && 
+                !event.target.closest('.hamburger-menu') && 
+                !event.target.closest('.admin-sidebar-overlay')) {
+                closeAdminSidebar();
+            }
+        });
+    }
+}
+
+// Toggle admin sidebar visibility
+function toggleAdminSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.admin-sidebar-overlay');
+    if (sidebar) {
+        sidebar.classList.toggle('mobile-open');
+        const hamburger = document.getElementById('hamburgerMenu');
+        if (hamburger) {
+            hamburger.classList.toggle('active');
+        }
+        // Toggle overlay
+        if (overlay) {
+            overlay.classList.toggle('active');
+        }
+    }
+}
+
+// Close admin sidebar
+function closeAdminSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.admin-sidebar-overlay');
+    if (sidebar) {
+        sidebar.classList.remove('mobile-open');
+        const hamburger = document.getElementById('hamburgerMenu');
+        if (hamburger) {
+            hamburger.classList.remove('active');
+        }
+        // Hide overlay
+        if (overlay) {
+            overlay.classList.remove('active');
+        }
+    }
+}
+
 // ===== TOAST NOTIFICATION SYSTEM =====
 function showAlert(title, type = 'info', duration = 3000) {
     const alertContainer = document.getElementById('alert-container') || createAlertContainer();
@@ -57,6 +128,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeDashboard() {
+    // Setup mobile sidebar first
+    setupAdminMobileSidebar();
+    
     loadDashboardData(); // Load real-time data from backend
     loadCandidatesData(); // Load mock candidates data
     loadComplaintsData(); // Load mock complaints data
