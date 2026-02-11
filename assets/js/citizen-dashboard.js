@@ -128,6 +128,19 @@ function setupMobileMenu() {
     const hamburger = document.getElementById('hamburgerMenu');
     const sidebar = document.querySelector('.sidebar');
     
+    // Create overlay element if it doesn't exist
+    let overlay = document.querySelector('.sidebar-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'sidebar-overlay';
+        document.body.appendChild(overlay);
+        
+        // Close sidebar when clicking overlay
+        overlay.addEventListener('click', function() {
+            closeSidebarMobile();
+        });
+    }
+    
     if (hamburger && sidebar) {
         // Close sidebar when nav item is clicked
         document.querySelectorAll('.nav-item').forEach(item => {
@@ -136,9 +149,11 @@ function setupMobileMenu() {
             });
         });
         
-        // Close sidebar when clicking outside
+        // Close sidebar when clicking outside (but not on overlay as it has its own handler)
         document.addEventListener('click', function(event) {
-            if (!event.target.closest('.sidebar') && !event.target.closest('.hamburger-menu')) {
+            if (!event.target.closest('.sidebar') && 
+                !event.target.closest('.hamburger-menu') && 
+                !event.target.closest('.sidebar-overlay')) {
                 closeSidebarMobile();
             }
         });
@@ -148,11 +163,16 @@ function setupMobileMenu() {
 // Toggle sidebar visibility on mobile
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
     if (sidebar) {
         sidebar.classList.toggle('mobile-open');
         const hamburger = document.getElementById('hamburgerMenu');
         if (hamburger) {
             hamburger.classList.toggle('active');
+        }
+        // Toggle overlay
+        if (overlay) {
+            overlay.classList.toggle('active');
         }
     }
 }
@@ -160,11 +180,16 @@ function toggleSidebar() {
 // Close sidebar on mobile
 function closeSidebarMobile() {
     const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
     if (sidebar) {
         sidebar.classList.remove('mobile-open');
         const hamburger = document.getElementById('hamburgerMenu');
         if (hamburger) {
             hamburger.classList.remove('active');
+        }
+        // Hide overlay
+        if (overlay) {
+            overlay.classList.remove('active');
         }
     }
 }
