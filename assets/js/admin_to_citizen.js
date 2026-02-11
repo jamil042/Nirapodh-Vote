@@ -5,6 +5,8 @@
 let socket = null;
 let currentCitizen = null;
 let citizens = {};
+let allCitizens = []; // All citizens from database
+let onlineCitizens = new Set(); // Track online citizens
 let unreadCounts = {};
 let replyingTo = null; // Track message being replied to
 
@@ -20,6 +22,9 @@ function initAdminSocket() {
     socket.on('connect', () => {
         console.log('✅ Admin connected to chat server');
         socket.emit('admin_join');
+        
+        // Load all citizens from database
+        loadAllCitizens();
     });
 
     // Admin already connected warning
@@ -31,7 +36,7 @@ function initAdminSocket() {
     // New citizen joined
     socket.on('citizen_joined', (data) => {
         console.log('👤 Citizen joined:', data);
-        addCitizen(data);
+        markCitizenOnline(data);
     });
 
     // Receive message from citizen
@@ -56,7 +61,7 @@ function initAdminSocket() {
     // Load all active citizens
     socket.on('active_citizens', (data) => {
         console.log('📋 Active citizens loaded:', data.citizens.length);
-        data.citizens.forEach(citizen => addCitizen(citizen));
+        data.citizens.forEach(citizen => markCitizenOnline(citizen));
     });
 
     // ✅ NEW: Receive chat history when selecting a citizen
@@ -74,9 +79,61 @@ function initAdminSocket() {
     });
 }
 
-// Add citizen to list
-function addCitizen(citizen) {
-    if (!citizens[citizen.nid]) {
+// Load all citizens from database
+async function loadAllCitizens() {
+    try {
+        const token = sessionStorage.getItem('nirapodh_admin_token') || localStorage.getItem('adminToken');
+        
+        if (!token) {
+            console.error('❌ No admin token found');
+            return;
+        }
+
+        const response = await fetch(`${API_CONFIG.API_URL}/admin/users`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            allCitizens = data.users;
+            console.log('✅ Loaded all citizens:', allCitizens.length);
+            
+            // Initialize citizens object with all users
+            allCitizens.forEach(user => {
+                if (!citizens[user.nid]) {
+                    citizens[user.nid] = {
+                        name: user.name,
+                        nid: user.nid,
+                        messages: [],
+                        lastMessage: null,
+                        timestamp: user.createdAt || new Date().toISOString(),
+                        online: false
+                    };
+                    unreadCounts[user.nid] = 0;
+                }
+            });
+            
+            renderChatList();
+        } else {
+            console.error('❌ Failed to load citizens:', data.message);
+        }
+    } catch (error) {
+        console.error('❌ Error loading citizens:', error);
+    }
+}
+
+// Mark citizen as online
+function markCitizenOnline(citizen) {
+    onlineCitizens.add(citizen.nid);
+    
+    if (citizens[citizen.nid]) {
+        citizens[citizen.nid].online = true;
+        citizens[citizen.nid].timestamp = citizen.timestamp;
+    } else {
+        // Add new citizen if not in database yet
         citizens[citizen.nid] = {
             name: citizen.name,
             nid: citizen.nid,
@@ -86,17 +143,16 @@ function addCitizen(citizen) {
             online: true
         };
         unreadCounts[citizen.nid] = 0;
-        console.log('✅ Citizen added:', citizen.name, citizen.nid);
-    } else {
-        // Update online status
-        citizens[citizen.nid].online = true;
-        citizens[citizen.nid].timestamp = citizen.timestamp;
     }
+    
+    console.log('✅ Citizen marked online:', citizen.name, citizen.nid);
     renderChatList();
 }
 
-// Mark citizen as offline (don't delete, keep history)
+// Mark citizen as offline (don't delete, keep in list)
 function markCitizenOffline(nid) {
+    onlineCitizens.delete(nid);
+    
     if (citizens[nid]) {
         citizens[nid].online = false;
         console.log('👋 Citizen marked offline:', nid);
@@ -140,7 +196,7 @@ function loadCitizenHistory(nid, messages) {
 // Handle incoming message
 function handleIncomingMessage(data) {
     if (!citizens[data.senderNID]) {
-        addCitizen({
+        markCitizenOnline({
             name: data.senderName,
             nid: data.senderNID,
             timestamp: data.timestamp
