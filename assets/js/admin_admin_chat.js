@@ -163,7 +163,7 @@ async function loadAllChatAdmins() {
 
         console.log('🔑 Using token to fetch admins');
 
-        const response = await fetch('http://localhost:3000/api/admin/all-admins', {
+        const response = await fetch(`${API_CONFIG.API_URL}/admin/all-admins`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
