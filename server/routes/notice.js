@@ -5,11 +5,25 @@ const { authenticateAdmin } = require('../utils/helpers');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
 
-// Configure multer for PDF uploads
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Socket.IO instance will be set from server.js
+let io;
+router.setIO = (socketIO) => {
+    io = socketIO;
+};
+
+// Configure multer for temporary PDF uploads (will upload to Cloudinary)
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const uploadDir = 'uploads/notices';
+        const uploadDir = 'uploads/temp';
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -41,44 +55,79 @@ router.post('/create', authenticateAdmin, upload.single('pdfFile'), async (req, 
         console.log('Body:', req.body);
         console.log('File:', req.file);
 
-        const { title, type, contentType, message } = req.body;
+        const { title, type, message } = req.body;
         const adminId = req.admin._id || req.admin.id;
         const adminName = req.admin.username;
 
         console.log('Admin ID:', adminId, 'Admin Name:', adminName);
 
         // Validation
-        if (!title || !type || !contentType) {
+        if (!title || !type) {
             return res.status(400).json({ 
                 success: false, 
-                message: 'শিরোনাম, ধরন এবং কন্টেন্ট টাইপ আবশ্যক' 
+                message: 'শিরোনাম এবং ধরন আবশ্যক' 
+            });
+        }
+
+        // At least one content type required
+        if (!message && !req.file) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'বার্তা অথবা PDF ফাইল অন্তত একটি আবশ্যক' 
             });
         }
 
         const noticeData = {
             title,
             type,
-            contentType,
             publishedBy: adminId,
             publishedByName: adminName
         };
 
-        if (contentType === 'text') {
-            if (!message) {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: 'টেক্সট নোটিশের জন্য বার্তা আবশ্যক' 
-                });
-            }
+        // Add message if provided
+        if (message) {
             noticeData.message = message;
-        } else if (contentType === 'pdf') {
-            if (!req.file) {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: 'PDF নোটিশের জন্য ফাইল আবশ্যক' 
+        }
+
+        // Upload PDF to Cloudinary if provided
+        if (req.file) {
+            try {
+                console.log('📤 Uploading PDF to Cloudinary...');
+                
+                // Upload to Cloudinary with public access
+                const result = await cloudinary.uploader.upload(req.file.path, {
+                    folder: 'nirapodh-vote/notices',
+                    resource_type: 'raw', // For PDF files
+                    public_id: `notice-${Date.now()}`,
+                    type: 'upload', // Use 'upload' type for public access
+                    invalidate: true
+                });
+                
+                // Construct public URL for raw files
+                // Format: https://res.cloudinary.com/{cloud_name}/raw/upload/{folder}/{public_id}.{format}
+                const publicUrl = result.secure_url;
+                
+                // Save Cloudinary URL to database
+                noticeData.pdfUrl = publicUrl;
+                console.log('✅ PDF uploaded to Cloudinary:', publicUrl);
+                console.log('📋 Full result:', JSON.stringify(result, null, 2));
+                
+                // Delete temporary local file
+                fs.unlinkSync(req.file.path);
+                console.log('🗑️ Temporary file deleted');
+                
+            } catch (uploadError) {
+                console.error('Cloudinary upload error:', uploadError);
+                // Clean up temp file
+                if (fs.existsSync(req.file.path)) {
+                    fs.unlinkSync(req.file.path);
+                }
+                return res.status(500).json({
+                    success: false,
+                    message: 'PDF আপলোড করতে সমস্যা হয়েছে',
+                    error: uploadError.message
                 });
             }
-            noticeData.pdfUrl = `/uploads/notices/${req.file.filename}`;
         }
 
         // Set priority based on type
@@ -96,6 +145,17 @@ router.post('/create', authenticateAdmin, upload.single('pdfFile'), async (req, 
         console.log('💾 Saving notice to database...');
         await notice.save();
         console.log('✅ Notice saved successfully:', notice._id);
+
+        // Emit socket event for real-time notification
+        if (io) {
+            io.emit('new_notice', {
+                noticeId: notice._id,
+                title: notice.title,
+                type: notice.type,
+                message: 'নতুন নোটিশ পাবলিশ করা হয়েছে'
+            });
+            console.log('🔔 Socket event emitted: new_notice');
+        }
 
         res.status(201).json({
             success: true,

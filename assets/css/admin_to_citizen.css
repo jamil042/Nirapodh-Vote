@@ -17,7 +17,7 @@
     display: grid;
     grid-template-columns: 350px 1fr;
     gap: 20px;
-    height: 700px;
+    height: 480px;
 }
 
 /* =========================
@@ -43,6 +43,23 @@
 .chat-list-header h3 {
     font-size: 1.3em;
     color: var(--text-dark);
+}
+
+.chat-list-header .count-badge {
+    background: var(--green-main);
+    color: white;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 0.85em;
+    font-weight: 700;
+    width: 36px;
+    height: 36px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
 }
 
 /* =========================
@@ -277,19 +294,23 @@
     display: flex;
     gap: 12px;
     padding: 20px;
-    border-top: 2px solid var(--green-border);
+    border-top: 1px solid #e5e7eb;
 }
 
 .chat-input input {
     flex: 1;
     padding: 12px 18px;
-    border: 2px solid var(--green-border);
+    border: 2px solid #e5e7eb;
     border-radius: 25px;
+    background: #f8fafc;
+    transition: all 0.2s;
 }
 
 .chat-input input:focus {
     outline: none;
-    border-color: var(--green-main);
+    border-color: #3b82f6;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
 .chat-input button {
@@ -452,13 +473,176 @@
 /* =========================
    Responsive
 ========================= */
+
+/* Tablet (1024px) */
+@media (max-width: 1024px) {
+    .chat-container {
+        grid-template-columns: 300px 1fr;
+    }
+    
+    .chat-list {
+        min-width: 280px;
+    }
+}
+
+/* Mobile Landscape & Small Tablet (768px) */
 @media (max-width: 768px) {
     .chat-container {
         grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        height: auto;
+        gap: 15px;
+    }
+    
+    .chat-list {
+        position: relative;
+        height: auto;
+        max-height: 300px;
+        width: 100%;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .chat-window {
+        min-height: 400px;
         height: auto;
     }
-
+    
+    .chat-header {
+        padding: 15px;
+    }
+    
+    .chat-header h3 {
+        font-size: 1.1rem;
+    }
+    
     .message-bubble {
         max-width: 85%;
+    }
+    
+    .chat-input {
+        padding: 15px;
+    }
+    
+    .chat-input input {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+    
+    .chat-input button {
+        padding: 10px 20px;
+    }
+}
+
+/* Mobile Portrait (480px) */
+@media (max-width: 480px) {
+    .chat-container {
+        gap: 12px;
+    }
+    
+    .chat-list {
+        width: 100%;
+        max-height: 250px;
+        padding: 15px;
+    }
+    
+    .chat-list-header {
+        padding: 12px 0;
+    }
+    
+    .chat-list-header h3 {
+        font-size: 1rem;
+    }
+    
+    .count-badge {
+        width: 30px;
+        height: 30px;
+        font-size: 0.75rem;
+    }
+    
+    .search-box {
+        margin-bottom: 10px;
+    }
+    
+    .search-box input {
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+    
+    .chat-item {
+        padding: 12px 15px;
+    }
+    
+    .chat-item-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 0.9rem;
+    }
+    
+    .chat-item-name {
+        font-size: 0.9rem;
+    }
+    
+    .chat-item-message {
+        font-size: 0.8rem;
+    }
+    
+    .chat-window {
+        min-height: 450px;
+    }
+    
+    .chat-header {
+        padding: 12px;
+    }
+    
+    .chat-header h3 {
+        font-size: 1rem;
+    }
+    
+    .chat-header-nid {
+        font-size: 0.75rem;
+    }
+    
+    .chat-status {
+        font-size: 0.8rem;
+    }
+    
+    .chat-messages {
+        padding: 15px 10px;
+    }
+    
+    .message-bubble {
+        max-width: 90%;
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+    
+    .message-time {
+        font-size: 0.65rem;
+    }
+    
+    .message-reply-indicator {
+        padding: 6px 10px;
+        font-size: 0.7rem;
+        margin-bottom: 6px;
+    }
+    
+    .chat-input {
+        padding: 12px 10px;
+        gap: 8px;
+    }
+    
+    .chat-input input {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+    
+    .chat-input button {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+    }
+    
+    .reply-preview {
+        padding: 8px 12px;
+        font-size: 0.8rem;
     }
 }

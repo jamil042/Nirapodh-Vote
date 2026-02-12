@@ -14,34 +14,32 @@ async function handleNoticeSubmit(event) {
 
         const title = document.getElementById('noticeTitle').value.trim();
         const type = document.getElementById('noticeType').value;
-        const contentType = document.querySelector('input[name="contentType"]:checked').value;
         const message = document.getElementById('noticeMessage').value.trim();
         const pdfFile = document.getElementById('noticePdf').files[0];
 
-        console.log('Form data:', { title, type, contentType, messageLength: message.length });
+        console.log('Form data:', { title, type, hasMessage: !!message, hasPdf: !!pdfFile });
 
-        // Validation
+        // Validation - at least one content type required
         if (!title || !type) {
             throw new Error('শিরোনাম এবং ধরন আবশ্যক');
         }
 
-        if (contentType === 'text' && !message) {
-            throw new Error('টেক্সট নোটিশের জন্য বার্তা আবশ্যক');
-        }
-
-        if (contentType === 'pdf' && !pdfFile) {
-            throw new Error('PDF নোটিশের জন্য ফাইল আবশ্যক');
+        if (!message && !pdfFile) {
+            throw new Error('বার্তা অথবা PDF ফাইল অন্তত একটি প্রদান করতে হবে');
         }
 
         // Prepare form data
         const formData = new FormData();
         formData.append('title', title);
         formData.append('type', type);
-        formData.append('contentType', contentType);
 
-        if (contentType === 'text') {
+        // Add message if provided
+        if (message) {
             formData.append('message', message);
-        } else {
+        }
+
+        // Add PDF if provided
+        if (pdfFile) {
             formData.append('pdfFile', pdfFile);
         }
 
@@ -79,10 +77,6 @@ async function handleNoticeSubmit(event) {
         }
         
         form.reset();
-        
-        // Reset to text mode
-        document.querySelector('input[name="contentType"][value="text"]').checked = true;
-        toggleNoticeContent('text');
 
         // Reload notices
         await loadPublishedNotices();
@@ -130,6 +124,14 @@ async function loadPublishedNotices() {
         });
 
         noticeList.innerHTML = html;
+        
+        // Add event listeners to PDF buttons
+        document.querySelectorAll('.pdf-view-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const pdfUrl = this.getAttribute('data-pdf-url');
+                viewNoticePDF(pdfUrl);
+            });
+        });
 
     } catch (error) {
         console.error('Load notices error:', error);
@@ -140,9 +142,18 @@ async function loadPublishedNotices() {
 // Render single notice item
 function renderNoticeItem(notice) {
     const badgeClass = `badge-${getNoticeBadgeType(notice.type)}`;
-    const preview = notice.contentType === 'text' 
-        ? (notice.message ? notice.message.substring(0, 100) + '...' : 'বার্তা নেই')
-        : 'PDF ফাইল';
+    
+    // Build preview text
+    let preview = '';
+    if (notice.message) {
+        preview = notice.message.substring(0, 100) + (notice.message.length > 100 ? '...' : '');
+    }
+    if (notice.pdfUrl && !notice.message) {
+        preview = 'PDF ফাইল';
+    }
+    if (!notice.message && !notice.pdfUrl) {
+        preview = 'বিষয়বস্তু নেই';
+    }
     
     const date = new Date(notice.createdAt).toLocaleDateString('bn-BD', {
         year: 'numeric',
@@ -164,15 +175,10 @@ function renderNoticeItem(notice) {
                 <span>👤 ${notice.publishedByName}</span>
             </div>
             <div class="notice-actions">
-                ${notice.contentType === 'pdf' ? 
-                    `<button onclick="viewNoticePDF('${notice.pdfUrl}')" class="btn btn-sm btn-secondary">
+                ${notice.pdfUrl ? 
+                    `<button class="btn btn-sm btn-secondary pdf-view-btn" data-pdf-url="${notice.pdfUrl}">
                         <i class="fas fa-file-pdf"></i> PDF দেখুন
                     </button>` : ''}
-                <button onclick="toggleNoticeStatus('${notice._id}', ${notice.isActive})" 
-                        class="btn btn-sm ${notice.isActive ? 'btn-warning' : 'btn-success'}">
-                    <i class="fas fa-${notice.isActive ? 'eye-slash' : 'eye'}"></i> 
-                    ${notice.isActive ? 'নিষ্ক্রিয়' : 'সক্রিয়'} করুন
-                </button>
                 <button onclick="deleteNotice('${notice._id}')" class="btn btn-sm btn-danger">
                     <i class="fas fa-trash"></i> মুছুন
                 </button>
@@ -196,43 +202,14 @@ function getNoticeBadgeType(type) {
 
 // View PDF notice
 function viewNoticePDF(pdfUrl) {
-    window.open(API_CONFIG.API_URL + pdfUrl, '_blank');
-}
-
-// Toggle notice active status
-async function toggleNoticeStatus(noticeId, currentStatus) {
-    const token = sessionStorage.getItem('nirapodh_admin_token');
-    if (!token) {
-        showErrorMessage('অনুগ্রহ করে লগইন করুন');
-        return;
-    }
-
-    if (!confirm(`এই নোটিশটি ${currentStatus ? 'নিষ্ক্রিয়' : 'সক্রিয়'} করতে চান?`)) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_CONFIG.API_URL}/notice/${noticeId}/toggle`, {
-            method: 'PATCH',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-            throw new Error(data.message || 'স্ট্যাটাস পরিবর্তন করতে সমস্যা হয়েছে');
-        }
-
-        showSuccessMessage(data.message);
-        await loadPublishedNotices();
-
-    } catch (error) {
-        console.error('Toggle notice error:', error);
-        showErrorMessage(error.message);
-    }
+    // If Cloudinary URL (starts with https://), use directly
+    // Otherwise, construct URL with API base
+    const fullUrl = pdfUrl.startsWith('http') 
+        ? pdfUrl 
+        : API_CONFIG.API_URL.replace('/api', '') + pdfUrl;
+    
+    console.log('Opening PDF:', fullUrl);
+    window.open(fullUrl, '_blank');
 }
 
 // Delete notice

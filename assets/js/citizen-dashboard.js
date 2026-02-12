@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupNavigationListeners();
     setupRealtimeFeatures();
     setupMobileMenu();
-    loadUserData();
+    // loadUserData(); // Handled by citizen-dashboard-backend.js
     updateTimeRemaining();
 });
 
@@ -19,18 +19,21 @@ function initializeDashboard() {
         localStorage.removeItem('nirapodh_token');
     }
     
-    // Check if user is logged in (from sessionStorage only)
-    const userData = getUserData();
-    console.log('Dashboard - User Data:', userData); // Debug log
-    if (!userData) {
-        window.location.href = 'login.html';
-        return;
-    }
+    // Note: User authentication is handled by citizen-dashboard-backend.js
+    // which will redirect if no valid token is found
     
-    // Display user name
-    document.getElementById('userName').textContent = userData.name || 'নাগরিক';
-    document.getElementById('userArea').textContent = userData.votingArea || 'N/A';
-    console.log('Dashboard - Voting Area:', userData.votingArea); // Debug log
+    // Check if user data is already available (after backend loads it)
+    const userData = getUserData();
+    if (userData) {
+        console.log('Dashboard - User Data:', userData); // Debug log
+        // Display user name
+        document.getElementById('userName').textContent = userData.name || 'নাগরিক';
+        const userAreaElement = document.getElementById('userArea');
+        if (userAreaElement) {
+            userAreaElement.textContent = userData.votingArea || 'N/A';
+        }
+        console.log('Dashboard - Voting Area:', userData.votingArea); // Debug log
+    }
     
     // Set active section from URL hash or default to voting
     const hash = window.location.hash.substring(1) || 'voting';
@@ -45,6 +48,19 @@ function initializeDashboard() {
                 sendChatMessage();
             }
         });
+    }
+}
+
+// Close candidate modal
+function closeCandidateModal() {
+    document.getElementById('candidateModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('candidateModal');
+    if (event.target === modal) {
+        closeCandidateModal();
     }
 }
 
@@ -87,12 +103,43 @@ function showSection(sectionName) {
             item.classList.add('active');
         }
     });
+    
+    // Load results when switching to results section
+    if (sectionName === 'results' && typeof loadAllResults === 'function') {
+        loadAllResults();
+    }
+    
+    // Refresh profile data when switching to profile section
+    if (sectionName === 'profile') {
+        const userData = getUserData();
+        if (userData && typeof populateProfileSection === 'function') {
+            populateProfileSection(userData);
+        }
+    }
+    
+    // Clear notification badge when entering notices section
+    if (sectionName === 'notices' && typeof markNoticesAsViewed === 'function') {
+        markNoticesAsViewed();
+    }
 }
 
 // Setup mobile menu
 function setupMobileMenu() {
     const hamburger = document.getElementById('hamburgerMenu');
     const sidebar = document.querySelector('.sidebar');
+    
+    // Create overlay element if it doesn't exist
+    let overlay = document.querySelector('.sidebar-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'sidebar-overlay';
+        document.body.appendChild(overlay);
+        
+        // Close sidebar when clicking overlay
+        overlay.addEventListener('click', function() {
+            closeSidebarMobile();
+        });
+    }
     
     if (hamburger && sidebar) {
         // Close sidebar when nav item is clicked
@@ -102,9 +149,11 @@ function setupMobileMenu() {
             });
         });
         
-        // Close sidebar when clicking outside
+        // Close sidebar when clicking outside (but not on overlay as it has its own handler)
         document.addEventListener('click', function(event) {
-            if (!event.target.closest('.sidebar') && !event.target.closest('.hamburger-menu')) {
+            if (!event.target.closest('.sidebar') && 
+                !event.target.closest('.hamburger-menu') && 
+                !event.target.closest('.sidebar-overlay')) {
                 closeSidebarMobile();
             }
         });
@@ -114,11 +163,16 @@ function setupMobileMenu() {
 // Toggle sidebar visibility on mobile
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
     if (sidebar) {
         sidebar.classList.toggle('mobile-open');
         const hamburger = document.getElementById('hamburgerMenu');
         if (hamburger) {
             hamburger.classList.toggle('active');
+        }
+        // Toggle overlay
+        if (overlay) {
+            overlay.classList.toggle('active');
         }
     }
 }
@@ -126,11 +180,16 @@ function toggleSidebar() {
 // Close sidebar on mobile
 function closeSidebarMobile() {
     const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
     if (sidebar) {
         sidebar.classList.remove('mobile-open');
         const hamburger = document.getElementById('hamburgerMenu');
         if (hamburger) {
             hamburger.classList.remove('active');
+        }
+        // Hide overlay
+        if (overlay) {
+            overlay.classList.remove('active');
         }
     }
 }
@@ -282,7 +341,7 @@ let dashboardSocket = null;
 // Setup realtime features
 function setupRealtimeFeatures() {
     // Connect to server
-    dashboardSocket = io('http://localhost:3000', {
+    dashboardSocket = io(API_CONFIG.SOCKET_URL, {
         transports: ['websocket', 'polling'],
         reconnection: true
     });

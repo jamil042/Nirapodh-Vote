@@ -93,7 +93,7 @@
 ================================ */
 
 .global-chat-messages {
-  height: 500px;
+  height: 310px;
   background: #f8fafc;
   border: 1px solid var(--border);
   border-top: none;
@@ -465,4 +465,185 @@
 .btn-primary_chat:active {
   transform: translateY(0);
   box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+}
+
+/* ===============================
+   Mobile Responsive Design
+================================ */
+
+@media (max-width: 768px) {
+  .chat-header-bar {
+    padding: 12px 15px;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .chat-header-left h3 {
+    font-size: 15px;
+  }
+
+  .online-count {
+    font-size: 12px;
+  }
+
+  .global-chat-messages {
+    height: 350px;
+    padding: 15px;
+  }
+
+  .message-bubble {
+    max-width: 80%;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .global-message:not(.own-message) .message-text,
+  .global-message.own-message .message-text {
+    font-size: 13px;
+  }
+
+  .chat-input-container {
+    padding: 12px 15px;
+  }
+
+  .chat-input-wrapper {
+    gap: 8px;
+  }
+
+  .message-input-box {
+    font-size: 14px;
+    padding: 10px 14px;
+  }
+
+  .send-message-btn {
+    width: 42px;
+    height: 42px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  #discussion-section {
+    padding: 10px;
+  }
+
+  .chat-header-bar {
+    padding: 10px 12px;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .chat-header-left h3 {
+    font-size: 14px;
+  }
+
+  .online-count {
+    font-size: 11px;
+  }
+
+  .online-dot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .global-chat-messages {
+    height: 320px;
+    padding: 12px;
+  }
+
+  .message-bubble {
+    max-width: 85%;
+    padding: 10px 12px;
+    border-radius: 16px;
+  }
+
+  .global-message:not(.own-message):not(.system-message) .message-bubble {
+    border-radius: 16px 16px 16px 4px;
+  }
+
+  .global-message.own-message .message-bubble {
+    border-radius: 16px 16px 4px 16px;
+  }
+
+  .message-anonymous-name {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+
+  .global-message:not(.own-message) .message-text,
+  .global-message.own-message .message-text {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .message-time {
+    font-size: 10px;
+  }
+
+  .chat-input-container {
+    padding: 10px 12px;
+  }
+
+  .chat-input-wrapper {
+    gap: 6px;
+  }
+
+  .message-input-box {
+    font-size: 13px;
+    padding: 10px 12px;
+    min-height: 40px;
+  }
+
+  .send-message-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .system-message .message-bubble {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+
+  .reply-context {
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    font-size: 11px;
+  }
+
+  .message-reply-indicator {
+    margin-bottom: 6px;
+    padding: 6px;
+    font-size: 11px;
+  }
+
+  .btn-primary_chat {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 360px) {
+  .chat-header-left h3 {
+    font-size: 13px;
+  }
+
+  .global-chat-messages {
+    height: 280px;
+    padding: 10px;
+  }
+
+  .message-bubble {
+    max-width: 90%;
+    padding: 8px 10px;
+  }
+
+  .message-input-box {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+
+  .send-message-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 15px;
+  }
 }

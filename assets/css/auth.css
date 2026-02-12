@@ -715,6 +715,12 @@
     .auth-container {
         grid-template-columns: 1fr;
         gap: 20px;
+        padding: 20px;
+        max-width: 100%;
+    }
+    
+    .auth-form {
+        padding: 30px 20px;
     }
     
     .auth-header h2 {
@@ -759,5 +765,109 @@
 
     .form-success h3 {
         font-size: 1.3rem;
+    }
+}
+
+/* Mobile Portrait (480px) */
+@media (max-width: 480px) {
+    .auth-container {
+        padding: 15px;
+        gap: 15px;
+    }
+    
+    .auth-form {
+        padding: 25px 15px;
+        border-radius: 12px;
+    }
+    
+    .auth-header h2 {
+        font-size: 1.3rem;
+    }
+    
+    .auth-header p {
+        font-size: 0.85rem;
+    }
+    
+    .form-group {
+        margin-bottom: 18px;
+    }
+    
+    .form-group label {
+        font-size: 0.9rem;
+    }
+    
+    .input-field {
+        padding: 12px 15px;
+        font-size: 0.9rem;
+    }
+    
+    .btn {
+        padding: 12px 20px;
+        font-size: 0.9rem;
+    }
+    
+    .auth-footer {
+        font-size: 0.85rem;
+        padding-top: 20px;
+    }
+    
+    .admin-badge {
+        padding: 5px 12px;
+        font-size: 0.75rem;
+    }
+    
+    .alert {
+        padding: 12px 15px;
+        font-size: 0.85rem;
+    }
+    
+    .logo-section img {
+        width: 100px;
+    }
+    
+    .logo-section h1 {
+        font-size: 1.5rem;
+    }
+}
+
+/* ===========================
+   AUTH PAGES FOOTER STYLE
+   =========================== */
+
+.auth-page-footer {
+    background: transparent;
+    padding: 30px 0;
+    margin-top: 40px;
+    text-align: center;
+    border-top: 1px solid rgba(0, 106, 78, 0.1);
+}
+
+.auth-page-footer .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.auth-page-footer p {
+    color: var(--text-dark);
+    font-size: 0.95rem;
+    margin: 8px 0;
+    opacity: 0.85;
+    line-height: 1.6;
+}
+
+.auth-page-footer p:first-child {
+    font-weight: 600;
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .auth-page-footer {
+        padding: 20px 0;
+        margin-top: 30px;
+    }
+    
+    .auth-page-footer p {
+        font-size: 0.85rem;
     }
 }

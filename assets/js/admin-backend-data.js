@@ -4,11 +4,14 @@
 
 // Load Dashboard Statistics from backend
 async function loadDashboardData() {
+    console.log('🔄 Loading dashboard data...');
     const token = sessionStorage.getItem('nirapodh_admin_token');
     if (!token) {
         console.log('❌ No token found');
         return;
     }
+
+    console.log('✅ Token found, fetching statistics...');
 
     try {
         const response = await fetch(`${API_CONFIG.API_URL}/admin/statistics`, {
@@ -16,43 +19,141 @@ async function loadDashboardData() {
                 'Authorization': `Bearer ${token}`
             }
         });
+        
+        console.log('Response status:', response.status);
+        
         const data = await response.json();
+        console.log('📊 Dashboard data received:', data);
 
         if (data.success) {
             const stats = data.statistics;
+            console.log('📈 Statistics:', stats);
 
-            // Update stat cards
+            // Update stat cards with Bengali numbers
             const totalBallots = document.getElementById('total-ballots');
             const activeVotes = document.getElementById('active-votes');
             const totalVoters = document.getElementById('total-voters');
             const votesCast = document.getElementById('votes-cast');
 
-            if (totalBallots) totalBallots.textContent = stats.totalBallots || '০';
-            if (activeVotes) activeVotes.textContent = stats.totalVotes || '০';
-            if (totalVoters) totalVoters.textContent = stats.totalUsers || '০';
-            if (votesCast) votesCast.textContent = stats.votersWhoVoted || '০';
+            if (totalBallots) {
+                totalBallots.textContent = toBengaliNumber(stats.totalBallots || 0);
+                console.log('✅ Total ballots updated:', stats.totalBallots);
+            }
+            if (activeVotes) {
+                activeVotes.textContent = toBengaliNumber(stats.totalVotes || 0);
+                console.log('✅ Active votes updated:', stats.totalVotes);
+            }
+            if (totalVoters) {
+                totalVoters.textContent = toBengaliNumber(stats.totalUsers || 0);
+                console.log('✅ Total voters updated:', stats.totalUsers);
+            }
+            if (votesCast) {
+                votesCast.textContent = toBengaliNumber(stats.votersWhoVoted || 0);
+                console.log('✅ Votes cast updated:', stats.votersWhoVoted);
+            }
 
-            // Load activity list (can be enhanced later)
+            // Load activity list with real data
             const activityListContainer = document.getElementById('activity-list-container');
             if (activityListContainer) {
                 activityListContainer.innerHTML = `
                     <div class="activity-item">
                         <span class="activity-time">এখন</span>
-                        <p class="activity-text">মোট ${stats.totalUsers} জন নিবন্ধিত ভোটার</p>
+                        <p class="activity-text">মোট ${toBengaliNumber(stats.totalUsers)} জন নিবন্ধিত ভোটার</p>
                     </div>
                     <div class="activity-item">
                         <span class="activity-time">আজ</span>
-                        <p class="activity-text">${stats.votersWhoVoted} জন ভোট প্রদান করেছেন</p>
+                        <p class="activity-text">${toBengaliNumber(stats.votersWhoVoted)} জন ভোট প্রদান করেছেন</p>
                     </div>
                     <div class="activity-item">
                         <span class="activity-time">পরিসংখ্যান</span>
-                        <p class="activity-text">টার্নআউট: ${stats.turnoutPercentage}%</p>
+                        <p class="activity-text">টার্নআউট: ${toBengaliNumber(stats.turnoutPercentage)}%</p>
                     </div>
                 `;
+                console.log('✅ Activity list updated');
             }
+
+            // Load live voting statistics
+            const liveStatsContainer = document.getElementById('live-stats-container');
+            if (liveStatsContainer) {
+                try {
+                    const ballotsRes = await fetch(`${API_CONFIG.API_URL}/admin/ballots`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const ballotsData = await ballotsRes.json();
+
+                    if (ballotsData.success && ballotsData.ballots && ballotsData.ballots.length > 0) {
+                        const ballotStats = [];
+                        for (const ballot of ballotsData.ballots) {
+                            let voteCount = 0;
+                            const totalEligible = stats.totalUsers || 1;
+                            try {
+                                const resResult = await fetch(`${API_CONFIG.API_URL}/admin/results/${ballot._id}`, {
+                                    headers: { 'Authorization': `Bearer ${token}` }
+                                });
+                                const resData = await resResult.json();
+                                if (resData.success) {
+                                    voteCount = resData.totalVotes || 0;
+                                }
+                            } catch (e) {
+                                console.warn('Could not fetch results for ballot:', ballot._id);
+                            }
+                            const percentage = totalEligible > 0 ? Math.round((voteCount / totalEligible) * 100) : 0;
+                            ballotStats.push({ ballot, voteCount, percentage });
+                        }
+
+                        const itemsHtml = ballotStats.map(({ ballot, voteCount, percentage }) => {
+                            const getTurnoutClass = (p) => p >= 50 ? 'high' : p >= 20 ? 'mid' : 'low';
+                            return `
+                            <div class="live-ballot-card">
+                                <div class="live-ballot-header">
+                                    <div class="live-ballot-info">
+                                        <div class="live-status-dot"></div>
+                                        <div>
+                                            <div class="live-ballot-name">${ballot.name}</div>
+                                            <div class="live-ballot-location"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg> ${ballot.location}</div>
+                                        </div>
+                                    </div>
+                                    <div class="live-vote-display">
+                                        <div class="live-vote-count">${toBengaliNumber(voteCount)}</div>
+                                        <div class="live-vote-label">ভোট</div>
+                                    </div>
+                                </div>
+                                <div class="live-progress-container">
+                                    <div class="live-progress-bar" data-progress="${percentage}"></div>
+                                </div>
+                                <div class="live-ballot-footer">
+                                    <span class="live-turnout-label">টার্নআউট</span>
+                                    <span class="live-turnout-badge ${getTurnoutClass(percentage)}">${toBengaliNumber(percentage)}%</span>
+                                </div>
+                            </div>`;
+                        }).join('');
+
+                        liveStatsContainer.innerHTML = itemsHtml;
+
+                        // Animate progress bars
+                        setTimeout(() => {
+                            document.querySelectorAll('.live-progress-bar').forEach(bar => {
+                                const progress = bar.getAttribute('data-progress');
+                                bar.style.width = progress + '%';
+                            });
+                        }, 150);
+
+                        console.log('✅ Live stats updated with', ballotStats.length, 'ballots');
+                    } else {
+                        liveStatsContainer.innerHTML = '<div class="live-stats-empty"><svg viewBox="0 0 24 24" fill="#ccc" width="48" height="48"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><p>এখনো কোনো ব্যালট তৈরি হয়নি</p></div>';
+                    }
+                } catch (liveErr) {
+                    console.error('❌ Live stats load error:', liveErr);
+                    liveStatsContainer.innerHTML = '<div class="live-stats-empty"><p style="color:#f44336;">লাইভ পরিসংখ্যান লোড ব্যর্থ</p></div>';
+                }
+            }
+            
+            console.log('✅ Dashboard loaded successfully!');
+        } else {
+            console.error('❌ API returned success: false', data);
         }
     } catch (error) {
-        console.error('Load dashboard data error:', error);
+        console.error('❌ Load dashboard data error:', error);
     }
 }
 
@@ -344,5 +445,205 @@ function loadPublishedNotices() {
     const publishedNoticesContainer = document.getElementById('publishedNoticesContainer');
     if (publishedNoticesContainer) {
         publishedNoticesContainer.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">নোটিশ শীঘ্রই উপলব্ধ হবে</p>';
+    }
+}
+
+// ===== RESULTS MANAGEMENT FUNCTIONS =====
+
+// Load ballots for results dropdown
+async function loadBallotsForResults() {
+    const selectBallot = document.getElementById('selectBallot');
+    if (!selectBallot) return;
+
+    const token = sessionStorage.getItem('nirapodh_admin_token');
+    if (!token) {
+        console.log('❌ No token found for loading ballots');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_CONFIG.API_URL}/admin/ballots`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const data = await response.json();
+
+        if (data.success && data.ballots && data.ballots.length > 0) {
+            selectBallot.innerHTML = '<option value="">ব্যালট নির্বাচন করুন</option>' +
+                data.ballots.map(ballot => 
+                    `<option value="${ballot._id}">${ballot.name} - ${ballot.location}</option>`
+                ).join('');
+            
+            // Add change event listener
+            selectBallot.addEventListener('change', function() {
+                if (this.value) {
+                    loadBallotResults(this.value);
+                }
+            });
+        } else {
+            selectBallot.innerHTML = '<option value="">কোনো ব্যালট নেই</option>';
+        }
+    } catch (error) {
+        console.error('Load ballots for results error:', error);
+        selectBallot.innerHTML = '<option value="">ব্যালট লোড করতে ব্যর্থ</option>';
+    }
+}
+
+// Load ballot results from backend
+async function loadBallotResults(ballotId) {
+    const resultsSummary = document.querySelector('.results-summary');
+    if (!resultsSummary) return;
+
+    const token = sessionStorage.getItem('nirapodh_admin_token');
+    if (!token) {
+        showAlert('অনুমোদন প্রয়োজন', 'error');
+        return;
+    }
+
+    // Show loading
+    resultsSummary.innerHTML = '<p style="text-align: center; padding: 40px;">লোড হচ্ছে...</p>';
+
+    try {
+        const response = await fetch(`${API_CONFIG.API_URL}/admin/results/${ballotId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        
+        // Check if response is ok
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Response error text:', errorText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Results data:', data);
+
+        if (data.success) {
+            const { ballot, results, totalVotes } = data;
+            const totalVoters = await getTotalVotersForArea(ballot.location);
+
+            // Calculate turnout percentage
+            const turnoutPercentage = totalVoters > 0 ? ((totalVotes / totalVoters) * 100).toFixed(2) : 0;
+
+            // Render results
+            resultsSummary.innerHTML = `
+                <h3>ফলাফল সারসংক্ষেপ - ${ballot.name}</h3>
+                <div class="result-stats">
+                    <div class="result-stat">
+                        <span class="result-label">মোট ভোটার:</span>
+                        <span class="result-value">${toBengaliNumber(totalVoters)}</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-label">প্রদত্ত ভোট:</span>
+                        <span class="result-value">${toBengaliNumber(totalVotes)}</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-label">ভোট প্রদানের হার:</span>
+                        <span class="result-value">${toBengaliNumber(turnoutPercentage)}%</span>
+                    </div>
+                </div>
+
+                <div class="candidate-results">
+                    ${results.map(candidate => {
+                        const votePercentage = totalVotes > 0 ? ((candidate.voteCount / totalVotes) * 100).toFixed(2) : 0;
+                        const imageSrc = candidate.image || 'assets/images/default-avatar.png';
+                        
+                        let symbolHtml = '';
+                        if (candidate.symbol && candidate.symbol.startsWith('data:')) {
+                            symbolHtml = `<img src="${candidate.symbol}" alt="Party Symbol" width="16" height="16" style="vertical-align: middle;">`;
+                        } else if (candidate.symbol) {
+                            symbolHtml = `<img src="${candidate.symbol}" alt="Party Symbol" width="16" height="16" style="vertical-align: middle;" onerror="this.src='assets/images/powerful-symbol-unity-anti-corruption-day_968957-12635.avif'">`;
+                        }
+
+                        return `
+                            <div class="candidate-result-item">
+                                <div class="candidate-info">
+                                    <div class="candidate-photo">
+                                        <img src="${imageSrc}" alt="${candidate.name}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='assets/images/default-avatar.png'">
+                                    </div>
+                                    <div>
+                                        <h4>${candidate.name}</h4>
+                                        <p>${candidate.party} ${symbolHtml ? '- ' + symbolHtml : ''}</p>
+                                    </div>
+                                </div>
+                                <div class="vote-count">
+                                    <span class="votes">${toBengaliNumber(candidate.voteCount)} ভোট</span>
+                                    <div class="vote-bar">
+                                        <div class="vote-fill" style="width: ${votePercentage}%"></div>
+                                    </div>
+                                    <span class="percentage">${toBengaliNumber(votePercentage)}%</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        } else {
+            resultsSummary.innerHTML = `<p style="text-align: center; color: #f44336; padding: 40px;">${data.message || 'ফলাফল লোড করতে ব্যর্থ হয়েছে'}</p>`;
+        }
+    } catch (error) {
+        console.error('Load ballot results error:', error);
+        resultsSummary.innerHTML = '<p style="text-align: center; color: #f44336; padding: 40px;">ফলাফল লোড করতে ব্যর্থ হয়েছে</p>';
+    }
+}
+
+// Get total voters for a specific area
+async function getTotalVotersForArea(area) {
+    try {
+        const token = sessionStorage.getItem('nirapodh_admin_token');
+        const response = await fetch(`${API_CONFIG.API_URL}/admin/users?area=${area}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const data = await response.json();
+        return data.success ? data.count : 0;
+    } catch (error) {
+        console.error('Get total voters error:', error);
+        return 0;
+    }
+}
+
+// Calculate/Recalculate results - refresh the displayed results
+async function calculateResults() {
+    const btn = event?.target || null;
+    const originalText = btn?.textContent || 'গণনা করুন';
+    
+    if (btn) {
+        btn.disabled = true;
+        btn.classList.add('btn-loading');
+        btn.textContent = 'গণনা চলছে...';
+    }
+    
+    const selectBallot = document.getElementById('selectBallot');
+    const ballotId = selectBallot?.value;
+    
+    if (!ballotId) {
+        showAlert('অনুগ্রহ করে একটি ব্যালট নির্বাচন করুন', 'warning');
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('btn-loading');
+            btn.textContent = originalText;
+        }
+        return;
+    }
+    
+    try {
+        await loadBallotResults(ballotId);
+        showAlert('ফলাফল সফলভাবে গণনা করা হয়েছে!', 'success');
+    } catch (error) {
+        showAlert('ফলাফল গণনা করতে ব্যর্থ হয়েছে', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('btn-loading');
+            btn.textContent = originalText;
+        }
     }
 }

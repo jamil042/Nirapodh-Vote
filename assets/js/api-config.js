@@ -1,8 +1,16 @@
 // API Configuration
+// Note: Replace 'localhost' with your server IP address for network access
+// Example: 'http://192.168.1.5:3000' or 'http://192.168.0.100:3000'
 const API_CONFIG = {
-  BASE_URL: 'http://localhost:3000',
-  API_URL: 'http://localhost:3000/api',
-  SOCKET_URL: 'http://localhost:3000',
+  BASE_URL: window.location.origin.includes('localhost') 
+    ? 'http://localhost:3000' 
+    : window.location.origin,
+  API_URL: window.location.origin.includes('localhost') 
+    ? 'http://localhost:3000/api' 
+    : window.location.origin + '/api',
+  SOCKET_URL: window.location.origin.includes('localhost') 
+    ? 'http://localhost:3000' 
+    : window.location.origin,
   ENDPOINTS: {
     // Auth endpoints
     REGISTER: '/auth/register',
@@ -10,11 +18,18 @@ const API_CONFIG = {
     GET_USER: '/auth/me',
     SEND_OTP: '/auth/send-otp',
     VERIFY_OTP_REGISTER: '/auth/verify-otp-register',
+    FORGOT_PASSWORD_OTP: '/auth/forgot-password-otp',
+    VERIFY_RESET_OTP: '/auth/verify-reset-otp',
+    RESET_PASSWORD: '/auth/reset-password',
     
     // Vote endpoints
     CAST_VOTE: '/vote/cast',
     VOTE_STATUS: '/vote/status',
+    BALLOT_STATUS: '/vote/status',
     VOTE_STATISTICS: '/vote/statistics',
+    GET_BALLOTS: '/vote/ballots',
+    GET_CANDIDATES: '/vote/candidates',
+    GET_RESULTS: '/vote/results',
     
     // Admin endpoints
     ADMIN_LOGIN: '/admin/login',
@@ -48,9 +63,11 @@ async function apiRequest(endpoint, method = 'GET', data = null, requiresAuth = 
 
   // Add auth token if required
   if (requiresAuth) {
-    const token = localStorage.getItem('nirapodh_token');
+    const token = sessionStorage.getItem('nirapodh_token');
     if (token) {
       options.headers['Authorization'] = `Bearer ${token}`;
+    } else {
+      console.warn('⚠️ No token found in sessionStorage for authenticated request');
     }
   }
 

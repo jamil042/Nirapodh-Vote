@@ -308,8 +308,14 @@ router.post('/login', async (req, res) => {
         id: user._id,
         nid: user.nid,
         name: user.name,
+        dob: user.dob,
+        fatherName: user.fatherName,
+        motherName: user.motherName,
+        presentAddress: user.presentAddress,
+        permanentAddress: user.permanentAddress,
         votingArea: votingArea,
-        hasVoted: user.hasVoted
+        hasVoted: user.hasVoted,
+        votedAt: user.votedAt
       }
     });
   } catch (error) {
@@ -336,12 +342,29 @@ router.get('/me', async (req, res) => {
       return res.status(404).json({ success: false, message: 'ব্যবহারকারী খুঁজে পাওয়া যায়নি' });
     }
 
+    console.log('📤 Sending user data to frontend:', {
+      id: user._id,
+      nid: user.nid,
+      name: user.name,
+      dob: user.dob,
+      fatherName: user.fatherName,
+      motherName: user.motherName,
+      presentAddress: user.presentAddress,
+      votingArea: user.votingArea
+    });
+
     res.json({
       success: true,
       user: {
         id: user._id,
         nid: user.nid,
         name: user.name,
+        dob: user.dob,
+        fatherName: user.fatherName,
+        motherName: user.motherName,
+        presentAddress: user.presentAddress,
+        permanentAddress: user.permanentAddress,
+        votingArea: user.votingArea,
         hasVoted: user.hasVoted,
         votedAt: user.votedAt
       }
@@ -349,6 +372,251 @@ router.get('/me', async (req, res) => {
   } catch (error) {
     console.error('Auth error:', error);
     res.status(401).json({ success: false, message: 'অবৈধ টোকেন' });
+  }
+});
+
+// ===== PASSWORD RESET ROUTES =====
+
+// Send OTP for Password Reset
+router.post('/forgot-password-otp', async (req, res) => {
+  try {
+    let { nid, phoneNumber } = req.body;
+
+    console.log('🔐 Password reset OTP request:', { nid, phoneNumber });
+
+    // Validation
+    if (!nid || !phoneNumber) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'NID এবং ফোন নম্বর প্রদান করুন' 
+      });
+    }
+
+    // Normalize NID
+    nid = nid.replace(/[-\s]/g, '');
+    
+    // Normalize phone number
+    const normalizedPhone = normalizeBDPhone(phoneNumber);
+    
+    if (!normalizedPhone) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'অবৈধ ফোন নম্বর। বাংলাদেশি ফোন নম্বর ব্যবহার করুন' 
+      });
+    }
+
+    // Check if user exists with this NID
+    const user = await User.findOne({ nid });
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'এই NID দিয়ে কোন অ্যাকাউন্ট পাওয়া যায়নি' 
+      });
+    }
+
+    // Verify phone number matches
+    const preregistered = await PreregisteredCitizen.findOne({ nid });
+    if (!preregistered) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'নিবন্ধন তথ্য পাওয়া যায়নি' 
+      });
+    }
+
+    const normalizedStoredPhone = normalizeBDPhone(preregistered.mobileNumber);
+    
+    if (normalizedPhone !== normalizedStoredPhone) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'ফোন নম্বর মিলছে না। নিবন্ধিত ফোন নম্বর ব্যবহার করুন' 
+      });
+    }
+
+    // Generate OTP
+    const otpCode = generateOTP();
+    const expiresAt = getOTPExpiry(process.env.OTP_EXPIRY_MINUTES || 2);
+
+    // Delete any existing OTP for this NID
+    await OTP.deleteMany({ nid });
+
+    // Save OTP to database
+    const otpRecord = new OTP({
+      nid,
+      phoneNumber: normalizedPhone,
+      otp: otpCode,
+      expiresAt,
+      purpose: 'password_reset' // Mark purpose
+    });
+    await otpRecord.save();
+
+    // Send SMS
+    const smsMessage = `Your NirapodhVote password reset OTP is ${otpCode}. Valid for 2 minutes. Do not share this code.`;
+    
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    
+    if (process.env.SMS_USER && process.env.SMS_USER !== 'your_username_here') {
+      try {
+        await sendSMS(normalizedPhone, smsMessage);
+        console.log(`✅ Password reset OTP sent via SMS to ${normalizedPhone}`);
+      } catch (smsError) {
+        console.error('SMS sending failed:', smsError);
+        if (!isDevelopment) {
+          return res.status(500).json({ 
+            success: false, 
+            message: 'SMS পাঠাতে ব্যর্থ হয়েছে' 
+          });
+        }
+      }
+    }
+
+    // In development, return OTP in response
+    const responseData = {
+      success: true,
+      message: 'OTP পাঠানো হয়েছে',
+      expiresIn: process.env.OTP_EXPIRY_MINUTES || 2
+    };
+
+    if (isDevelopment) {
+      responseData.otp = otpCode;
+      console.log(`🔓 DEV MODE - OTP: ${otpCode}`);
+    }
+
+    res.json(responseData);
+  } catch (error) {
+    console.error('Forgot password OTP error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'সার্ভার ত্রুটি' 
+    });
+  }
+});
+
+// Verify OTP for Password Reset
+router.post('/verify-reset-otp', async (req, res) => {
+  try {
+    let { nid, otp } = req.body;
+
+    console.log('🔐 Verify reset OTP request:', { nid, otp });
+
+    if (!nid || !otp) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'NID এবং OTP প্রদান করুন' 
+      });
+    }
+
+    // Normalize NID
+    nid = nid.replace(/[-\s]/g, '');
+
+    // Find OTP record
+    const otpRecord = await OTP.findOne({ nid, otp });
+
+    if (!otpRecord) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'OTP ভুল বা মেয়াদ শেষ হয়েছে' 
+      });
+    }
+
+    // Check if OTP has expired
+    if (new Date() > otpRecord.expiresAt) {
+      await OTP.deleteOne({ _id: otpRecord._id });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'OTP মেয়াদ শেষ হয়েছে। নতুন OTP পাঠান' 
+      });
+    }
+
+    // OTP is valid - mark it for password reset (don't delete yet)
+    otpRecord.verified = true;
+    await otpRecord.save();
+
+    res.json({
+      success: true,
+      message: 'OTP যাচাই সফল হয়েছে'
+    });
+  } catch (error) {
+    console.error('Verify reset OTP error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'সার্ভার ত্রুটি' 
+    });
+  }
+});
+
+// Reset Password
+router.post('/reset-password', async (req, res) => {
+  try {
+    let { nid, newPassword } = req.body;
+
+    console.log('🔐 Reset password request:', { nid });
+
+    if (!nid || !newPassword) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'NID এবং নতুন পাসওয়ার্ড প্রদান করুন' 
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে' 
+      });
+    }
+
+    // Normalize NID
+    nid = nid.replace(/[-\s]/g, '');
+
+    // Check if OTP was verified (security check)
+    const otpRecord = await OTP.findOne({ nid, verified: true });
+
+    if (!otpRecord) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'অননুমোদিত অনুরোধ। প্রথমে OTP যাচাই করুন' 
+      });
+    }
+
+    // Check OTP hasn't expired
+    if (new Date() > otpRecord.expiresAt) {
+      await OTP.deleteOne({ _id: otpRecord._id });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'সময় শেষ। পুনরায় শুরু করুন' 
+      });
+    }
+
+    // Find user
+    const user = await User.findOne({ nid });
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'ব্যবহারকারী পাওয়া যায়নি' 
+      });
+    }
+
+    // Update password (will be hashed by User model pre-save hook)
+    user.password = newPassword;
+    await user.save();
+
+    // Delete OTP record
+    await OTP.deleteOne({ _id: otpRecord._id });
+
+    console.log(`✅ Password reset successful for NID: ${nid}`);
+
+    res.json({
+      success: true,
+      message: 'পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে'
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'সার্ভার ত্রুটি' 
+    });
   }
 });
 

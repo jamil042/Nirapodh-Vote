@@ -72,33 +72,38 @@ router.post('/login', async (req, res) => {
 // Get Dashboard Statistics
 router.get('/statistics', authenticateAdmin, async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments();
-    const totalVotes = await Vote.countDocuments();
-    const votersWhoVoted = await User.countDocuments({ hasVoted: true });
+    console.log('📊 Fetching dashboard statistics...');
     
-    const candidateAVotes = await Vote.countDocuments({ candidate: 'candidate-a' });
-    const candidateBVotes = await Vote.countDocuments({ candidate: 'candidate-b' });
-    const candidateCVotes = await Vote.countDocuments({ candidate: 'candidate-c' });
-    const candidateDVotes = await Vote.countDocuments({ candidate: 'candidate-d' });
+    const totalUsers = await User.countDocuments();
+    console.log('✅ Total users:', totalUsers);
+    
+    const totalVotes = await Vote.countDocuments();
+    console.log('✅ Total votes:', totalVotes);
+    
+    const votersWhoVoted = await User.countDocuments({ hasVoted: true });
+    console.log('✅ Voters who voted:', votersWhoVoted);
+    
+    const totalBallots = await Ballot.countDocuments();
+    console.log('✅ Total ballots:', totalBallots);
+
+    const stats = {
+      totalUsers,
+      totalVotes,
+      totalBallots,
+      votersWhoVoted,
+      pendingVoters: totalUsers - votersWhoVoted,
+      turnoutPercentage: totalUsers > 0 ? ((votersWhoVoted / totalUsers) * 100).toFixed(2) : 0
+    };
+    
+    console.log('✅ Statistics ready:', stats);
 
     res.json({
       success: true,
-      statistics: {
-        totalUsers,
-        totalVotes,
-        votersWhoVoted,
-        pendingVoters: totalUsers - votersWhoVoted,
-        turnoutPercentage: totalUsers > 0 ? ((votersWhoVoted / totalUsers) * 100).toFixed(2) : 0,
-        candidates: {
-          candidateA: candidateAVotes,
-          candidateB: candidateBVotes,
-          candidateC: candidateCVotes,
-          candidateD: candidateDVotes
-        }
-      }
+      statistics: stats
     });
   } catch (error) {
-    console.error('Admin statistics error:', error);
+    console.error('❌ Admin statistics error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ 
       success: false, 
       message: 'পরিসংখ্যান লোড করতে ব্যর্থ হয়েছে' 
@@ -106,14 +111,116 @@ router.get('/statistics', authenticateAdmin, async (req, res) => {
   }
 });
 
+// Chart Data - real-time turnout trend & results summary
+router.get('/chart-data', authenticateAdmin, async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+
+    // === Turnout Trend: votes grouped by hour today ===
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const hourlyVotes = await Vote.aggregate([
+      { $match: { timestamp: { $gte: todayStart } } },
+      {
+        $group: {
+          _id: { $hour: '$timestamp' },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id': 1 } }
+    ]);
+
+    // If no votes today, try all-time grouped by date
+    let turnoutLabels = [];
+    let turnoutData = [];
+
+    if (hourlyVotes.length > 0) {
+      // Build hourly cumulative turnout for today
+      let cumulative = 0;
+      for (const hv of hourlyVotes) {
+        cumulative += hv.count;
+        const hour = hv._id;
+        const label = hour < 12 ? `${hour === 0 ? 12 : hour}AM` 
+                    : hour === 12 ? '12PM'
+                    : `${hour - 12}PM`;
+        turnoutLabels.push(label);
+        turnoutData.push(totalUsers > 0 ? Math.round((cumulative / totalUsers) * 100) : 0);
+      }
+    } else {
+      // All-time: group by date
+      const dailyVotes = await Vote.aggregate([
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { '_id': 1 } },
+        { $limit: 10 }
+      ]);
+
+      let cumulative = 0;
+      for (const dv of dailyVotes) {
+        cumulative += dv.count;
+        turnoutLabels.push(dv._id);
+        turnoutData.push(totalUsers > 0 ? Math.round((cumulative / totalUsers) * 100) : 0);
+      }
+    }
+
+    // === Results Summary: votes per candidate across all ballots ===
+    const candidateVotes = await Vote.aggregate([
+      {
+        $group: {
+          _id: '$candidate',
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]);
+
+    // Populate candidate names
+    const resultLabels = [];
+    const resultData = [];
+    for (const cv of candidateVotes) {
+      const candidate = await Candidate.findById(cv._id).select('name party');
+      if (candidate) {
+        resultLabels.push(candidate.name);
+      } else {
+        resultLabels.push('অজানা');
+      }
+      resultData.push(cv.count);
+    }
+
+    res.json({
+      success: true,
+      turnout: { labels: turnoutLabels, data: turnoutData },
+      results: { labels: resultLabels, data: resultData }
+    });
+  } catch (error) {
+    console.error('❌ Chart data error:', error);
+    res.status(500).json({ success: false, message: 'চার্ট ডেটা লোড ব্যর্থ' });
+  }
+});
+
 // Get All Users
 router.get('/users', authenticateAdmin, async (req, res) => {
   try {
-    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    const { area } = req.query;
+    
+    // Build query
+    const query = {};
+    if (area) {
+      query.votingArea = area;
+    }
+    
+    const users = await User.find(query).select('-password').sort({ createdAt: -1 });
     
     res.json({
       success: true,
-      users
+      users,
+      count: users.length
     });
   } catch (error) {
     console.error('Get users error:', error);
@@ -299,6 +406,81 @@ router.get('/ballots', authenticateAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'ব্যালট লোড করতে ব্যর্থ হয়েছে'
+    });
+  }
+});
+
+// Get ballot results (Admin endpoint)
+router.get('/results/:ballotId', authenticateAdmin, async (req, res) => {
+  try {
+    const { ballotId } = req.params;
+    console.log('📊 Admin results request for ballot:', ballotId);
+    
+    // Get ballot
+    const ballot = await Ballot.findById(ballotId);
+    if (!ballot) {
+      console.log('❌ Ballot not found:', ballotId);
+      return res.status(404).json({
+        success: false,
+        message: 'ব্যালট পাওয়া যায়নি'
+      });
+    }
+    
+    console.log('✅ Ballot found:', ballot.name, '-', ballot.location);
+    
+    // Get all candidates for this ballot
+    const candidates = await Candidate.find({
+      ballotName: ballot.name,
+      area: ballot.location,
+      status: 'active'
+    });
+    
+    console.log('📋 Candidates found:', candidates.length);
+    
+    // Count votes for each candidate
+    const results = [];
+    let totalVotes = 0;
+    
+    for (const candidate of candidates) {
+      const voteCount = await Vote.countDocuments({
+        ballotId: ballotId,
+        candidate: candidate._id
+      });
+      
+      console.log(`  - ${candidate.name}: ${voteCount} votes`);
+      
+      results.push({
+        candidateId: candidate._id,
+        name: candidate.name,
+        party: candidate.party,
+        image: candidate.image,
+        symbol: candidate.symbol,
+        voteCount: voteCount
+      });
+      
+      totalVotes += voteCount;
+    }
+    
+    // Sort by vote count (highest first)
+    results.sort((a, b) => b.voteCount - a.voteCount);
+    
+    console.log('✅ Total votes:', totalVotes);
+    
+    res.json({
+      success: true,
+      ballot: {
+        id: ballot._id,
+        name: ballot.name,
+        location: ballot.location
+      },
+      results: results,
+      totalVotes: totalVotes
+    });
+  } catch (error) {
+    console.error('❌ Get admin results error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'ফলাফল লোড করতে ব্যর্থ হয়েছে'
     });
   }
 });
@@ -773,6 +955,41 @@ router.delete('/candidates/:id', authenticateAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'প্রার্থী মুছে ফেলতে ব্যর্থ হয়েছে'
+    });
+  }
+});
+
+// ===================================
+// ADMIN TO ADMIN CHAT ROUTES
+// ===================================
+
+// Get all admins (for admin-to-admin chat list)
+router.get('/all-admins', authenticateAdmin, async (req, res) => {
+  try {
+    const admins = await Admin.find({}, 'username email role fullName createdAt')
+      .sort({ role: -1, username: 1 }); // Superadmin first, then by username
+
+    // Exclude current admin from the list
+    const otherAdmins = admins.filter(admin => 
+      admin._id.toString() !== req.admin._id.toString()
+    );
+
+    res.json({
+      success: true,
+      admins: otherAdmins.map(admin => ({
+        id: admin._id,
+        username: admin.username,
+        email: admin.email,
+        role: admin.role,
+        fullName: admin.fullName || admin.username,
+        createdAt: admin.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error('Get all admins error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'অ্যাডমিন তালিকা লোড করতে ব্যর্থ হয়েছে'
     });
   }
 });
