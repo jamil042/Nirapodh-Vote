@@ -822,6 +822,48 @@
 }
 
 /* ===========================
+   Video Section
+   =========================== */
+.video-section {
+    padding: 80px 0;
+    background: #f9f9f9;
+}
+
+.video-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.video-wrapper {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.video-wrapper iframe,
+.video-wrapper video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.video-description {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 1.1rem;
+    color: #666;
+    line-height: 1.6;
+}
+
+/* ===========================
    Responsive Design
    =========================== */
 @media (max-width: 968px) {

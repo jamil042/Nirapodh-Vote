@@ -325,6 +325,11 @@ function showSection(sectionId) {
         loadCandidates();
     }
 
+    // Load videos when switching to video section
+    if (sectionId === 'video' && typeof loadVideos === 'function') {
+        loadVideos();
+    }
+
     // Initialize admin-to-admin chat when switching to admin-chat section
     if (sectionId === 'admin-chat' && typeof initAdminToAdminChat === 'function') {
         initAdminToAdminChat();

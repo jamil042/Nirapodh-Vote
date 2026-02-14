@@ -2588,3 +2588,245 @@ background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 1
         padding: 15px;
     }
 }
+
+/* Video Management Section Styles */
+.video-type-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.radio-card {
+    cursor: pointer;
+    display: block;
+}
+
+.radio-card input[type="radio"] {
+    display: none;
+}
+
+.radio-content {
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.radio-card input[type="radio"]:checked + .radio-content {
+    border-color: var(--primary-green);
+    background: #f0f9f4;
+}
+
+.radio-content svg {
+    margin-bottom: 10px;
+}
+
+.radio-content span {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.radio-content small {
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.file-upload-area {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.file-upload-area:hover,
+.file-upload-area.drag-over {
+    border-color: var(--primary-green);
+    background: #f0f9f4;
+}
+
+.file-upload-content p {
+    margin: 10px 0 5px;
+    font-weight: 500;
+}
+
+.file-upload-content small {
+    color: #666;
+}
+
+.file-upload-preview {
+    text-align: center;
+}
+
+.file-upload-preview video {
+    margin-bottom: 15px;
+    border-radius: 8px;
+}
+
+.file-info {
+    margin: 10px 0;
+    padding: 10px;
+    background: #f5f5f5;
+    border-radius: 5px;
+}
+
+.upload-progress {
+    margin-top: 15px;
+}
+
+.progress-bar {
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary-green);
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+#progressText {
+    display: block;
+    text-align: center;
+    margin-top: 5px;
+    color: #666;
+}
+
+.video-item {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.video-item:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.video-item.active {
+    border-color: var(--primary-green);
+    background: #f0f9f4;
+}
+
+.video-thumbnail {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #000;
+}
+
+.video-thumbnail img,
+.video-thumbnail video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.play-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.6);
+    border-radius: 50%;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.active-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--primary-green);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.video-details h4 {
+    margin: 0 0 10px;
+    color: #333;
+}
+
+.video-details p {
+    color: #666;
+    margin: 0 0 10px;
+    line-height: 1.5;
+}
+
+.video-meta {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.video-type-badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.video-type-badge.youtube {
+    background: #FFE5E5;
+    color: #FF0000;
+}
+
+.video-type-badge.upload {
+    background: #E3F2FD;
+    color: #1976D2;
+}
+
+.video-date {
+    color: #999;
+    font-size: 0.85rem;
+}
+
+.video-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+    .video-item {
+        grid-template-columns: 1fr;
+    }
+    
+    .video-type-selector {
+        grid-template-columns: 1fr;
+    }
+}
