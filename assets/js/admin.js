@@ -325,6 +325,11 @@ function showSection(sectionId) {
         loadCandidates();
     }
 
+    // Load videos when switching to video section
+    if (sectionId === 'video' && typeof loadVideos === 'function') {
+        loadVideos();
+    }
+
     // Initialize admin-to-admin chat when switching to admin-chat section
     if (sectionId === 'admin-chat' && typeof initAdminToAdminChat === 'function') {
         initAdminToAdminChat();
@@ -462,6 +467,19 @@ function handleBallotSubmit(e) {
         return;
     }
     
+    // Parse datetime-local input as Bangladesh time (UTC+6) and convert to UTC
+    function parseBDTimeToUTC(dateTimeString) {
+        const [datePart, timePart] = dateTimeString.split('T');
+        const [year, month, day] = datePart.split('-').map(Number);
+        const [hour, minute] = timePart.split(':').map(Number);
+        
+        // Create UTC date by subtracting 6 hours from BD time
+        return new Date(Date.UTC(year, month - 1, day, hour - 6, minute));
+    }
+    
+    const startDateISO = parseBDTimeToUTC(startDate).toISOString();
+    const endDateISO = parseBDTimeToUTC(endDate).toISOString();
+    
     // Collect all candidate data from the form
     const candidateCards = document.querySelectorAll('#candidatesList .card');
     const candidates = [];
@@ -509,7 +527,7 @@ function handleBallotSubmit(e) {
         btn.textContent = 'তৈরি হচ্ছে...';
         
         // Process images and save candidates
-        processCandidatesAndSave(ballotName, ballotLocation, startDate, endDate, candidates, btn, originalText);
+        processCandidatesAndSave(ballotName, ballotLocation, startDateISO, endDateISO, candidates, btn, originalText);
     }
 }
 
@@ -864,13 +882,37 @@ async function saveBallotDates(ballotId) {
     }
     
     try {
+        // Parse datetime-local input as Bangladesh time (UTC+6) and convert to UTC
+        // datetime-local format: "2026-02-15T08:49"
+        function parseBDTimeToUTC(dateTimeString) {
+            const [datePart, timePart] = dateTimeString.split('T');
+            const [year, month, day] = datePart.split('-').map(Number);
+            const [hour, minute] = timePart.split(':').map(Number);
+            
+            // Create UTC date by subtracting 6 hours from BD time
+            return new Date(Date.UTC(year, month - 1, day, hour - 6, minute));
+        }
+        
+        const startDateISO = parseBDTimeToUTC(startDate).toISOString();
+        const endDateISO = parseBDTimeToUTC(endDate).toISOString();
+        
+        console.log('🕒 Sending dates:', {
+            inputStart: startDate,
+            inputEnd: endDate,
+            startUTC: startDateISO,
+            endUTC: endDateISO
+        });
+        
         const response = await fetch(`${API_CONFIG.API_URL}/admin/ballots/${ballotId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ startDate, endDate })
+            body: JSON.stringify({ 
+                startDate: startDateISO, 
+                endDate: endDateISO 
+            })
         });
         
         const result = await response.json();
