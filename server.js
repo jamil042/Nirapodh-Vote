@@ -14,6 +14,7 @@ const voteRoutes = require('./server/routes/vote');
 const adminRoutes = require('./server/routes/admin');
 const complaintRoutes = require('./server/routes/complaint');
 const noticeRoutes = require('./server/routes/notice');
+const videoRoutes = require('./server/routes/video');
 
 const app = express();
 const server = http.createServer(app);
@@ -54,6 +55,7 @@ app.use('/api/vote', voteRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/complaint', complaintRoutes);
 app.use('/api/notice', noticeRoutes);
+app.use('/api/video', videoRoutes);
 
 // ===== CHAT STATE MANAGEMENT =====
 

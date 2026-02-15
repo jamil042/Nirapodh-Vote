@@ -3,6 +3,8 @@
 .env.local
 .env.*.local
 
+server/config/cloudinary.js
+
 # Node modules
 node_modules/
 assets/images/ 
@@ -15,6 +17,18 @@ package-lock.json
 package.json
 project_structure.txt
 SMSBangladesh_API_Documentation.pdf
+
+# Video files (stored in Cloudinary)
+*.mp4
+*.webm
+*.ogg
+*.mov
+*.avi
+*.mkv
+videos/
+
+# Cloudinary config (already in .env)
+server/config/cloudinary.js
 
 # Logs
 logs

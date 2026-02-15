@@ -326,4 +326,73 @@ console.log('%c Version 1.0.0 | © ২০২৫ বাংলাদেশ নি�
 window.addEventListener('load', () => {
     console.log('✓ পেজ সম্পূর্ণভাবে লোড হয়েছে');
     document.body.classList.add('page-loaded');
+    
+    // Load promotional video
+    loadPromoVideo();
 });
+
+// Load and display promotional video
+async function loadPromoVideo() {
+    try {
+        const response = await fetch('http://localhost:3000/api/video/active');
+        const data = await response.json();
+        
+        if (data.success && data.video) {
+            const video = data.video;
+            const header = document.getElementById('videoHeader');
+            const container = document.getElementById('promoVideoContainer');
+            const section = document.querySelector('.video-section');
+            
+            // Set dynamic title and subtitle
+            let headerHTML = `<h2 class="section-title gradient-text">${video.title}</h2>`;
+            if (video.description) {
+                headerHTML += `<p class="section-subtitle">${video.description}</p>`;
+            }
+            header.innerHTML = headerHTML;
+            
+            // Set video content
+            let videoHTML = '';
+            
+            if (video.videoType === 'youtube') {
+                videoHTML = `
+                    <div class="video-wrapper">
+                        <iframe 
+                            width="100%" 
+                            height="500" 
+                            src="https://www.youtube.com/embed/${video.youtubeId}?rel=0" 
+                            title="${video.title}"
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen
+                            loading="lazy">
+                        </iframe>
+                    </div>
+                `;
+            } else {
+                videoHTML = `
+                    <div class="video-wrapper">
+                        <video 
+                            controls 
+                            width="100%" 
+                            poster="${video.thumbnailUrl || ''}"
+                            preload="metadata">
+                            <source src="${video.cloudinaryUrl}" type="video/mp4">
+                            আপনার ব্রাউজার ভিডিও প্লেয়ার সাপোর্ট করে না।
+                        </video>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = videoHTML;
+            section.style.display = 'block';
+            
+            // Trigger animation
+            if (observer) {
+                observer.observe(section);
+            }
+        }
+    } catch (error) {
+        console.error('Video load error:', error);
+        // Silently fail - video section remains hidden
+    }
+}

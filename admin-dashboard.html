@@ -100,6 +100,14 @@
                     </span>
                     <span class="nav-text">অ্যাডমিন চ্যাট</span>
                 </a>
+                <a href="#" class="nav-item" onclick="showSection('video')">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                        </svg>
+                    </span>
+                    <span class="nav-text">হোমপেজ ভিডিও</span>
+                </a>
                 <a href="#" class="nav-item" onclick="showSection('settings')">
                     <span class="nav-icon">
                         <svg viewBox="0 0 24 24" fill="currentColor">
@@ -599,6 +607,128 @@
         </div>
     </section>
 
+    <!-- Video Management Section -->
+    <section id="video-section" class="content-section">
+        <div class="section-header">
+            <h2>
+                <svg viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
+                    <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                </svg>
+                হোমপেজ ভিডিও ব্যবস্থাপনা
+            </h2>
+            <p>হোমপেজে প্রদর্শিত হবে এমন প্রচারমূলক ভিডিও আপলোড ও পরিচালনা করুন</p>
+        </div>
+
+        <!-- Upload Video Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3>নতুন ভিডিও আপলোড</h3>
+            </div>
+            <div class="card-content">
+                <form id="videoUploadForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="videoTitle">ভিডিও শিরোনাম *</label>
+                            <input type="text" id="videoTitle" required placeholder="ভিডিওর শিরোনাম লিখুন">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="videoDescription">বিবরণ</label>
+                        <textarea id="videoDescription" rows="3" placeholder="ভিডিও সম্পর্কে সংক্ষিপ্ত বিবরণ (ঐচ্ছিক)"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>ভিডিও টাইপ *</label>
+                        <div class="video-type-selector">
+                            <label class="radio-card">
+                                <input type="radio" name="videoType" value="youtube" checked>
+                                <div class="radio-content">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 32px; height: 32px; color: #FF0000;">
+                                        <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+                                    </svg>
+                                    <span>YouTube লিঙ্ক</span>
+                                    <small>YouTube থেকে ভিডিও embed করুন</small>
+                                </div>
+                            </label>
+                            <label class="radio-card">
+                                <input type="radio" name="videoType" value="upload">
+                                <div class="radio-content">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 32px; height: 32px; color: #4285F4;">
+                                        <path d="M18 20H4V6h9V4H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-9h-2v9zm-7.79-3.17l-1.96-2.36L5.5 18h11l-3.54-4.71zM20 4V1h-2v3h-3c.01.01 0 2 0 2h3v2.99c.01.01 2 0 2 0V6h3V4h-3z"/>
+                                    </svg>
+                                    <span>ফাইল আপলোড</span>
+                                    <small>সরাসরি ভিডিও ফাইল আপলোড করুন</small>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- YouTube URL Input -->
+                    <div class="form-group" id="youtubeUrlGroup">
+                        <label for="youtubeUrl">YouTube URL *</label>
+                        <input type="url" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=...">
+                        <small class="form-help">YouTube ভিডিও লিঙ্ক paste করুন</small>
+                    </div>
+
+                    <!-- File Upload Input -->
+                    <div class="form-group" id="videoFileGroup" style="display: none;">
+                        <label for="videoFile">ভিডিও ফাইল *</label>
+                        <div class="file-upload-area" id="videoDropZone">
+                            <input type="file" id="videoFile" accept="video/mp4,video/webm,video/ogg,video/quicktime" hidden>
+                            <div class="file-upload-content">
+                                <svg viewBox="0 0 24 24" fill="currentColor" style="width: 48px; height: 48px; color: #666;">
+                                    <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+                                </svg>
+                                <p>ভিডিও ফাইল নির্বাচন করুন বা এখানে drag & drop করুন</p>
+                                <small>MP4, WebM, OGG, MOV (সর্বোচ্চ 100MB)</small>
+                            </div>
+                            <div class="file-upload-preview" id="videoPreview" style="display: none;">
+                                <video id="previewVideo" controls style="max-width: 100%; max-height: 300px;"></video>
+                                <div class="file-info" id="fileInfo"></div>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="clearVideoFile()">পরিবর্তন করুন</button>
+                            </div>
+                        </div>
+                        <div class="upload-progress" id="uploadProgress" style="display: none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <small id="progressText">0%</small>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="uploadBtn">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; margin-right: 5px;">
+                                <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+                            </svg>
+                            আপলোড করুন
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="resetVideoForm()">রিসেট</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Current Videos List -->
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <h3>আপলোড করা ভিডিও</h3>
+                <button class="btn btn-secondary btn-sm" onclick="loadVideos()">
+                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 16px; height: 16px;">
+                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                    রিফ্রেশ
+                </button>
+            </div>
+            <div class="card-content">
+                <div id="videosContainer">
+                    <div class="loading-spinner">লোড হচ্ছে...</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
              <section id="settings-section" class="content-section">
                 <div class="section-header">
                     <h2>সেটিংস</h2>
@@ -765,6 +895,7 @@
     <script src="assets/js/admin-candidates.js"></script>
     <script src="assets/js/admin-notices.js"></script>
     <script src="assets/js/admin.js"></script>
+    <script src="assets/js/admin-video.js"></script>
     <script src="assets/js/admin_to_citizen.js"></script>
     <script src="assets/js/admin_admin_chat.js"></script>
     <script src="assets/js/admin-complaints.js"></script>
